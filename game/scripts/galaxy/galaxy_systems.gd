@@ -34,9 +34,15 @@ static func explore(world: Dictionary, target: int) -> bool:
         return false
     if world["known"].has(target):
         return false
-    var origin: Dictionary = world["stars"][0]
     var star: Dictionary = world["stars"][target]
-    if distance(origin, star) > 270.0:
+    var reachable := false
+    for fleet in world["fleets"]:
+        if int(fleet["owner"]) != 0 or int(fleet["destination"]) >= 0:
+            continue
+        var origin: Dictionary = world["stars"][int(fleet["location"])]
+        if distance(origin, star) <= 170.0:
+            reachable = true
+    if not reachable:
         return false
     world["known"].append(target)
     world["science"] = int(world["science"]) + 4
@@ -80,6 +86,23 @@ static func diplomatic_action(world: Dictionary, rival_id: int, action: String) 
         return "Handelsabkommen: +25 Credits."
     return "Unbekannte diplomatische Aktion."
 
+static func move_fleet(world: Dictionary, target: int) -> bool:
+    prepare(world)
+    if target < 0 or target >= world["stars"].size() or not world["known"].has(target):
+        return false
+    var fleet: Dictionary = world["fleets"][0]
+    if int(fleet["destination"]) >= 0 or int(fleet["location"]) == target:
+        return false
+    var origin: Dictionary = world["stars"][int(fleet["location"])]
+    var destination: Dictionary = world["stars"][target]
+    var travel := distance(origin, destination)
+    if travel > 220.0:
+        return false
+    fleet["destination"] = target
+    fleet["eta"] = maxi(1, ceili(travel / 70.0))
+    world["history"].append("Expedition nach %s gestartet (%d Jahre)." % [destination["name"], fleet["eta"]])
+    return true
+
 static func build_fleet(world: Dictionary) -> bool:
     prepare(world)
     if int(world["credits"]) < 65:
@@ -102,6 +125,14 @@ static func start_research(world: Dictionary) -> bool:
 static func tick(world: Dictionary) -> void:
     prepare(world)
     GalaxyModel.advance(world)
+    for fleet in world["fleets"]:
+        if int(fleet["destination"]) >= 0:
+            fleet["eta"] = int(fleet["eta"]) - 1
+            if int(fleet["eta"]) <= 0:
+                fleet["location"] = int(fleet["destination"])
+                fleet["destination"] = -1
+                fleet["eta"] = 0
+                world["history"].append("Flotte erreicht %s." % world["stars"][int(fleet["location"])]["name"])
     var colonies := 0
     var production := 0
     for star in world["stars"]:
