@@ -34,9 +34,9 @@ jobs:
       - name: Test player input and scene interaction
         run: godot --headless --path game --script res://tests/interaction_test.gd
       - name: Test galactic new game and persistence
-        run: godot --headless --path game --script res://tests/galaxy_test.gd
+        run: timeout 100s godot --headless --path game --script res://tests/galaxy_test.gd
       - name: Test strategic simulation systems
-        run: godot --headless --path game --script res://tests/galaxy_systems_test.gd
+        run: timeout 100s godot --headless --path game --script res://tests/galaxy_systems_test.gd
       - name: Load main scene
         run: godot --headless --path game --quit-after 10
 
