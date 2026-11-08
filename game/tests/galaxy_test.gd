@@ -38,6 +38,9 @@ func _run() -> void:
         return
     print("GALAXY_STAGE: instantiate UI")
     var ui: Control = scene.instantiate()
+    if ui.get_script() == null:
+        _fail("Galactic UI script failed to compile")
+        return
     root.add_child(ui)
     await process_frame
     if ui.screen != "menu":
