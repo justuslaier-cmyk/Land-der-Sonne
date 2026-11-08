@@ -36,14 +36,19 @@ func to_dict() -> Dictionary:
     }
 
 static func from_dict(data: Dictionary) -> WorldState:
-    if typeof(data.get("version")) != TYPE_INT or data["version"] != SAVE_VERSION:
+    # Godot JSON decodes numeric values as floats, including serialized integers.
+    for field in ["version", "seed", "tick"]:
+        var value: Variant = data.get(field)
+        if typeof(value) != TYPE_FLOAT and typeof(value) != TYPE_INT:
+            return null
+        if not is_finite(float(value)) or float(value) != floor(float(value)):
+            return null
+    if int(data["version"]) != SAVE_VERSION:
         return null
-    if typeof(data.get("seed")) != TYPE_INT or typeof(data.get("tick")) != TYPE_INT:
+    if float(data["tick"]) < 0.0 or typeof(data.get("flags")) != TYPE_DICTIONARY:
         return null
-    if data["tick"] < 0 or typeof(data.get("flags")) != TYPE_DICTIONARY:
-        return null
-    var loaded := WorldState.new(data["seed"])
-    loaded.tick = data["tick"]
+    var loaded := WorldState.new(int(data["seed"]))
+    loaded.tick = int(data["tick"])
     for key in data["flags"].keys():
         if typeof(key) != TYPE_STRING or typeof(data["flags"][key]) != TYPE_BOOL or key.is_empty():
             return null
