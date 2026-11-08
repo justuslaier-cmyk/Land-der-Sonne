@@ -2,9 +2,12 @@ name: Godot foundation checks
 
 on:
   push:
-    branches: [main, development/foundation]
+    branches: [main]
   pull_request:
     branches: [main]
+
+permissions:
+  contents: read
 
 concurrency:
   group: godot-foundation-${{ github.ref }}
