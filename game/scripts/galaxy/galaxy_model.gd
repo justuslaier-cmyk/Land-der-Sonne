@@ -24,6 +24,8 @@ static func generate(settings: Dictionary, empire: Dictionary) -> Dictionary:
     var rng := RandomNumberGenerator.new()
     rng.seed = int(settings["seed"])
     var stars: Array = []
+    var prefixes := ["Astra", "Nery", "Vela", "Khar", "Orion", "Ely", "Thal", "Cyr", "Oph", "Zora", "Mer", "Sola", "Vey", "Iona", "Xen", "Arka"]
+    var suffixes := ["ion", "is", "ara", "os", "eth", "ora", " Prime", " VII", "aris", "ea", "on", "yx"]
     var count := int(settings["size"])
     for i in range(count):
         var angle := TAU * float(i) / float(count) * 3.0 + rng.randf_range(-0.4, 0.4)
@@ -35,7 +37,10 @@ static func generate(settings: Dictionary, empire: Dictionary) -> Dictionary:
             distance = rng.randf_range(150.0, 330.0)
             p = Vector2(cos(angle), sin(angle)) * distance
         var kind := rng.randi_range(0, 3)
-        stars.append({"id": i, "name": "SYS-%03d" % (i + 1), "x": snappedf(p.x, 0.1), "y": snappedf(p.y, 0.1), "kind": kind, "resource": rng.randi_range(1, 5), "habitable": rng.randi_range(0, 99) < int(settings["habitable"]), "owner": -1})
+        var star_name := "%s%s-%02d" % [prefixes[rng.randi_range(0, prefixes.size() - 1)], suffixes[rng.randi_range(0, suffixes.size() - 1)], i + 1]
+        var resource_roll := rng.randi_range(0, 99) + int(settings["resources"]) / 5
+        var resource_level := clampi(1 + resource_roll / 24, 1, 5)
+        stars.append({"id": i, "name": star_name, "x": snappedf(p.x, 0.1), "y": snappedf(p.y, 0.1), "kind": kind, "resource": resource_level, "habitable": rng.randi_range(0, 99) < int(settings["habitable"]), "owner": -1})
     stars[0]["name"] = str(empire["homeworld"])
     stars[0]["habitable"] = true
     stars[0]["owner"] = 0
