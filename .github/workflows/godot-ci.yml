@@ -22,5 +22,7 @@ jobs:
         run: godot --headless --path game --editor --quit
       - name: Run deterministic smoke test
         run: godot --headless --path game --script res://tests/smoke_test.gd
+      - name: Test world state and chunk coordinates
+        run: godot --headless --path game --script res://tests/world_test.gd
       - name: Load main scene
         run: godot --headless --path game --quit-after 10
