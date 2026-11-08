@@ -4,6 +4,7 @@ func _initialize() -> void:
     call_deferred("_run")
 
 func _run() -> void:
+    print("GALAXY_STAGE: load scripts")
     var model: Script = load("res://scripts/galaxy/galaxy_model.gd")
     var scene: PackedScene = load("res://scenes/galaxy.tscn")
     if model == null or scene == null:
@@ -14,6 +15,7 @@ func _run() -> void:
     if model.validate(settings, empire) != "":
         _fail("Default setup invalid")
         return
+    print("GALAXY_STAGE: generate")
     var a: Dictionary = model.generate(settings, empire)
     var b: Dictionary = model.generate(settings, empire)
     if JSON.stringify(a) != JSON.stringify(b):
@@ -26,6 +28,7 @@ func _run() -> void:
     if int(a["tick"]) != 1:
         _fail("Tick did not advance")
         return
+    print("GALAXY_STAGE: save")
     if not model.save_game(a):
         _fail("Galaxy save failed")
         return
@@ -33,19 +36,23 @@ func _run() -> void:
     if restored.is_empty() or JSON.stringify(restored) != JSON.stringify(a):
         _fail("Galaxy save/load mismatch")
         return
+    print("GALAXY_STAGE: instantiate UI")
     var ui: Control = scene.instantiate()
     root.add_child(ui)
     await process_frame
     if ui.screen != "menu":
         _fail("Main menu did not initialize")
         return
+    print("GALAXY_STAGE: wizard")
     ui._show_settings()
     ui._show_empire()
     ui._show_review()
+    print("GALAXY_STAGE: start")
     ui._start_game()
     if ui.screen != "galaxy":
         _fail("New game flow did not reach map")
         return
+    print("GALAXY_STAGE: finished")
     ui.queue_free()
     print("GALAXY_TEST_PASS: deterministic galaxy, AI, tick, save/load, menu and new game")
     quit(0)
