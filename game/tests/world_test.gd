@@ -32,7 +32,26 @@ func _initialize() -> void:
     if restored == null or restored.seed_value != 17 or restored.tick != 12 or not restored.has_flag("first_landmark"):
         _fail("Save/load roundtrip failed")
         return
+    world.advance(3)
+    if not storage_script.save_world(world, path):
+        _fail("Second save failed")
+        return
+    var current: WorldState = storage_script.load_world(path)
+    if current == null or current.tick != 15:
+        _fail("Latest save missing")
+        return
+    var corrupted := FileAccess.open(path, FileAccess.WRITE)
+    if corrupted == null:
+        _fail("Could not open corruption fixture")
+        return
+    corrupted.store_string("{invalid json")
+    corrupted.close()
+    var recovered: WorldState = storage_script.load_world(path)
+    if recovered == null or recovered.tick != 12:
+        _fail("Backup recovery failed")
+        return
     DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+    DirAccess.remove_absolute(ProjectSettings.globalize_path(path + ".bak"))
     if state_script.from_dict({"version": 999, "seed": 17, "tick": 0, "flags": {}}) != null:
         _fail("Unsupported save version accepted")
         return
