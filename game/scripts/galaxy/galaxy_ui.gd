@@ -73,6 +73,7 @@ func _show_menu() -> void:
     _clear()
     _title("LAND DER SONNE", 52)
     _label("GALAKTISCHE CHRONIKEN  •  Ein Universum. Unzählige Geschichten.")
+    _illustration("menu")
     _button("NEUES SPIEL", _show_settings)
     _button("SPIEL LADEN", _load_game)
     _button("EINSTELLUNGEN", _show_options)
@@ -373,6 +374,7 @@ func _show_event() -> void:
     screen = "event"
     _clear()
     var kind := str(world["pending_event"])
+    _illustration(kind)
     if kind == "colonies":
         _title("EREIGNIS / DER KOLONIALRAT")
         _label("Die jüngsten Kolonien fordern eine neue politische und wirtschaftliche Ausrichtung.")
@@ -393,3 +395,38 @@ func _show_event() -> void:
 func _resolve_system_event(option: int) -> void:
     GalaxySystems.resolve_event(world, option)
     _show_galaxy()
+
+func _illustration(kind: String) -> void:
+    var canvas := Control.new()
+    canvas.custom_minimum_size = Vector2(850, 200)
+    canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    canvas.draw.connect(func(): _draw_illustration(canvas, kind))
+    root.add_child(canvas)
+
+func _draw_illustration(canvas: Control, kind: String) -> void:
+    var width := canvas.size.x
+    canvas.draw_rect(Rect2(0, 0, width, 200), Color("#0c1930"))
+    for i in range(90):
+        var x := float(posmod(i * 1237 + 61, 997)) / 997.0 * width
+        var y := float(posmod(i * 439 + 17, 191))
+        canvas.draw_circle(Vector2(x, y), 0.8 + float(i % 3) * 0.5, Color("#8eafcd", 0.4 + float(i % 4) * 0.13))
+    if kind == "menu":
+        canvas.draw_circle(Vector2(width * 0.76, 115), 92, Color("#1e3559"))
+        canvas.draw_circle(Vector2(width * 0.76 - 11, 102), 77, Color("#487e94"))
+        canvas.draw_arc(Vector2(width * 0.76, 110), 112, -0.6, 2.4, 90, Color("#d3b47c", 0.8), 4.0)
+        canvas.draw_circle(Vector2(width * 0.21, 80), 16, Color("#e9c780"))
+    elif kind == "colonies":
+        canvas.draw_circle(Vector2(width * 0.7, 110), 90, Color("#486a72"))
+        canvas.draw_circle(Vector2(width * 0.68, 90), 72, Color("#719f88"))
+        canvas.draw_rect(Rect2(width * 0.1, 132, 190, 55), Color("#243c59"))
+        for i in range(8):
+            canvas.draw_rect(Rect2(width * 0.12 + i * 21, 110 - i % 3 * 12, 13, 50), Color("#7aa9b6"))
+    elif kind == "market":
+        canvas.draw_circle(Vector2(width * 0.78, 90), 75, Color("#4d567b"))
+        for i in range(9):
+            canvas.draw_line(Vector2(width * 0.13 + i * 29, 150), Vector2(width * 0.13 + i * 29, 150 - (i * 31 % 95)), Color("#e0b976"), 7.0)
+    else:
+        canvas.draw_circle(Vector2(width * 0.75, 95), 69, Color("#263e5e"))
+        canvas.draw_arc(Vector2(width * 0.75, 95), 84, 0, TAU, 64, Color("#7ccad3"), 3.0)
+        canvas.draw_line(Vector2(width * 0.2, 115), Vector2(width * 0.38, 115), Color("#e5c47e"), 5.0)
+        canvas.draw_colored_polygon(PackedVector2Array([Vector2(width * 0.3, 92), Vector2(width * 0.37, 115), Vector2(width * 0.3, 138)]), Color("#a1b7cc"))
