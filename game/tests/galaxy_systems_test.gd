@@ -9,10 +9,15 @@ func _initialize() -> void:
     if world["fleets"].size() != 1 or world["known"].size() != 1:
         _fail("Simulation defaults missing")
         return
-    if not GalaxySystems.explore(world, 1):
+    var nearby := -1
+    for star in world["stars"]:
+        if int(star["id"]) != 0 and GalaxySystems.distance(world["stars"][0], star) <= 170.0:
+            nearby = int(star["id"])
+            break
+    if nearby < 0 or not GalaxySystems.explore(world, nearby):
         _fail("First exploration failed")
         return
-    if not world["known"].has(1):
+    if not world["known"].has(nearby):
         _fail("Exploration was not recorded")
         return
     var initial_tick := int(world["tick"])
