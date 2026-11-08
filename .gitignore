@@ -1,0 +1,19 @@
+# Godot 4 generated cache
+.godot/
+.import/
+# Editor and system
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+# Generated test/build output
+build/
+dist/
+coverage/
+test-results/
+screenshots/generated/
+*.log
+# Python tooling
+__pycache__/
+*.py[cod]
+.venv/
