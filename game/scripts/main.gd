@@ -8,9 +8,14 @@ const WALK_SPEED: float = 210.0
 
 var player_position: Vector2 = Vector2(16 * CELL_SIZE, 9 * CELL_SIZE)
 var player_direction: Vector2 = Vector2.ZERO
+var world: WorldState = WorldState.new(WORLD_SEED)
 var landmark_changed: bool = false
 
 func _ready() -> void:
+    var restored := WorldStorage.load_world()
+    if restored != null:
+        world = restored
+    landmark_changed = world.has_flag(WorldState.LANDMARK_ID)
     get_window().title = "Land der Sonne - Technical Prototype"
     queue_redraw()
 
@@ -20,14 +25,18 @@ func _process(delta: float) -> void:
     player_position.x = clampf(player_position.x, 16.0, GRID_WIDTH * CELL_SIZE - 16.0)
     player_position.y = clampf(player_position.y, 16.0, GRID_HEIGHT * CELL_SIZE - 16.0)
     if Input.is_key_pressed(KEY_E) and player_position.distance_to(Vector2(15 * CELL_SIZE, 8 * CELL_SIZE)) < 70.0:
-        landmark_changed = true
+        if not landmark_changed:
+            landmark_changed = true
+            world.set_flag(WorldState.LANDMARK_ID, true)
+            if not WorldStorage.save_world(world):
+                push_warning("Could not save world state")
     queue_redraw()
 
 func _draw() -> void:
     for y in range(GRID_HEIGHT):
         for x in range(GRID_WIDTH):
             var cell := Vector2i(x, y)
-            var terrain := terrain_at(cell, WORLD_SEED)
+            var terrain := Terrain.terrain_at(cell, world.seed_value)
             var tint := Color("#4f8a54") if terrain == 0 else Color("#5b985d")
             if terrain == 2:
                 tint = Color("#d5b979")
