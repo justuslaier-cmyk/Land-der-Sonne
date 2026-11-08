@@ -303,11 +303,19 @@ func _show_selection() -> void:
         _button("ERKUNDEN", _explore)
     else:
         _label("Rohstoffstufe %d  •  %s" % [int(star["resource"]), "Bewohnbar" if bool(star["habitable"]) else "Unbewohnbar"])
+        if int(world["fleets"][0]["location"]) != selected:
+            _button("FLOTTE HIERHER SCHICKEN", _move_fleet)
         if owner == -1 and bool(star["habitable"]):
             _button("KOLONISIEREN (50 Credits)", _colonize)
         if owner > 0:
             _button("DIPLOMATIE MIT DIESEM REICH", func(): _diplomacy(owner))
+    var fleet: Dictionary = world["fleets"][0]
+    _label("Flotte: Stärke %d  •  Standort %s  •  Reisezeit %d" % [int(fleet["strength"]), world["stars"][int(fleet["location"])]["name"], int(fleet["eta"])])
     _label("Letzter Chronikeintrag: " + str(world["history"].back()))
+
+func _move_fleet() -> void:
+    notice = "Flottenroute festgelegt." if GalaxySystems.move_fleet(world, selected) else "Route nicht möglich: Ziel zu weit entfernt oder Flotte unterwegs."
+    _show_galaxy()
 
 func _explore() -> void:
     notice = "System kartografiert (+4 Forschung)." if GalaxySystems.explore(world, selected) else "Außerhalb der Erkundungsreichweite (270)."
