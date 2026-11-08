@@ -1,27 +1,16 @@
-# Game vision v0.1
+# Land der Sonne — active vision (2026-11-08)
 
-## Fixed decisions
-- Title: Land der Sonne.
-- Genre: open-world fantasy sandbox RPG with persistent world simulation.
-- Camera: **top-down** 2D.
-- Art: detailed, coherent, original pixel art.
-- World: changes persist; NPCs, economies, ecology and factions act even without the player.
-- Player: many viable paths including exploration, professions, crafting, magic, settlement building, politics and adventure.
+**ACTIVE GENRE:** 2D pixel-art galactic grand strategy / 4X / narrative read-and-click empire simulation.
 
-## Long-term ambition (not implemented targets)
-Thousands of creature variants and quest situations; hundreds of professions and class/specialization combinations; very large procedurally generated continents; deep systemic interaction. Counts must represent meaningful gameplay differences rather than cosmetic renaming.
+The original fantasy open-world RPG vision has been superseded by user decision on 2026-11-08. Its previous contents remain recoverable through Git history. Do not implement fantasy RPG gameplay under the active project without a new explicit decision.
 
-## Candidate differentiators
-- Causal world-event system connecting ecology, economy, settlements, NPC goals and quests.
-- Tiered NPC simulation preserving identity and key state across near/far simulation.
-- Modular magic interacting with physical and social world rules.
-- World history and persistent consequences across generations.
+## Authoritative new design
+- [Complete galaxy game vision](GALACTIC_GAME_VISION.md)
+- [Main menu, New Game, Load Game, galaxy settings and empire creator](../design/FRONTEND_AND_NEW_GAME_FLOW.md)
+- [ADR-001: genre pivot, migration, preservation](../decisions/ADR-001-GENRE-PIVOT.md)
 
-## Art direction hypotheses to prototype
-Orthographic top-down, 32px base tiles, 48-64px characters, modular environment assets, dynamic lighting, readable silhouettes and disciplined palettes. These are not approved production specs until visually tested.
+## Fixed requirements
+All three play styles coexist: interactive galactic map, deep administration and illustrated event/decision panels. Procedural seed-based galaxies with configurable AI empires; species/empire creation with portrait, traits, government and ship style; causal events, independent AI, diplomacy, war, trade and evolving history. Polished launch menu and New Game/Load Game flow are foundational.
 
-## Non-goals for first vertical slice
-No mass production of thousands of items, quests, creatures or maps before generator and quality pipelines are validated.
-
-## Open design decisions
-Combat pacing; real-time vs pause; camera zoom and pixel density; art palette; world lore and factions; survival depth; accessibility; supported hardware; single-player vs future multiplayer.
+## Evidence boundary
+These are **approved requirements, not implemented functionality**. Existing Godot terrain/movement foundation may be reused only where technically compatible; do not claim the old prototype implements a galaxy simulator.
