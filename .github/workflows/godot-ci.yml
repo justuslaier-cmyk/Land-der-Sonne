@@ -1,0 +1,89 @@
+name: Godot foundation checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: godot-foundation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  godot-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot 4.3 stable
+        run: |
+          curl --fail --location --retry 3 --output /tmp/godot.zip "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
+          unzip -q /tmp/godot.zip -d /tmp
+          sudo install -m 0755 /tmp/Godot_v4.3-stable_linux.x86_64 /usr/local/bin/godot
+          godot --version
+      - name: Import project
+        run: godot --headless --path game --editor --quit
+      - name: Run deterministic smoke test
+        run: godot --headless --path game --script res://tests/smoke_test.gd
+      - name: Test world state and chunk coordinates
+        run: godot --headless --path game --script res://tests/world_test.gd
+      - name: Test player input and scene interaction
+        run: godot --headless --path game --script res://tests/interaction_test.gd
+      - name: Load main scene
+        run: godot --headless --path game --quit-after 10
+
+  render-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot 4.3 stable
+        run: |
+          curl --fail --location --retry 3 --output /tmp/godot.zip "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
+          unzip -q /tmp/godot.zip -d /tmp
+          sudo install -m 0755 /tmp/Godot_v4.3-stable_linux.x86_64 /usr/local/bin/godot
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb
+      - name: Import project
+        run: godot --headless --path game --editor --quit
+      - name: Capture real engine render
+        run: xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-method gl_compatibility --script res://tests/render_capture.gd
+      - name: Publish screenshot evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-render-evidence
+          path: ~/.local/share/godot/app_userdata/Land der Sonne/render-check.png
+          if-no-files-found: error
+          retention-days: 7
+
+  windows-export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install editor and export templates
+        run: |
+          curl --fail --location --retry 3 --output /tmp/godot.zip "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
+          unzip -q /tmp/godot.zip -d /tmp
+          sudo install -m 0755 /tmp/Godot_v4.3-stable_linux.x86_64 /usr/local/bin/godot
+          curl --fail --location --retry 3 --output /tmp/templates.tpz "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz"
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.3.stable"
+          unzip -q /tmp/templates.tpz -d /tmp/godot_templates
+          cp /tmp/godot_templates/templates/* "$HOME/.local/share/godot/export_templates/4.3.stable/"
+      - name: Import and export Windows x86_64
+        run: |
+          godot --headless --path game --editor --quit
+          mkdir -p dist
+          godot --headless --path game --export-release "Windows Desktop" ../dist/LandDerSonne.exe
+          test -s dist/LandDerSonne.exe
+      - name: Publish experimental Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: LandDerSonne-Windows-experimental
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
