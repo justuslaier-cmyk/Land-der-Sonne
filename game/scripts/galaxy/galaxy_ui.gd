@@ -69,7 +69,6 @@ func _show_menu() -> void:
     _clear()
     _title("LAND DER SONNE", 52)
     _label("GALAKTISCHE CHRONIKEN  •  Ein Universum. Unzählige Geschichten.")
-    root.add_spacer(false)
     _button("NEUES SPIEL", _show_settings)
     _button("SPIEL LADEN", _load_game)
     _button("EINSTELLUNGEN", _show_options)
