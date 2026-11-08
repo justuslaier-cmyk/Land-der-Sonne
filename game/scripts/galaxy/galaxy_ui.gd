@@ -12,6 +12,10 @@ var root: VBoxContainer
 var status: Label
 var map_area: Control
 var selected: int = 0
+var notice: String = ""
+var panel: String = "system"
+var zoom: float = 0.65
+var map_offset: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
     get_window().title = "Land der Sonne | Galaktische Chroniken"
@@ -179,6 +183,7 @@ func _start_game() -> void:
         return
     world = GalaxyModel.generate(settings, empire)
     selected = 0
+    GalaxySystems.prepare(world)
     _show_galaxy()
 
 func _load_game() -> void:
@@ -190,6 +195,7 @@ func _load_game() -> void:
         _button("ZURÜCK", _show_menu)
         return
     world = loaded
+    GalaxySystems.prepare(world)
     settings = world["settings"].duplicate(true)
     empire = world["empire"].duplicate(true)
     selected = clampi(int(world.get("selected", 0)), 0, world["stars"].size() - 1)
@@ -197,74 +203,119 @@ func _load_game() -> void:
 
 func _show_galaxy() -> void:
     screen = "galaxy"
+    GalaxySystems.prepare(world)
     _clear()
     _title("GALAXIE / %s" % world["empire"]["name"], 29)
     status = _label("")
     _refresh_status()
-    var buttons := HBoxContainer.new()
-    root.add_child(buttons)
-    for spec in [["ZEIT +1", _advance], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
+    var bar := HBoxContainer.new()
+    root.add_child(bar)
+    for spec in [["ZEIT +1", _advance], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
         var button := Button.new()
         button.text = spec[0]
         button.pressed.connect(spec[1])
-        buttons.add_child(button)
+        bar.add_child(button)
+    if notice != "":
+        _label(notice)
+    var info := _label("Linksklick: Stern auswählen   •   Mausrad: Zoom   •   Erkundung deckt Systeme auf")
+    info.add_theme_font_size_override("font_size", 13)
     map_area = Control.new()
-    map_area.custom_minimum_size = Vector2(850, 490)
+    map_area.custom_minimum_size = Vector2(850, 510)
     map_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     map_area.draw.connect(_draw_map)
     map_area.gui_input.connect(_map_input)
     root.add_child(map_area)
     _show_selection()
-    if not bool(world["event_done"]) and int(world["tick"]) >= 3:
+    if str(world["pending_event"]) != "":
         _show_event()
 
 func _refresh_status() -> void:
     status.text = "Jahr %d  •  Credits %d  •  Forschung %d  •  %d Sternensysteme  •  %d KI-Reiche" % [int(world["tick"]) + 2200, int(world["credits"]), int(world["science"]), world["stars"].size(), world["ai"].size()]
 
+func _star_pos(star: Dictionary) -> Vector2:
+    return Vector2(430, 245) + map_offset + Vector2(float(star["x"]), float(star["y"])) * zoom
+
 func _draw_map() -> void:
-    var center := Vector2(430, 245)
-    var scale_factor := 0.65
     var palette := [Color("#f3d59a"), Color("#8dd0ff"), Color("#f19b80"), Color("#c7a8f2")]
+    var width := map_area.size.x
+    var height := map_area.size.y
+    map_area.draw_rect(Rect2(Vector2.ZERO, Vector2(width, height)), Color("#080e20"))
+    var seed := int(world["settings"]["seed"])
+    for i in range(140):
+        var x := float(posmod(i * 7919 + seed, 1009)) / 1009.0 * width
+        var y := float(posmod(i * 4861 + seed, 997)) / 997.0 * height
+        map_area.draw_circle(Vector2(x, y), 0.65 + float(i % 3) * 0.35, Color("#405575"))
     for star in world["stars"]:
-        var pos := center + Vector2(float(star["x"]), float(star["y"])) * scale_factor
-        var radius := 7.0 if int(star["id"]) == selected else 3.0 + float(star["resource"]) * 0.5
-        map_area.draw_circle(pos, radius + 3.0, Color("#3a4768"))
-        map_area.draw_circle(pos, radius, palette[int(star["kind"]) % palette.size()])
-        if int(star["owner"]) == 0:
-            map_area.draw_arc(pos, 12, 0, TAU, 24, GOLD, 2.0)
-        elif int(star["owner"]) > 0:
-            map_area.draw_arc(pos, 10, 0, TAU, 24, Color("#d4748b"), 1.5)
-        if int(star["id"]) == selected:
-            map_area.draw_arc(pos, 17, 0, TAU, 28, Color.WHITE, 1.0)
+        var pos := _star_pos(star)
+        var id := int(star["id"])
+        var known := world["known"].has(id)
+        var owner := int(star["owner"])
+        var radius := 7.0 if id == selected else 3.0 + float(star["resource"]) * 0.5
+        map_area.draw_circle(pos, radius + 5.0, Color("#182943", 0.75))
+        map_area.draw_circle(pos, radius, palette[int(star["kind"]) % palette.size()] if known else Color("#63738c"))
+        if owner == 0:
+            map_area.draw_arc(pos, 13, 0, TAU, 24, GOLD, 2.0)
+        elif known and owner > 0:
+            map_area.draw_arc(pos, 11, 0, TAU, 24, Color("#d4748b"), 1.5)
+        if id == selected:
+            map_area.draw_arc(pos, 19, 0, TAU, 32, Color.WHITE, 1.4)
+            map_area.draw_string(ThemeDB.fallback_font, pos + Vector2(12, -15), str(star["name"]) if known else "Unkartiert", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, WHITE)
+    for fleet in world["fleets"]:
+        if int(fleet["owner"]) == 0:
+            var loc := int(fleet["location"])
+            if loc >= 0 and loc < world["stars"].size():
+                var p := _star_pos(world["stars"][loc])
+                map_area.draw_colored_polygon(PackedVector2Array([p + Vector2(0, -15), p + Vector2(-7, -26), p + Vector2(7, -26)]), Color("#7ce3cc"))
 
 func _map_input(event: InputEvent) -> void:
-    if not (event is InputEventMouseButton) or not event.pressed or event.button_index != MOUSE_BUTTON_LEFT:
-        return
-    var center := Vector2(430, 245)
-    var best := 22.0
-    var found := -1
-    for star in world["stars"]:
-        var pos := center + Vector2(float(star["x"]), float(star["y"])) * 0.65
-        var distance := pos.distance_to(event.position)
-        if distance < best:
-            best = distance
-            found = int(star["id"])
-    if found >= 0:
-        selected = found
-        world["selected"] = selected
-        _show_galaxy()
+    if event is InputEventMouseButton:
+        if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
+            zoom = minf(1.6, zoom * 1.15)
+            map_area.queue_redraw()
+            return
+        if event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
+            zoom = maxf(0.3, zoom / 1.15)
+            map_area.queue_redraw()
+            return
+        if not event.pressed or event.button_index != MOUSE_BUTTON_LEFT:
+            return
+        var best := 22.0
+        var found := -1
+        for star in world["stars"]:
+            var distance := _star_pos(star).distance_to(event.position)
+            if distance < best:
+                best = distance
+                found = int(star["id"])
+        if found >= 0:
+            selected = found
+            world["selected"] = selected
+            notice = ""
+            _show_galaxy()
 
 func _show_selection() -> void:
     var star: Dictionary = world["stars"][selected]
-    _label("Ausgewählt: %s  •  Ressourcenstufe %s  •  %s" % [star["name"], star["resource"], "Bewohnbar" if star["habitable"] else "Unbewohnbar"])
-    if int(star["owner"]) == -1 and bool(star["habitable"]):
-        _button("KOLONISIEREN (50 Credits)", _colonize)
-    _label("Chronik: " + str(world["history"].back()))
+    var known := world["known"].has(selected)
+    var owner := int(star["owner"])
+    _label("SYSTEM: %s  •  %s" % [str(star["name"]) if known else "Unkartiert", GalaxySystems.empire_name(world, owner) if known and owner >= 0 else "Unbeansprucht / Unbekannt"])
+    if not known:
+        _label("Unbekannte Systeme müssen vor der Kolonisierung kartografiert werden.")
+        _button("ERKUNDEN", _explore)
+    else:
+        _label("Rohstoffstufe %d  •  %s" % [int(star["resource"]), "Bewohnbar" if bool(star["habitable"]) else "Unbewohnbar"])
+        if owner == -1 and bool(star["habitable"]):
+            _button("KOLONISIEREN (50 Credits)", _colonize)
+        if owner > 0:
+            _button("DIPLOMATIE MIT DIESEM REICH", func(): _diplomacy(owner))
+    _label("Letzter Chronikeintrag: " + str(world["history"].back()))
+
+func _explore() -> void:
+    notice = "System kartografiert (+4 Forschung)." if GalaxySystems.explore(world, selected) else "Außerhalb der Erkundungsreichweite (270)."
+    _show_galaxy()
 
 func _colonize() -> void:
     if int(world["credits"]) < 50:
         return
-    if int(world["stars"][selected]["owner"]) != -1 or not bool(world["stars"][selected]["habitable"]):
+    if not world["known"].has(selected) or int(world["stars"][selected]["owner"]) != -1 or not bool(world["stars"][selected]["habitable"]):
         return
     world["credits"] = int(world["credits"]) - 50
     world["stars"][selected]["owner"] = 0
@@ -272,28 +323,73 @@ func _colonize() -> void:
     _show_galaxy()
 
 func _advance() -> void:
-    GalaxyModel.advance(world)
+    GalaxySystems.tick(world)
+    notice = ""
     _show_galaxy()
 
 func _save() -> void:
     var ok := GalaxyModel.save_game(world)
     _label("Spielstand gespeichert." if ok else "Speichern fehlgeschlagen.")
 
+func _research() -> void:
+    notice = "Forschungsdurchbruch erzielt." if GalaxySystems.start_research(world) else "Nicht genügend Forschungspunkte."
+    _show_galaxy()
+
+func _fleet() -> void:
+    notice = "Flotte verstärkt (+5)." if GalaxySystems.build_fleet(world) else "65 Credits für den Flottenausbau benötigt."
+    _show_galaxy()
+
+func _chronicle() -> void:
+    screen = "chronicle"
+    _clear()
+    _title("GALAKTISCHE CHRONIK")
+    var history: Array = world["history"]
+    for i in range(maxi(0, history.size() - 35), history.size()):
+        _label("• " + str(history[i]))
+    _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
+
+func _diplomacy(rival_id: int = -1) -> void:
+    screen = "diplomacy"
+    _clear()
+    _title("DIPLOMATIE")
+    _label("Erkunde fremde Hauptwelten, um diplomatische Kontakte herzustellen.")
+    for rival in world["ai"]:
+        var id := int(rival["id"])
+        if rival_id != -1 and rival_id != id:
+            continue
+        if not world["contacts"].has(id):
+            continue
+        _label("%s  •  Beziehung: %d" % [rival["name"], int(world["relations"].get(str(id), 0))])
+        _button("GESCHENK SENDEN (-30 Credits)", func(): _diplomatic_choice(id, "gift"))
+        _button("HANDELSABKOMMEN", func(): _diplomatic_choice(id, "trade"))
+        _button("ULTIMATUM", func(): _diplomatic_choice(id, "threat"))
+    _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
+
+func _diplomatic_choice(id: int, action: String) -> void:
+    notice = GalaxySystems.diplomatic_action(world, id, action)
+    _show_galaxy()
+
 func _show_event() -> void:
     screen = "event"
     _clear()
-    _title("EREIGNIS / DAS VERLASSENE SIGNAL")
-    _label("Ein Forschungsschiff entdeckt ein uraltes Notsignal in einem benachbarten Sektor.")
-    _label("Deine Berater empfehlen, die Quelle sorgfältig zu untersuchen.")
-    _button("SIGNAL UNTERSUCHEN (+20 Forschung)", func(): _resolve_event(true))
-    _button("TECHNOLOGIE BERGEN (+30 Credits)", func(): _resolve_event(false))
-
-func _resolve_event(research: bool) -> void:
-    if research:
-        world["science"] = int(world["science"]) + 20
-        world["history"].append("Das Signal wurde wissenschaftlich untersucht.")
+    var kind := str(world["pending_event"])
+    if kind == "colonies":
+        _title("EREIGNIS / DER KOLONIALRAT")
+        _label("Die jüngsten Kolonien fordern eine neue politische und wirtschaftliche Ausrichtung.")
+        _label("Die Entscheidung wird langfristig in der Chronik vermerkt.")
+        _button("FORSCHUNG FÖRDERN (-20 Credits, +35 Forschung)", func(): _resolve_system_event(0))
+        _button("EXPORTE STÄRKEN (+30 Credits)", func(): _resolve_system_event(1))
+    elif kind == "market":
+        _title("EREIGNIS / SCHWANKUNGEN AM MARKT")
+        _label("Steigende Reserven lösen eine Debatte über die Zukunft des Reichshaushalts aus.")
+        _button("TECHNOLOGIEFONDS (-40 Credits, +45 Forschung)", func(): _resolve_system_event(0))
+        _button("RESERVEN VERKAUFEN (+20 Credits)", func(): _resolve_system_event(1))
     else:
-        world["credits"] = int(world["credits"]) + 30
-        world["history"].append("Die Technologie des Signals wurde verkauft.")
-    world["event_done"] = true
+        _title("EREIGNIS / DAS VERLASSENE SIGNAL")
+        _label("Ein Forschungsschiff entdeckt ein uraltes Notsignal in einem benachbarten Sektor.")
+        _button("SIGNAL UNTERSUCHEN (+20 Forschung)", func(): _resolve_system_event(0))
+        _button("TECHNOLOGIE BERGEN (+30 Credits)", func(): _resolve_system_event(1))
+
+func _resolve_system_event(option: int) -> void:
+    GalaxySystems.resolve_event(world, option)
     _show_galaxy()
