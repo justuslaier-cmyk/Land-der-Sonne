@@ -4,12 +4,12 @@ func _initialize() -> void:
     call_deferred("_capture")
 
 func _capture() -> void:
-    var packed: PackedScene = load("res://scenes/main.tscn")
+    var packed: PackedScene = load("res://scenes/galaxy.tscn")
     if packed == null:
         push_error("Could not load scene for screenshot")
         quit(1)
         return
-    var instance: Node2D = packed.instantiate()
+    var instance: Control = packed.instantiate()
     root.add_child(instance)
     for i in range(4):
         await process_frame
