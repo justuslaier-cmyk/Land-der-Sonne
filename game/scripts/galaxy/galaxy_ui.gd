@@ -249,7 +249,7 @@ func _draw_map() -> void:
     for star in world["stars"]:
         var pos := _star_pos(star)
         var id := int(star["id"])
-        var known := world["known"].has(id)
+        var known: bool = world["known"].has(id)
         var owner := int(star["owner"])
         var radius := 7.0 if id == selected else 3.0 + float(star["resource"]) * 0.5
         map_area.draw_circle(pos, radius + 5.0, Color("#182943", 0.75))
@@ -295,7 +295,7 @@ func _map_input(event: InputEvent) -> void:
 
 func _show_selection() -> void:
     var star: Dictionary = world["stars"][selected]
-    var known := world["known"].has(selected)
+    var known: bool = world["known"].has(selected)
     var owner := int(star["owner"])
     _label("SYSTEM: %s  •  %s" % [str(star["name"]) if known else "Unkartiert", GalaxySystems.empire_name(world, owner) if known and owner >= 0 else "Unbeansprucht / Unbekannt"])
     if not known:
