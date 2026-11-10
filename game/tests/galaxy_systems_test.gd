@@ -2,6 +2,7 @@ extends SceneTree
 
 func _initialize() -> void:
     var config := GalaxyModel.defaults()
+    config["seed"] = 161803
     config["size"] = 80
     config["ai_count"] = 4
     var world := GalaxyModel.generate(config, GalaxyModel.empire_defaults())
