@@ -328,6 +328,10 @@ func _draw_map() -> void:
         var x := float(posmod(i * 7919 + seed, 1009)) / 1009.0 * width
         var y := float(posmod(i * 4861 + seed, 997)) / 997.0 * height
         map_area.draw_circle(Vector2(x, y), 0.65 + float(i % 3) * 0.35, Color("#405575"))
+    for cloud in range(12):
+        var center := Vector2(float(posmod(seed + cloud * 373, 997)) / 997.0 * width, float(posmod(seed / 3 + cloud * 659, 991)) / 991.0 * height)
+        var tint := Color("#34447c") if cloud % 2 == 0 else Color("#31596d")
+        map_area.draw_circle(center, 38.0 + float(cloud % 4) * 16.0, Color(tint, 0.055))
     for star in world["stars"]:
         var pos := _star_pos(star)
         if pos.x < -35.0 or pos.y < -35.0 or pos.x > width + 35.0 or pos.y > height + 35.0:
@@ -349,6 +353,13 @@ func _draw_map() -> void:
         if id == selected:
             map_area.draw_arc(pos, 19, 0, TAU, 32, Color.WHITE, 1.4)
             map_area.draw_string(ThemeDB.fallback_font, pos + Vector2(12, -15), str(star["name"]) if known else "Unkartiert", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, WHITE)
+    for rival_fleet in world.get("ai_fleets", []):
+        var rival_loc := int(rival_fleet["location"])
+        if rival_loc < 0 or rival_loc >= world["stars"].size() or not world["known"].has(rival_loc):
+            continue
+        var rp := _star_pos(world["stars"][rival_loc])
+        map_area.draw_colored_polygon(PackedVector2Array([rp + Vector2(0, 14), rp + Vector2(-6, 24), rp + Vector2(6, 24)]), Color("#e991b3"))
+        map_area.draw_line(rp + Vector2(-3, 20), rp + Vector2(3, 20), Color("#ffd4e0"), 1.0)
     for fleet in world["fleets"]:
         if int(fleet["owner"]) == 0:
             var loc := int(fleet["location"])
@@ -436,6 +447,10 @@ func _show_selection() -> void:
     var fleet: Dictionary = world["fleets"][0]
     _side_label("FLOTTE / Stärke %d" % int(fleet["strength"]), true)
     _side_label("Reisezeit: %d" % int(fleet["eta"]))
+    _side_label("GALAKTISCHE AKTIVITÄT", true)
+    var activity: Array = world.get("ai_activity", [])
+    if not activity.is_empty():
+        _side_label(str(activity.back()["text"]))
     _side_label("CHRONIK", true)
     var history: Array = world["history"]
     _side_label(str(history.back()) if not history.is_empty() else "Keine Einträge")
