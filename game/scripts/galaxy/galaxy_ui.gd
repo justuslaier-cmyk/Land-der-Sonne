@@ -450,6 +450,12 @@ func _chronicle() -> void:
     screen = "chronicle"
     _clear()
     _title("GALAKTISCHE CHRONIK")
+    GalaxyLore.prepare(world)
+    var lore: Dictionary = world["ancient_history"]
+    if not lore["discovered"].is_empty():
+        _label("ARCHÄOLOGISCHES ARCHIV / " + str(lore["civilization"]))
+        _label("Geschätztes Alter: %d Jahre  •  Fundorte: %d" % [int(lore["age"]), lore["discovered"].size()])
+        _label("Die Vergangenheit wird aus tatsächlichen Funden und Entscheidungen rekonstruiert.")
     var history: Array = world["history"]
     for i in range(maxi(0, history.size() - 35), history.size()):
         _label("• " + str(history[i]))
@@ -482,7 +488,16 @@ func _show_event() -> void:
     _clear()
     var kind := str(world["pending_event"])
     _illustration(kind)
-    if kind == "colonies":
+    if kind in ["ancient_signal", "ancient_echo"]:
+        _title("EREIGNIS / " + GalaxyLore.event_title(kind))
+        _label(GalaxyLore.event_text(world, kind))
+        if kind == "ancient_signal":
+            _button("FUNDORT SICHERN UND ERFORSCHEN (+12 Forschung)", func(): _resolve_system_event(0))
+            _button("RELIKTE BERGEN (+20 Credits, -3 Stabilität)", func(): _resolve_system_event(1))
+        else:
+            _button("VERGESSENE STERNKARTEN ENTSCHLÜSSELN (+Forschung)", func(): _resolve_system_event(0))
+            _button("ARCHIV VERKAUFEN (+55 Credits, -8 Stabilität)", func(): _resolve_system_event(1))
+    elif kind == "colonies":
         _title("EREIGNIS / DER KOLONIALRAT")
         _label("Die jüngsten Kolonien fordern eine neue politische und wirtschaftliche Ausrichtung.")
         _label("Die Entscheidung wird langfristig in der Chronik vermerkt.")
