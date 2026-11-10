@@ -24,6 +24,8 @@ static func prepare(world: Dictionary) -> void:
         world["ai_treasury"] = {}
     if not world.has("industry"):
         world["industry"] = 0
+    if not world.has("ambient_event_log"):
+        world["ambient_event_log"] = []
     GalaxyLore.prepare(world)
 
 static func distance(a: Dictionary, b: Dictionary) -> float:
@@ -128,6 +130,7 @@ static func tick(world: Dictionary) -> void:
     prepare(world)
     GalaxyModel.advance(world)
     GalaxyLore.tick(world)
+    _ambient_event(world)
     for fleet in world["fleets"]:
         if int(fleet["destination"]) >= 0:
             fleet["eta"] = int(fleet["eta"]) - 1
@@ -176,6 +179,30 @@ static func tick(world: Dictionary) -> void:
             world["pending_event"] = "market"
         else:
             world["pending_event"] = "signal"
+
+# Small incidents are automatic; only consequential stories interrupt the player.
+static func _ambient_event(world: Dictionary) -> void:
+    var year := int(world["tick"])
+    var frequency := int(world["settings"].get("events", 50))
+    if frequency <= 0 or year == 0:
+        return
+    var rng := RandomNumberGenerator.new()
+    rng.seed = int(world["settings"]["seed"]) * 151 + year * 10007
+    if rng.randi_range(1, 100) > clampi(frequency / 4, 1, 25):
+        return
+    var incidents := [
+        ["Ein ungewöhnlicher Meteorschauer liefert seltene Mineralien.", "alloys", 4],
+        ["Ein stiller Sonnensturm beschädigt Handelsrelais.", "credits", -7],
+        ["Forschende registrieren einen rätselhaften Gravitationsimpuls.", "science", 6],
+        ["Eine kurze Kommunikationsstörung verunsichert die Kolonien.", "stability", -2],
+        ["Ein neuer Handelsweg belebt die Randsektoren.", "credits", 9],
+        ["Die Messung einer fremden Radiowelle liefert neue Erkenntnisse.", "science", 4]
+    ]
+    var incident: Array = incidents[rng.randi_range(0, incidents.size() - 1)]
+    var field: String = incident[1]
+    world[field] = maxi(0, int(world.get(field, 0)) + int(incident[2]))
+    world["history"].append(str(incident[0]))
+    world["ambient_event_log"].append({"year": year, "text": incident[0], "effect": incident[2], "resource": field})
 
 static func resolve_event(world: Dictionary, option: int) -> void:
     prepare(world)
