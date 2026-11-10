@@ -282,7 +282,7 @@ func _draw_map() -> void:
             map_area.draw_circle(pos, radius + 8.0, Color("#5a9bd1", 0.13))
         if known and int(star["kind"]) == 2:
             map_area.draw_circle(pos, radius + 7.0, Color("#dd735d", 0.14))
-        map_area.draw_circle(pos, radius, palette[int(star["kind"]) % palette.size()] if known else Color("#63738c"))
+        _draw_pixel_star(pos, radius, palette[int(star["kind"]) % palette.size()] if known else Color("#63738c"), id)
         if owner == 0:
             map_area.draw_arc(pos, 13, 0, TAU, 24, GOLD, 2.0)
         elif known and owner > 0:
@@ -296,6 +296,19 @@ func _draw_map() -> void:
             if loc >= 0 and loc < world["stars"].size():
                 var p := _star_pos(world["stars"][loc])
                 map_area.draw_colored_polygon(PackedVector2Array([p + Vector2(0, -15), p + Vector2(-7, -26), p + Vector2(7, -26)]), Color("#7ce3cc"))
+
+func _draw_pixel_star(pos: Vector2, radius: float, tint: Color, star_id: int) -> void:
+    var pixel := maxf(1.5, radius / 3.5)
+    var grid := 5
+    for yy in range(-grid, grid + 1):
+        for xx in range(-grid, grid + 1):
+            var d := Vector2(float(xx), float(yy)).length()
+            if d > 4.4:
+                continue
+            var variation := float(posmod(xx * 13 + yy * 29 + star_id * 7, 9)) / 30.0
+            var light := 1.15 - d * 0.12 + variation
+            var color := tint.lightened(clampf(light - 1.0, 0.0, 0.55)) if light >= 1.0 else tint.darkened(clampf(1.0 - light, 0.0, 0.65))
+            map_area.draw_rect(Rect2(pos + Vector2(float(xx), float(yy)) * pixel - Vector2.ONE * pixel * 0.5, Vector2.ONE * pixel), color)
 
 func _map_input(event: InputEvent) -> void:
     if event is InputEventMouseMotion and map_dragging:
@@ -672,7 +685,7 @@ func _draw_star_system(canvas: Control, system: Dictionary) -> void:
         canvas.draw_line(Vector2(x, 45), Vector2(x, h - 40), Color("#31465d", 0.24), 1.0)
         if bool(planet["rings"]):
             canvas.draw_arc(p, radius + 9.0, -0.5, PI + 0.5, 28, Color("#c9bb9a"), 3.0)
-        canvas.draw_circle(p, radius, colors[int(planet["type_id"])])
+        _draw_pixel_planet(canvas, p, radius, colors[int(planet["type_id"])], int(planet["orbit"]) + selected * 11)
         if i == selected_planet:
             canvas.draw_arc(p, radius + 14.0, 0.0, TAU, 40, GOLD, 2.0)
         canvas.draw_arc(p, radius, -PI * 0.4, PI * 0.65, 24, Color("#e2e5f2", 0.3), 2.0)
@@ -803,9 +816,24 @@ func _draw_planet_preview(canvas: Control) -> void:
     var colors := [Color("#ae9981"), Color("#cba676"), Color("#9bc7df"), Color("#3c91b5"), Color("#c9a36d"), Color("#d87e5e"), Color("#69a980"), Color("#afc4d4")]
     var center := Vector2(w * 0.28, 90)
     canvas.draw_circle(center + Vector2(9, 0), 72, Color("#213853"))
-    canvas.draw_circle(center, 65, colors[int(target["type_id"])])
+    _draw_pixel_planet(canvas, center, 65.0, colors[int(target["type_id"])], selected + int(target["orbit"]) * 17)
     canvas.draw_circle(center + Vector2(-22, -20), 17, Color("#dce8e7", 0.15))
     canvas.draw_circle(center + Vector2(17, 24), 25, Color("#182d4a", 0.16))
     canvas.draw_string(ThemeDB.fallback_font, Vector2(w * 0.48, 60), str(target["type"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 23, GOLD)
     canvas.draw_string(ThemeDB.fallback_font, Vector2(w * 0.48, 95), "%d Planeten  /  %d Asteroidengürtel" % [planets.size(), int(system["asteroids"])], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, WHITE)
     canvas.draw_string(ThemeDB.fallback_font, Vector2(w * 0.48, 125), "Sternklasse: " + str(system["star_class"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, WHITE)
+
+func _draw_pixel_planet(canvas: Control, center: Vector2, radius: float, tint: Color, variation_seed: int) -> void:
+    var cell := maxf(2.0, radius / 13.0)
+    var cells := int(ceil(radius / cell))
+    for yy in range(-cells, cells + 1):
+        for xx in range(-cells, cells + 1):
+            var delta := Vector2(float(xx), float(yy)) * cell
+            if delta.length_squared() > radius * radius:
+                continue
+            var stripe := float(posmod(xx * 17 + yy * 31 + variation_seed * 13, 19)) / 19.0
+            var shade := clampf(0.55 + (float(-xx) / float(maxi(1, cells))) * 0.3 + stripe * 0.25, 0.15, 1.0)
+            var color := tint.darkened(1.0 - shade)
+            if posmod(xx * 7 + yy * 11 + variation_seed, 13) < 3:
+                color = color.lightened(0.17)
+            canvas.draw_rect(Rect2(center + delta - Vector2.ONE * cell * 0.5, Vector2.ONE * cell), color)
