@@ -572,15 +572,18 @@ func _show_event() -> void:
     _clear()
     var kind := str(world["pending_event"])
     _illustration(kind)
-    if kind in ["ancient_signal", "ancient_echo"]:
+    if kind in ["ancient_signal", "ancient_echo", "ancient_awakening"]:
         _title("EREIGNIS / " + GalaxyLore.event_title(kind))
         _label(GalaxyLore.event_text(world, kind))
         if kind == "ancient_signal":
             _button("FUNDORT SICHERN UND ERFORSCHEN (+12 Forschung)", func(): _resolve_system_event(0))
             _button("RELIKTE BERGEN (+20 Credits, -3 Stabilität)", func(): _resolve_system_event(1))
-        else:
+        elif kind == "ancient_echo":
             _button("VERGESSENE STERNKARTEN ENTSCHLÜSSELN (+Forschung)", func(): _resolve_system_event(0))
             _button("ARCHIV VERKAUFEN (+55 Credits, -8 Stabilität)", func(): _resolve_system_event(1))
+        else:
+            _button("DAS ARCHIV BEWAHREN (+65 Forschung, +8 Stabilität)", func(): _resolve_system_event(0))
+            _button("DIE MASCHINEN AUSSCHLACHTEN (+35 Legierungen, +60 Credits, -12 Stabilität)", func(): _resolve_system_event(1))
     elif kind == "political_crisis":
         _title("EREIGNIS / AUFSTAND IN DEN KOLONIEN")
         _label("Die Stabilität des Reiches ist eingebrochen. Demonstrationen und Versorgungsengpässe bedrohen den Zusammenhalt. Der Rat verlangt eine Entscheidung.")
@@ -628,7 +631,7 @@ func _draw_illustration(canvas: Control, kind: String) -> void:
         canvas.draw_arc(Vector2(width * 0.76, 110), 112, -0.6, 2.4, 90, Color("#d3b47c", 0.8), 4.0)
         canvas.draw_circle(Vector2(width * 0.21, 80), 16, Color("#e9c780"))
     elif kind in ["ancient_signal", "ancient_echo"]:
-        var glow := Color("#58b3c1") if kind == "ancient_signal" else Color("#ba78d8")
+        var glow := Color("#58b3c1") if kind == "ancient_signal" else Color("#edbd7b") if kind == "ancient_awakening" else Color("#ba78d8")
         canvas.draw_circle(Vector2(width * 0.73, 100), 100, Color(glow, 0.08))
         canvas.draw_circle(Vector2(width * 0.73, 100), 72, Color("#26334c"))
         for i in range(8):
@@ -637,7 +640,7 @@ func _draw_illustration(canvas: Control, kind: String) -> void:
             canvas.draw_rect(Rect2(x, 165 - height, 13, height), Color("#37485f"))
             canvas.draw_rect(Rect2(x + 3, 165 - height + 6, 7, 3), glow)
         canvas.draw_arc(Vector2(width * 0.73, 96), 92, 0.0, TAU, 80, Color(glow, 0.6), 2.0)
-        if kind == "ancient_echo":
+        if kind in ["ancient_echo", "ancient_awakening"]:
             for i in range(5):
                 canvas.draw_arc(Vector2(width * 0.73, 96), 22 + float(i) * 19, -0.9, 1.4, 36, Color(glow, 0.2 + float(i) * 0.1), 2.0)
         else:
