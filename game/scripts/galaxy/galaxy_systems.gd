@@ -156,21 +156,7 @@ static func tick(world: Dictionary) -> void:
             if int(star["owner"]) == id:
                 owned += 1
         world["ai_treasury"][key] = int(world["ai_treasury"].get(key, 50)) + owned * 4
-        if int(world["tick"]) % 6 == id % 6 and int(world["ai_treasury"][key]) >= 45:
-            var capital: Dictionary = world["stars"][int(rival["capital"])]
-            var candidate := -1
-            var closest := 999999.0
-            for star in world["stars"]:
-                if int(star["owner"]) != -1 or not bool(star["habitable"]):
-                    continue
-                var d := distance(capital, star)
-                if d < closest and d < 150.0:
-                    closest = d
-                    candidate = int(star["id"])
-            if candidate >= 0:
-                world["stars"][candidate]["owner"] = id
-                world["ai_treasury"][key] = int(world["ai_treasury"][key]) - 45
-                world["history"].append("%s gründet eine Kolonie auf %s." % [rival["name"], world["stars"][candidate]["name"]])
+    # Rival expansion is handled by GalaxyAI to avoid duplicate claims and costs.
     # Periodic events are tied to actual simulated conditions and a deterministic cadence.
     if str(world["pending_event"]) == "" and int(world["tick"]) > 3 and int(world["tick"]) % 7 == 0:
         if colonies >= 2:
