@@ -56,6 +56,7 @@ func _toggle_pause() -> void:
 
 func _set_speed(speed: int) -> void:
     simulation_speed = speed
+    world["simulation_speed"] = speed
     simulation_paused = false
     _refresh_time_status()
 
@@ -236,6 +237,8 @@ func _start_game() -> void:
     GalaxyStrategy.prepare(world)
     _ensure_home_colony()
     simulation_elapsed = 0.0
+    simulation_speed = 1
+    world["simulation_speed"] = 1
     simulation_paused = false
     _show_galaxy()
 
@@ -254,6 +257,7 @@ func _load_game() -> void:
     empire = world["empire"].duplicate(true)
     selected = clampi(int(world.get("selected", 0)), 0, world["stars"].size() - 1)
     simulation_elapsed = 0.0
+    simulation_speed = clampi(int(world.get("simulation_speed", 1)), 1, 8)
     simulation_paused = true
     _show_galaxy()
 
