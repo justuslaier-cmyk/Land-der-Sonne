@@ -41,6 +41,8 @@ jobs:
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_strategy_test.gd
       - name: Test procedural star systems
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_celestials_test.gd
+      - name: Test planet economy
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_planet_economy_test.gd
       - name: Load main scene
         run: godot --headless --path game --quit-after 10
 
