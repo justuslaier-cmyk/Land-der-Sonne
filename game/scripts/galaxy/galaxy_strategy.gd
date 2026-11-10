@@ -4,6 +4,8 @@ class_name GalaxyStrategy
 # Pure, deterministic strategic rules. Existing saves are upgraded lazily.
 static func prepare(world: Dictionary) -> void:
     GalaxySystems.prepare(world)
+    if not world.has("planet_colonies"):
+        world["planet_colonies"] = {}
     if not world.has("buildings"):
         world["buildings"] = {}
     if not world.has("wars"):
@@ -23,6 +25,56 @@ static func prepare(world: Dictionary) -> void:
         for rival in world["ai"]:
             fleets.append({"owner": int(rival["id"]), "location": int(rival["capital"]), "strength": 10 + int(rival["temperament"]) * 3})
         world["ai_fleets"] = fleets
+
+# Colonies are keyed by system and orbital index. Old system-wide buildings remain
+# supported for backwards-compatible saves, but new construction is planet-specific.
+static func planet_key(star_id: int, planet_index: int) -> String:
+    return "%d:%d" % [star_id, planet_index]
+
+static func planet_colony(world: Dictionary, star_id: int, planet_index: int) -> Dictionary:
+    prepare(world)
+    return world["planet_colonies"].get(planet_key(star_id, planet_index), {})
+
+static func settle_planet(world: Dictionary, star_id: int, planet_index: int) -> bool:
+    prepare(world)
+    if star_id < 0 or star_id >= world["stars"].size():
+        return false
+    var star: Dictionary = world["stars"][star_id]
+    if int(star["owner"]) != 0:
+        return false
+    var system := GalaxyCelestials.generate(int(world["settings"]["seed"]), star)
+    if planet_index < 0 or planet_index >= system["planets"].size():
+        return false
+    var planet: Dictionary = system["planets"][planet_index]
+    if not bool(planet["habitable"]):
+        return false
+    var key := planet_key(star_id, planet_index)
+    if world["planet_colonies"].has(key) or int(world["credits"]) < 50:
+        return false
+    world["credits"] = int(world["credits"]) - 50
+    world["planet_colonies"][key] = {"population": 1, "buildings": {}}
+    world["history"].append("Kolonie auf %s gegründet." % str(planet["name"]))
+    return true
+
+static func construct_planet(world: Dictionary, star_id: int, planet_index: int, kind: String) -> bool:
+    prepare(world)
+    if not ["mine", "lab", "factory", "fort"].has(kind):
+        return false
+    if star_id < 0 or star_id >= world["stars"].size() or int(world["stars"][star_id]["owner"]) != 0:
+        return false
+    var key := planet_key(star_id, planet_index)
+    if not world["planet_colonies"].has(key):
+        return false
+    var colony: Dictionary = world["planet_colonies"][key]
+    var built: Dictionary = colony.get("buildings", {})
+    if int(built.get(kind, 0)) >= 3 or int(world["credits"]) < building_cost(kind):
+        return false
+    world["credits"] = int(world["credits"]) - building_cost(kind)
+    built[kind] = int(built.get(kind, 0)) + 1
+    colony["buildings"] = built
+    world["planet_colonies"][key] = colony
+    world["history"].append("%s auf Planet %d in %s errichtet." % [kind, planet_index + 1, world["stars"][star_id]["name"]])
+    return true
 
 static func building_cost(kind: String) -> int:
     match kind:
@@ -143,6 +195,23 @@ static func tick(world: Dictionary) -> void:
         credits_bonus += int(entry.get("mine", 0)) * (2 + int(world["stars"][star_id]["resource"]))
         science_bonus += int(entry.get("lab", 0)) * 4
         alloy_bonus += int(entry.get("factory", 0)) * 3
+    for key in world["planet_colonies"].keys():
+        var parts := str(key).split(":")
+        if parts.size() != 2:
+            continue
+        var sid := int(parts[0])
+        if sid < 0 or sid >= world["stars"].size() or int(world["stars"][sid]["owner"]) != 0:
+            continue
+        var colony: Dictionary = world["planet_colonies"][key]
+        var built: Dictionary = colony.get("buildings", {})
+        var planets: Array = GalaxyCelestials.generate(int(world["settings"]["seed"]), world["stars"][sid])["planets"]
+        var pid := int(parts[1])
+        if pid < 0 or pid >= planets.size():
+            continue
+        var resources := int(planets[pid]["resources"])
+        credits_bonus += int(built.get("mine", 0)) * (2 + resources)
+        science_bonus += int(built.get("lab", 0)) * 4
+        alloy_bonus += int(built.get("factory", 0)) * 3
     var focus := int(world["policies"]["focus"])
     var tax := int(world["policies"]["tax"])
     world["credits"] = int(world["credits"]) + credits_bonus + (tax - 1) * 5 + world["trade_pacts"].size() * 6
