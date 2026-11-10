@@ -1,10 +1,12 @@
 extends SceneTree
 
 func _initialize() -> void:
-    var world := GalaxyModel.generate(GalaxyModel.defaults(), GalaxyModel.empire_defaults())
+    var settings := GalaxyModel.defaults()
+    settings["seed"] = 271828
+    var world := GalaxyModel.generate(settings, GalaxyModel.empire_defaults())
     GalaxySystems.prepare(world)
     var original: Dictionary = world["ancient_history"].duplicate(true)
-    var other := GalaxyModel.generate(GalaxyModel.defaults(), GalaxyModel.empire_defaults())
+    var other := GalaxyModel.generate(settings, GalaxyModel.empire_defaults())
     GalaxySystems.prepare(other)
     if original != other["ancient_history"]:
         _fail("Ancient history not deterministic")
