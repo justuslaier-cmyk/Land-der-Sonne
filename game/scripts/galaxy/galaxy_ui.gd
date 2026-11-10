@@ -16,6 +16,9 @@ var notice: String = ""
 var panel: String = "system"
 var zoom: float = 0.65
 var map_offset: Vector2 = Vector2.ZERO
+var map_dragging := false
+var drag_origin := Vector2.ZERO
+var map_offset_origin := Vector2.ZERO
 
 func _ready() -> void:
     get_window().title = "Land der Sonne | Galaktische Chroniken"
@@ -218,7 +221,7 @@ func _show_galaxy() -> void:
         bar.add_child(button)
     if notice != "":
         _label(notice)
-    var info := _label("Linksklick: Stern auswählen   •   Mausrad: Zoom   •   Erkundung deckt Systeme auf")
+    var info := _label("Linksklick: System wählen   •   Rechte Maustaste ziehen: Kamera   •   Mausrad: Zoom zum Cursor")
     info.add_theme_font_size_override("font_size", 13)
     map_area = Control.new()
     map_area.custom_minimum_size = Vector2(850, 510)
@@ -234,7 +237,7 @@ func _refresh_status() -> void:
     status.text = "Jahr %d  •  Credits %d  •  Forschung %d  •  Legierungen %d  •  Stabilität %d%%  •  %d Systeme  •  %d KI-Reiche" % [int(world["tick"]) + 2200, int(world["credits"]), int(world["science"]), int(world["alloys"]), int(world["stability"]), world["stars"].size(), world["ai"].size()]
 
 func _star_pos(star: Dictionary) -> Vector2:
-    return Vector2(430, 245) + map_offset + Vector2(float(star["x"]), float(star["y"])) * zoom
+    return map_area.size * 0.5 + map_offset + Vector2(float(star["x"]), float(star["y"])) * zoom
 
 func _draw_map() -> void:
     var palette := [Color("#f3d59a"), Color("#8dd0ff"), Color("#f19b80"), Color("#c7a8f2")]
@@ -248,11 +251,17 @@ func _draw_map() -> void:
         map_area.draw_circle(Vector2(x, y), 0.65 + float(i % 3) * 0.35, Color("#405575"))
     for star in world["stars"]:
         var pos := _star_pos(star)
+        if pos.x < -35.0 or pos.y < -35.0 or pos.x > width + 35.0 or pos.y > height + 35.0:
+            continue
         var id := int(star["id"])
         var known: bool = world["known"].has(id)
         var owner := int(star["owner"])
-        var radius := 7.0 if id == selected else 3.0 + float(star["resource"]) * 0.5
+        var radius := 7.0 if id == selected else (4.0 + float(int(star["kind"]) % 4) * 1.0) * sqrt(zoom / 0.65)
         map_area.draw_circle(pos, radius + 5.0, Color("#182943", 0.75))
+        if known and int(star["kind"]) == 1:
+            map_area.draw_circle(pos, radius + 8.0, Color("#5a9bd1", 0.13))
+        if known and int(star["kind"]) == 2:
+            map_area.draw_circle(pos, radius + 7.0, Color("#dd735d", 0.14))
         map_area.draw_circle(pos, radius, palette[int(star["kind"]) % palette.size()] if known else Color("#63738c"))
         if owner == 0:
             map_area.draw_arc(pos, 13, 0, TAU, 24, GOLD, 2.0)
@@ -269,14 +278,24 @@ func _draw_map() -> void:
                 map_area.draw_colored_polygon(PackedVector2Array([p + Vector2(0, -15), p + Vector2(-7, -26), p + Vector2(7, -26)]), Color("#7ce3cc"))
 
 func _map_input(event: InputEvent) -> void:
+    if event is InputEventMouseMotion and map_dragging:
+        map_offset = map_offset_origin + event.position - drag_origin
+        map_area.queue_redraw()
+        return
     if event is InputEventMouseButton:
-        if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
-            zoom = minf(1.6, zoom * 1.15)
-            map_area.queue_redraw()
+        if event.button_index == MOUSE_BUTTON_RIGHT:
+            map_dragging = event.pressed
+            if event.pressed:
+                drag_origin = event.position
+                map_offset_origin = map_offset
             return
-        if event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
-            zoom = maxf(0.3, zoom / 1.15)
-            map_area.queue_redraw()
+        if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+            if event.pressed:
+                var previous := zoom
+                zoom = clampf(zoom * (1.13 if event.button_index == MOUSE_BUTTON_WHEEL_UP else 1.0 / 1.13), 0.25, 3.0)
+                var center := map_area.size * 0.5
+                map_offset = event.position - center - (event.position - center - map_offset) * (zoom / previous)
+                map_area.queue_redraw()
             return
         if not event.pressed or event.button_index != MOUSE_BUTTON_LEFT:
             return
@@ -303,6 +322,7 @@ func _show_selection() -> void:
         _button("ERKUNDEN", _explore)
     else:
         _label("Rohstoffstufe %d  •  %s" % [int(star["resource"]), "Bewohnbar" if bool(star["habitable"]) else "Unbewohnbar"])
+        _button("STERNSYSTEM ANSEHEN", _show_star_system)
         if int(world["fleets"][0]["location"]) != selected:
             _button("FLOTTE HIERHER SCHICKEN", _move_fleet)
         if owner == 0:
@@ -522,3 +542,50 @@ func _war(id: int) -> void:
 func _attack() -> void:
     notice = GalaxyStrategy.attack(world, selected)
     _show_galaxy()
+
+func _show_star_system() -> void:
+    screen = "star_system"
+    _clear()
+    var star: Dictionary = world["stars"][selected]
+    var system := GalaxyCelestials.generate(int(world["settings"]["seed"]), star)
+    _title("STERNSYSTEM / " + str(star["name"]))
+    _label("Sternklasse: %s  •  Oberflächentemperatur: %d K" % [system["star_class"], int(system["temperature"])])
+    _label("%d Planeten  •  %d Asteroidengürtel  •  %d Kometen" % [system["planets"].size(), int(system["asteroids"]), int(system["comets"])])
+    var canvas := Control.new()
+    canvas.custom_minimum_size = Vector2(950, 320)
+    canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    canvas.draw.connect(func(): _draw_star_system(canvas, system))
+    root.add_child(canvas)
+    for planet in system["planets"]:
+        _label("%s  •  %s  •  %d Monde  •  Rohstoffe %d%s" % [planet["name"], planet["type"], planet["moons"].size(), int(planet["resources"]), "  •  Bewohnbar" if bool(planet["habitable"]) else ""])
+    _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
+
+func _draw_star_system(canvas: Control, system: Dictionary) -> void:
+    var w := canvas.size.x
+    var h := canvas.size.y
+    canvas.draw_rect(Rect2(0, 0, w, h), Color("#081324"))
+    var seed := int(world["settings"]["seed"]) + selected * 77
+    for i in range(100):
+        var p := Vector2(float(posmod(seed + i * 1823, 997)) / 997.0 * w, float(posmod(seed + i * 1193, 313)) / 313.0 * h)
+        canvas.draw_rect(Rect2(p, Vector2.ONE * (1 if i % 3 else 2)), Color("#7088a7", 0.45))
+    var star_colors := [Color("#e9c57d"), Color("#7acaff"), Color("#e36e59"), Color("#e4eaf2")]
+    var origin := Vector2(76, h * 0.5)
+    canvas.draw_circle(origin, 36, star_colors[int(world["stars"][selected]["kind"]) % 4])
+    canvas.draw_circle(origin, 44, Color(star_colors[int(world["stars"][selected]["kind"]) % 4], 0.13))
+    var planets: Array = system["planets"]
+    var step := (w - 180.0) / float(maxi(1, planets.size()))
+    var colors := [Color("#ad9e86"), Color("#c89e69"), Color("#a8d7ec"), Color("#2b9bb4"), Color("#c8a267"), Color("#e57948"), Color("#4aab75"), Color("#b4c5d6")]
+    for i in range(planets.size()):
+        var planet: Dictionary = planets[i]
+        var x := 150.0 + float(i) * step
+        var y := h * 0.5 + sin(float(i) * 2.4) * 55.0
+        var p := Vector2(x, y)
+        var radius := float(planet["size"]) + (7.0 if int(planet["type_id"]) == 1 else 0.0)
+        canvas.draw_line(Vector2(x, 45), Vector2(x, h - 40), Color("#31465d", 0.24), 1.0)
+        if bool(planet["rings"]):
+            canvas.draw_arc(p, radius + 9.0, -0.5, PI + 0.5, 28, Color("#c9bb9a"), 3.0)
+        canvas.draw_circle(p, radius, colors[int(planet["type_id"])])
+        canvas.draw_arc(p, radius, -PI * 0.4, PI * 0.65, 24, Color("#e2e5f2", 0.3), 2.0)
+        for j in range(planet["moons"].size()):
+            canvas.draw_circle(p + Vector2(radius + 11 + j * 8, -radius - 8 + j * 8), 3.0, Color("#a6a9b8"))
+        canvas.draw_string(ThemeDB.fallback_font, p + Vector2(-10, radius + 25), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, WHITE)
