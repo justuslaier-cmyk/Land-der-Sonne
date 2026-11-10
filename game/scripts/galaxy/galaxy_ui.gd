@@ -146,8 +146,7 @@ func _show_settings() -> void:
     screen = "settings"
     _clear()
     _title("01 / GALAXIE KONFIGURIEREN")
-    _label("Jeder Seed erzeugt eine reproduzierbare Galaxie.")
-    _spin("Galaxie-Seed", "seed", 1, 2147483647)
+    _label("Jedes neue Spiel erschafft automatisch eine einzigartige Zufallsgalaxie.")
     _spin("Sternensysteme", "size", 20, 250, 10)
     _spin("KI-Reiche", "ai_count", 0, 20)
     _choice("Galaxieform", ["Spiralgalaxie", "Elliptisch", "Ring"], settings, "shape")
@@ -181,7 +180,7 @@ func _show_review() -> void:
     _title("03 / DEIN UNIVERSUM")
     _label("Reich: %s  |  Spezies: %s" % [empire["name"], empire["species"]])
     _label("Heimat: %s  |  Systeme: %s  |  KI-Reiche: %s" % [empire["homeworld"], settings["size"], settings["ai_count"]])
-    _label("Seed: %s" % settings["seed"])
+    _label("Die Galaxie wird beim Spielstart zufällig erzeugt.")
     _species_gallery(true)
     _ship_gallery(true)
     var error := GalaxyModel.validate(settings, empire)
@@ -194,6 +193,7 @@ func _show_review() -> void:
 func _start_game() -> void:
     if GalaxyModel.validate(settings, empire) != "":
         return
+    settings["seed"] = 0
     world = GalaxyModel.generate(settings, empire)
     selected = 0
     GalaxyStrategy.prepare(world)
