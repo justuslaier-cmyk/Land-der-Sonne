@@ -28,6 +28,24 @@ func _initialize() -> void:
     if total_owned <= 3:
         _fail("AI empires never expanded")
         return
+    world["contacts"].append(1)
+    world["relations"]["1"] = 40
+    if not GalaxyStrategy.propose_non_aggression(world, 1):
+        _fail("Non-aggression diplomacy failed")
+        return
+    if not GalaxyStrategy.declare_war(world, 1):
+        _fail("War declaration failed")
+        return
+    world["credits"] = 100
+    if not GalaxyStrategy.offer_peace(world, 1):
+        _fail("Peace negotiation failed")
+        return
+    world["pending_event"] = "political_crisis"
+    world["stability"] = 12
+    GalaxySystems.resolve_event(world, 0)
+    if int(world["stability"]) != 34 or str(world["pending_event"]) != "":
+        _fail("Political crisis resolution failed")
+        return
     if not GalaxyModel.save_game(world):
         _fail("AI state could not be saved")
         return
