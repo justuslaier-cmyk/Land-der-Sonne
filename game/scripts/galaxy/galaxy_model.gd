@@ -6,7 +6,7 @@ const SAVE_PATH: String = "user://galaxy_v1.json"
 const MAX_BYTES: int = 4194304
 
 static func defaults() -> Dictionary:
-    return {"seed": 20261108, "size": 60, "ai_count": 5, "shape": 0, "habitable": 30, "resources": 50, "events": 50, "difficulty": 1}
+    return {"seed": 0, "size": 60, "ai_count": 5, "shape": 0, "habitable": 30, "resources": 50, "events": 50, "difficulty": 1}
 
 static func empire_defaults() -> Dictionary:
     return {"name": "Solare Union", "species": "Solari", "portrait": 0, "government": 0, "trait": 0, "ship_style": 0, "homeworld": "Aurora"}
@@ -23,6 +23,10 @@ static func validate(settings: Dictionary, empire: Dictionary) -> String:
 static func generate(settings: Dictionary, empire: Dictionary) -> Dictionary:
     var rng := RandomNumberGenerator.new()
     rng.seed = int(settings["seed"])
+    if rng.seed == 0:
+        rng.randomize()
+    var actual_settings := settings.duplicate(true)
+    actual_settings["seed"] = int(rng.seed)
     var stars: Array = []
     var prefixes := ["Astra", "Nery", "Vela", "Khar", "Orion", "Ely", "Thal", "Cyr", "Oph", "Zora", "Mer", "Sola", "Vey", "Iona", "Xen", "Arka"]
     var suffixes := ["ion", "is", "ara", "os", "eth", "ora", " Prime", " VII", "aris", "ea", "on", "yx"]
@@ -50,7 +54,7 @@ static func generate(settings: Dictionary, empire: Dictionary) -> Dictionary:
         var index := 1 + int(float(j + 1) * float(count - 2) / float(int(settings["ai_count"]) + 1))
         stars[index]["owner"] = j + 1
         ai.append({"id": j + 1, "name": names[j % names.size()] if j < names.size() else "Imperium %d" % (j + 1), "capital": index, "temperament": rng.randi_range(0, 3)})
-    return {"version": VERSION, "settings": settings.duplicate(true), "empire": empire.duplicate(true), "stars": stars, "ai": ai, "tick": 0, "credits": 100, "science": 0, "selected": 0, "event_done": false, "history": ["Gründung des Reiches " + str(empire["name"])]}
+    return {"version": VERSION, "settings": actual_settings, "empire": empire.duplicate(true), "stars": stars, "ai": ai, "tick": 0, "credits": 100, "science": 0, "selected": 0, "event_done": false, "history": ["Gründung des Reiches " + str(empire["name"])]}
 
 static func advance(world: Dictionary) -> void:
     world["tick"] = int(world["tick"]) + 1
