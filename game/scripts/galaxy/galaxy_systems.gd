@@ -24,6 +24,7 @@ static func prepare(world: Dictionary) -> void:
         world["ai_treasury"] = {}
     if not world.has("industry"):
         world["industry"] = 0
+    GalaxyLore.prepare(world)
 
 static func distance(a: Dictionary, b: Dictionary) -> float:
     return Vector2(float(a["x"]), float(a["y"])).distance_to(Vector2(float(b["x"]), float(b["y"])))
@@ -45,6 +46,7 @@ static func explore(world: Dictionary, target: int) -> bool:
     if not reachable:
         return false
     world["known"].append(target)
+    GalaxyLore.inspect(world, target)
     world["science"] = int(world["science"]) + 4
     world["history"].append("Sternensystem %s kartografiert." % star["name"])
     if int(star["owner"]) > 0 and not world["contacts"].has(int(star["owner"])):
@@ -125,6 +127,7 @@ static func start_research(world: Dictionary) -> bool:
 static func tick(world: Dictionary) -> void:
     prepare(world)
     GalaxyModel.advance(world)
+    GalaxyLore.tick(world)
     for fleet in world["fleets"]:
         if int(fleet["destination"]) >= 0:
             fleet["eta"] = int(fleet["eta"]) - 1
@@ -177,6 +180,10 @@ static func tick(world: Dictionary) -> void:
 static func resolve_event(world: Dictionary, option: int) -> void:
     prepare(world)
     var kind := str(world["pending_event"])
+    if kind in ["ancient_signal", "ancient_echo"]:
+        GalaxyLore.resolve(world, kind, option)
+        world["event_counter"] = int(world["event_counter"]) + 1
+        return
     if kind == "colonies":
         if option == 0:
             world["credits"] = int(world["credits"]) - 20
