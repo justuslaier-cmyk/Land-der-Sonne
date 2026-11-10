@@ -54,7 +54,11 @@ static func tick(world: Dictionary) -> void:
             elif treasury >= 100:
                 stance = "handel"
             world["ai_intentions"][key] = {"stance": stance, "last_action": year}
-        # Hostility is restricted to empires actually at war with the player.
+        if year % 6 == id % 6 and treasury >= 45:
+            _expand(world, rival, fleet)
+        if year % 12 == id % 12 and temperament >= 2:
+            _rival_tension(world, rival, fleet)
+        # Player systems are attacked only during a declared war.
         if not world["wars"].has(id) or year % 4 != id % 4:
             continue
         var target := -1
@@ -84,6 +88,59 @@ static func tick(world: Dictionary) -> void:
         else:
             fleet["strength"] = maxi(1, power - 4)
             _record(world, "%s greift %s an; die Verteidigung hält." % [rival["name"], world["stars"][target]["name"]])
+
+
+static func _expand(world: Dictionary, rival: Dictionary, fleet: Dictionary) -> void:
+    var id := int(rival["id"])
+    var source: Dictionary = world["stars"][int(fleet["location"])]
+    var best := -1
+    var distance := 160.0
+    for star in world["stars"]:
+        if int(star["owner"]) != -1:
+            continue
+        var d := GalaxySystems.distance(source, star)
+        if d < distance:
+            best = int(star["id"])
+            distance = d
+    if best < 0:
+        return
+    world["stars"][best]["owner"] = id
+    world["ai_treasury"][str(id)] = int(world["ai_treasury"].get(str(id), 0)) - 45
+    fleet["location"] = best
+    _record(world, "%s besiedelt %s." % [rival["name"], world["stars"][best]["name"]])
+
+static func _rival_tension(world: Dictionary, rival: Dictionary, fleet: Dictionary) -> void:
+    var id := int(rival["id"])
+    var source: Dictionary = world["stars"][int(fleet["location"])]
+    var target := -1
+    var closest := 135.0
+    for star in world["stars"]:
+        var owner := int(star["owner"])
+        if owner <= 0 or owner == id:
+            continue
+        var d := GalaxySystems.distance(source, star)
+        if d < closest:
+            target = int(star["id"])
+            closest = d
+    if target < 0:
+        return
+    var defender := int(world["stars"][target]["owner"])
+    var key := "%d:%d" % [mini(id, defender), maxi(id, defender)]
+    if not world["ai_conflicts"].has(key):
+        world["ai_conflicts"].append(key)
+        _record(world, "Grenzkonflikt zwischen %s und %s um %s." % [rival["name"], GalaxySystems.empire_name(world, defender), world["stars"][target]["name"]])
+    var defense := 9 + int(world["stars"][target]["resource"]) * 3
+    for other in world["ai_fleets"]:
+        if int(other["owner"]) == defender and int(other["location"]) == target:
+            defense += int(other["strength"])
+    if int(fleet["strength"]) > defense + 7:
+        world["stars"][target]["owner"] = id
+        fleet["strength"] = maxi(2, int(fleet["strength"]) - defense / 2)
+        fleet["location"] = target
+        _record(world, "%s erobert %s von %s." % [rival["name"], world["stars"][target]["name"], GalaxySystems.empire_name(world, defender)])
+    else:
+        fleet["strength"] = maxi(1, int(fleet["strength"]) - 2)
+        _record(world, "Die Verteidigung von %s hält dem Angriff von %s stand." % [world["stars"][target]["name"], rival["name"]])
 
 static func _record(world: Dictionary, entry: String) -> void:
     world["history"].append(entry)
