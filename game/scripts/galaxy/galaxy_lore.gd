@@ -4,6 +4,8 @@ class_name GalaxyLore
 # Seed-bound archaeological strata: fixed history, discoverable sites, persistent choices.
 static func prepare(world: Dictionary) -> void:
     if world.has("ancient_history"):
+        if not world.has("ancient_sites"):
+            _generate_sites(world)
         return
     var seed := int(world["settings"]["seed"])
     var names := ["Die Ersten Wanderer", "Das Vael-Archiv", "Die Stille Dynastie", "Der Chor der Neun"]
@@ -18,13 +20,15 @@ static func prepare(world: Dictionary) -> void:
             id = 1 + (id % (count - 1))
         ruins.append(id)
     world["ancient_history"] = {"civilization": name, "age": rng.randi_range(18000, 90000), "ruins": ruins, "discovered": [], "stage": 0, "choice": -1, "timer": 0, "completed": false}
+    _generate_sites(world)
 
 static func inspect(world: Dictionary, star_id: int) -> bool:
     prepare(world)
     var lore: Dictionary = world["ancient_history"]
     if not lore["ruins"].has(star_id) or lore["discovered"].has(star_id):
-        return false
+        return _discover_site(world, star_id)
     lore["discovered"].append(star_id)
+    _discover_site(world, star_id)
     world["history"].append("Archäologische Anomalie in %s: Spuren von %s." % [world["stars"][star_id]["name"], lore["civilization"]])
     if int(lore["stage"]) == 0 and str(world.get("pending_event", "")) == "":
         world["pending_event"] = "ancient_signal"
@@ -75,3 +79,42 @@ static func event_text(world: Dictionary, kind: String) -> String:
     if kind == "ancient_signal":
         return "Auf einer verlassenen Welt ruhen Bauwerke von %s, einer Zivilisation, die vor etwa %d Jahren verschwand. Aus den Tiefen antwortet ein Signal, das kein heutiges Reich versteht." % [lore["civilization"], int(lore["age"])]
     return "Zwei Jahre nach der Entdeckung erwachen die Ruinen. Die geborgenen Daten tragen dieselbe Signatur wie das Signal. Was zunächst wie ein Fund wirkte, könnte eine Warnung sein."
+
+# Independent lost cultures coexist with the primary story arc. Discoveries are
+# tied to actual exploration, not random menu prompts.
+static func _generate_sites(world: Dictionary) -> void:
+    var rng := RandomNumberGenerator.new()
+    rng.seed = int(world["settings"]["seed"]) * 271 + 7919
+    var cultures := [
+        ["Die Architekten von Ilyr", "Gravitationsarchitektur", "Versunkene Orbitale"],
+        ["Das Thren-Konsortium", "Biotechnologie", "Organische Archive"],
+        ["Die Aschefürsten", "Sternenmetallurgie", "Verlassene Schmiedewelten"],
+        ["Der Meridian-Chor", "Quantenkommunikation", "Stille Relais"]
+    ]
+    var sites: Array = []
+    var occupied: Array = world["ancient_history"]["ruins"].duplicate()
+    var count: int = world["stars"].size()
+    for i in range(mini(4, count - 4)):
+        var id := rng.randi_range(1, count - 1)
+        while occupied.has(id):
+            id = 1 + (id % (count - 1))
+        occupied.append(id)
+        var culture: Array = cultures[i]
+        sites.append({"star_id": id, "culture": culture[0], "discipline": culture[1], "site": culture[2], "age": rng.randi_range(10000, 125000), "discovered": false, "artifact": false})
+    world["ancient_sites"] = sites
+    if not world.has("artifacts"):
+        world["artifacts"] = []
+
+static func _discover_site(world: Dictionary, star_id: int) -> bool:
+    var sites: Array = world.get("ancient_sites", [])
+    for site in sites:
+        if int(site["star_id"]) != star_id or bool(site["discovered"]):
+            continue
+        site["discovered"] = true
+        site["artifact"] = true
+        var artifact := {"culture": site["culture"], "discipline": site["discipline"], "origin": world["stars"][star_id]["name"]}
+        world["artifacts"].append(artifact)
+        world["science"] = int(world["science"]) + 8
+        world["history"].append("Relikt der %s in %s entdeckt: %s (+8 Forschung)." % [site["culture"], artifact["origin"], site["discipline"]])
+        return true
+    return false
