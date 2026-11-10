@@ -729,10 +729,14 @@ func _draw_star_system(canvas: Control, system: Dictionary) -> void:
         canvas.draw_line(Vector2(x, 45), Vector2(x, h - 40), Color("#31465d", 0.24), 1.0)
         if bool(planet["rings"]):
             canvas.draw_arc(p, radius + 9.0, -0.5, PI + 0.5, 28, Color("#c9bb9a"), 3.0)
+        if int(planet["type_id"]) in [2, 3, 6]:
+            canvas.draw_arc(p, radius + 4.0, PI * 0.1, PI * 1.85, 38, Color("#5bc9e9", 0.35), 3.0)
         _draw_pixel_planet(canvas, p, radius, colors[int(planet["type_id"])], int(planet["orbit"]) + selected * 11)
         if i == selected_planet:
             canvas.draw_arc(p, radius + 14.0, 0.0, TAU, 40, GOLD, 2.0)
         canvas.draw_arc(p, radius, -PI * 0.4, PI * 0.65, 24, Color("#e2e5f2", 0.3), 2.0)
+        if GalaxyStrategy.planet_colony(world, selected, i).size() > 0:
+            _draw_orbital_station(canvas, p + Vector2(radius + 17.0, -radius - 11.0))
         for j in range(planet["moons"].size()):
             canvas.draw_circle(p + Vector2(radius + 11 + j * 8, -radius - 8 + j * 8), 3.0, Color("#a6a9b8"))
         canvas.draw_string(ThemeDB.fallback_font, p + Vector2(-10, radius + 25), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, WHITE)
@@ -881,3 +885,11 @@ func _draw_pixel_planet(canvas: Control, center: Vector2, radius: float, tint: C
             if posmod(xx * 7 + yy * 11 + variation_seed, 13) < 3:
                 color = color.lightened(0.17)
             canvas.draw_rect(Rect2(center + delta - Vector2.ONE * cell * 0.5, Vector2.ONE * cell), color)
+
+func _draw_orbital_station(canvas: Control, center: Vector2) -> void:
+    var steel := Color("#9cb5ce")
+    canvas.draw_rect(Rect2(center + Vector2(-3, -10), Vector2(6, 20)), steel)
+    canvas.draw_rect(Rect2(center + Vector2(-17, -4), Vector2(34, 8)), steel.darkened(0.25))
+    canvas.draw_rect(Rect2(center + Vector2(-14, -7), Vector2(7, 14)), Color("#477aa3"))
+    canvas.draw_rect(Rect2(center + Vector2(7, -7), Vector2(7, 14)), Color("#477aa3"))
+    canvas.draw_rect(Rect2(center + Vector2(-2, -2), Vector2(4, 4)), Color("#8af5ed"))
