@@ -537,6 +537,22 @@ func _draw_illustration(canvas: Control, kind: String) -> void:
         canvas.draw_circle(Vector2(width * 0.76 - 11, 102), 77, Color("#487e94"))
         canvas.draw_arc(Vector2(width * 0.76, 110), 112, -0.6, 2.4, 90, Color("#d3b47c", 0.8), 4.0)
         canvas.draw_circle(Vector2(width * 0.21, 80), 16, Color("#e9c780"))
+    elif kind in ["ancient_signal", "ancient_echo"]:
+        var glow := Color("#58b3c1") if kind == "ancient_signal" else Color("#ba78d8")
+        canvas.draw_circle(Vector2(width * 0.73, 100), 100, Color(glow, 0.08))
+        canvas.draw_circle(Vector2(width * 0.73, 100), 72, Color("#26334c"))
+        for i in range(8):
+            var x := width * 0.6 + float(i) * 24.0
+            var height := float(35 + posmod(i * 31, 62))
+            canvas.draw_rect(Rect2(x, 165 - height, 13, height), Color("#37485f"))
+            canvas.draw_rect(Rect2(x + 3, 165 - height + 6, 7, 3), glow)
+        canvas.draw_arc(Vector2(width * 0.73, 96), 92, 0.0, TAU, 80, Color(glow, 0.6), 2.0)
+        if kind == "ancient_echo":
+            for i in range(5):
+                canvas.draw_arc(Vector2(width * 0.73, 96), 22 + float(i) * 19, -0.9, 1.4, 36, Color(glow, 0.2 + float(i) * 0.1), 2.0)
+        else:
+            canvas.draw_colored_polygon(PackedVector2Array([Vector2(width * 0.23, 125), Vector2(width * 0.3, 99), Vector2(width * 0.39, 125), Vector2(width * 0.3, 145)]), Color("#92a9bc"))
+            canvas.draw_circle(Vector2(width * 0.3, 125), 7, glow)
     elif kind == "colonies":
         canvas.draw_circle(Vector2(width * 0.7, 110), 90, Color("#486a72"))
         canvas.draw_circle(Vector2(width * 0.68, 90), 72, Color("#719f88"))
