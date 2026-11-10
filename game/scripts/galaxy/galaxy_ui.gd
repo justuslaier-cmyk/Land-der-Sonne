@@ -546,11 +546,21 @@ func _diplomacy(rival_id: int = -1) -> void:
             continue
         if not world["contacts"].has(id):
             continue
-        _label("%s  •  Beziehung: %d" % [rival["name"], int(world["relations"].get(str(id), 0))])
+        _label("%s  •  Beziehung: %d  •  Strategie: %s" % [rival["name"], int(world["relations"].get(str(id), 0)), str(world.get("ai_intentions", {}).get(str(id), {}).get("stance", "unbekannt"))])
         _button("GESCHENK SENDEN (-30 Credits)", func(): _diplomatic_choice(id, "gift"))
         _button("HANDELSABKOMMEN", func(): _diplomatic_choice(id, "trade"))
         _button("ULTIMATUM", func(): _diplomatic_choice(id, "threat"))
-        _button("KRIEG ERKLÄREN", func(): _war(id))
+        _button("NICHTANGRIFFSPAKT (Beziehung +35)", func():
+            notice = "Nichtangriffspakt geschlossen." if GalaxyStrategy.propose_non_aggression(world, id) else "Pakt nicht möglich: Beziehungen oder bestehender Vertrag."
+            _diplomacy()
+        )
+        if world["wars"].has(id):
+            _button("FRIEDEN ANBIETEN (gegebenenfalls 70 Credits)", func():
+                notice = "Friedensvertrag geschlossen." if GalaxyStrategy.offer_peace(world, id) else "Friedensangebot abgelehnt oder nicht finanzierbar."
+                _diplomacy()
+            )
+        else:
+            _button("KRIEG ERKLÄREN", func(): _war(id))
     _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
 
 func _diplomatic_choice(id: int, action: String) -> void:
