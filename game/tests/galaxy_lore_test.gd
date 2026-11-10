@@ -18,6 +18,16 @@ func _initialize() -> void:
     if not GalaxyLore.inspect(world, site) or world["artifacts"].size() != 1:
         _fail("Ancient artifact discovery failed")
         return
+    world["science"] = 50
+    if not GalaxyLore.analyze_artifact(world, 0):
+        _fail("Artifact analysis failed")
+        return
+    if GalaxyLore.analyze_artifact(world, 0):
+        _fail("Artifact analysis duplicated")
+        return
+    if world["ancient_technology"].is_empty():
+        _fail("Ancient technology was not unlocked")
+        return
     if GalaxyLore.inspect(world, site):
         _fail("Artifact discovered twice")
         return
