@@ -45,6 +45,7 @@ func _clear() -> void:
     margin.add_child(scroll)
     root = VBoxContainer.new()
     root.add_theme_constant_override("separation", 14)
+    root.size_flags_vertical = Control.SIZE_EXPAND_FILL
     root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     scroll.add_child(root)
 
@@ -67,6 +68,7 @@ func _button(value: String, callback: Callable) -> void:
     var button := Button.new()
     button.text = value
     button.custom_minimum_size = Vector2(320, 43)
+    button.add_theme_font_size_override("font_size", 16)
     button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
     button.pressed.connect(callback)
     root.add_child(button)
@@ -161,10 +163,13 @@ func _show_empire() -> void:
     _entry("Reichsname", "name")
     _entry("Speziesname", "species")
     _entry("Heimatwelt", "homeworld")
-    _choice("Speziesdesign", ["Humanoid", "Insektoid", "Aquatisch", "Kristallin", "Synthetisch"], empire, "portrait")
+    _label("Speziesdesign – wähle ein Porträt")
+    _species_gallery()
+    _label("Ausgewählt: " + ["Humanoid", "Insektoid", "Aquatisch", "Kristallin", "Synthetisch"][int(empire["portrait"])])
     _choice("Herrschaftsform", ["Republik", "Monarchie", "Technokratie", "Kollektiv"], empire, "government")
     _choice("Speziesmerkmal", ["Analytisch: +Forschung", "Handelsbegabt: +Credits", "Anpassungsfähig"], empire, "trait")
-    _choice("Schiffsstil", ["Solar", "Organisch", "Geometrisch", "Industriell"], empire, "ship_style")
+    _label("Schiffsarchitektur – Vorschau")
+    _ship_gallery()
     _button("WEITER: ZUSAMMENFASSUNG", _show_review)
     _button("ZURÜCK ZUR GALAXIE", _show_settings)
 
@@ -175,6 +180,8 @@ func _show_review() -> void:
     _label("Reich: %s  |  Spezies: %s" % [empire["name"], empire["species"]])
     _label("Heimat: %s  |  Systeme: %s  |  KI-Reiche: %s" % [empire["homeworld"], settings["size"], settings["ai_count"]])
     _label("Seed: %s" % settings["seed"])
+    _species_gallery(true)
+    _ship_gallery(true)
     var error := GalaxyModel.validate(settings, empire)
     if error != "":
         _label("Konfiguration ungültig: " + error)
@@ -471,6 +478,7 @@ func _construction() -> void:
     var star: Dictionary = world["stars"][selected]
     _title("PLANETENVERWALTUNG / " + str(star["name"]))
     _label("Rohstoffstufe %d  •  Credits %d  •  Legierungen %d" % [int(star["resource"]), int(world["credits"]), int(world["alloys"])])
+    _planet_preview()
     if notice != "":
         _label(notice)
     var built: Dictionary = world["buildings"].get(str(selected), {})
@@ -515,6 +523,7 @@ func _shipyard() -> void:
     var design: Dictionary = world["ship_design"]
     _label("Rumpf: %s  •  Bewaffnung: %s  •  Antrieb: %s" % [["Leicht", "Mittel", "Schwer"][int(design["hull"])], ["Laser", "Plasma", "Kinetisch"][int(design["weapon"])], ["Impuls", "Ionen", "Warp"][int(design["engine"])]])
     _label("Schiffsstärke: +%d" % GalaxyStrategy.ship_strength(world))
+    _ship_preview()
     for i in range(3):
         var index := i
         _button("RUMPF: " + ["LEICHT", "MITTEL", "SCHWER"][i], func(): _design(index, int(design["weapon"]), int(design["engine"])))
@@ -589,3 +598,133 @@ func _draw_star_system(canvas: Control, system: Dictionary) -> void:
         for j in range(planet["moons"].size()):
             canvas.draw_circle(p + Vector2(radius + 11 + j * 8, -radius - 8 + j * 8), 3.0, Color("#a6a9b8"))
         canvas.draw_string(ThemeDB.fallback_font, p + Vector2(-10, radius + 25), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, WHITE)
+
+func _species_gallery(readonly: bool = false) -> void:
+    var gallery := HBoxContainer.new()
+    gallery.add_theme_constant_override("separation", 12)
+    root.add_child(gallery)
+    for i in range(5):
+        var index := i
+        var card := VBoxContainer.new()
+        gallery.add_child(card)
+        var canvas := Control.new()
+        canvas.custom_minimum_size = Vector2(150, 170)
+        canvas.draw.connect(func(): _draw_species(canvas, index))
+        card.add_child(canvas)
+        var button := Button.new()
+        button.text = ["Humanoid", "Insektoid", "Aquatisch", "Kristallin", "Synthetisch"][i]
+        button.disabled = readonly
+        button.modulate = GOLD if int(empire["portrait"]) == i else WHITE
+        button.pressed.connect(func():
+            empire["portrait"] = index
+            _show_empire()
+        )
+        card.add_child(button)
+
+func _draw_species(canvas: Control, index: int) -> void:
+    var w := canvas.size.x
+    canvas.draw_rect(Rect2(0, 0, w, 170), Color("#13233a"))
+    var colors := [Color("#c9a17b"), Color("#91b97b"), Color("#6dc6c8"), Color("#ad8ed8"), Color("#9fb6c8")]
+    var c: Color = colors[index]
+    var center := Vector2(w * 0.5, 76)
+    canvas.draw_circle(center + Vector2(0, 8), 52, Color(c, 0.08))
+    canvas.draw_colored_polygon(PackedVector2Array([Vector2(26, 165), Vector2(44, 116), Vector2(64, 107), Vector2(86, 107), Vector2(106, 116), Vector2(124, 165)]), c.darkened(0.48))
+    if index == 1:
+        for side in [-1, 1]:
+            canvas.draw_line(center + Vector2(side * 24, -28), center + Vector2(side * 39, -61), c, 4)
+            canvas.draw_circle(center + Vector2(side * 39, -61), 6, c)
+    if index == 2:
+        for side in [-1, 1]:
+            canvas.draw_colored_polygon(PackedVector2Array([center + Vector2(side * 31, -10), center + Vector2(side * 52, 12), center + Vector2(side * 30, 26)]), c)
+    if index == 3:
+        canvas.draw_colored_polygon(PackedVector2Array([center + Vector2(0, -64), center + Vector2(-34, -21), center + Vector2(0, 34), center + Vector2(34, -21)]), c)
+    else:
+        canvas.draw_circle(center + Vector2(0, -9), 37, c)
+    if index == 4:
+        canvas.draw_rect(Rect2(center + Vector2(-26, -23), Vector2(52, 19)), Color("#263e5a"))
+        canvas.draw_rect(Rect2(center + Vector2(-18, -18), Vector2(36, 8)), Color("#77e6df"))
+    else:
+        for side in [-1, 1]:
+            canvas.draw_circle(center + Vector2(side * 15, -13), 6 if index == 1 else 4, Color("#182d47"))
+            canvas.draw_circle(center + Vector2(side * 15, -14), 2, Color("#e4eaf4"))
+    if index == int(empire["portrait"]):
+        canvas.draw_rect(Rect2(2, 2, w - 4, 166), GOLD, false, 2)
+
+func _ship_gallery(readonly: bool = false) -> void:
+    var gallery := HBoxContainer.new()
+    gallery.add_theme_constant_override("separation", 12)
+    root.add_child(gallery)
+    for i in range(4):
+        var index := i
+        var card := VBoxContainer.new()
+        gallery.add_child(card)
+        var canvas := Control.new()
+        canvas.custom_minimum_size = Vector2(178, 100)
+        canvas.draw.connect(func(): _draw_ship(canvas, index, 1))
+        card.add_child(canvas)
+        var button := Button.new()
+        button.text = ["Solar", "Organisch", "Geometrisch", "Industriell"][i]
+        button.disabled = readonly
+        button.modulate = GOLD if int(empire["ship_style"]) == i else WHITE
+        button.pressed.connect(func():
+            empire["ship_style"] = index
+            _show_empire()
+        )
+        card.add_child(button)
+
+func _draw_ship(canvas: Control, style: int, hull: int) -> void:
+    var w := canvas.size.x
+    var h := canvas.size.y
+    canvas.draw_rect(Rect2(0, 0, w, h), Color("#102039"))
+    var center := Vector2(w * 0.5, h * 0.5)
+    var scale_factor := 0.8 + float(hull) * 0.2
+    var hull_colors := [Color("#e1bf7e"), Color("#7ed2b2"), Color("#a9c5e8"), Color("#c1a4d8")]
+    var color: Color = hull_colors[style]
+    var points := PackedVector2Array()
+    if style == 0:
+        points = PackedVector2Array([Vector2(40, 0), Vector2(5, -12), Vector2(-18, -31), Vector2(-35, -20), Vector2(-24, 0), Vector2(-35, 20), Vector2(-18, 31), Vector2(5, 12)])
+    elif style == 1:
+        points = PackedVector2Array([Vector2(40, 0), Vector2(8, -20), Vector2(-15, -25), Vector2(-35, -8), Vector2(-25, 0), Vector2(-35, 8), Vector2(-15, 25), Vector2(8, 20)])
+    elif style == 2:
+        points = PackedVector2Array([Vector2(40, 0), Vector2(0, -22), Vector2(-30, -22), Vector2(-17, 0), Vector2(-30, 22), Vector2(0, 22)])
+    else:
+        points = PackedVector2Array([Vector2(38, -10), Vector2(4, -10), Vector2(-10, -28), Vector2(-35, -28), Vector2(-25, 0), Vector2(-35, 28), Vector2(-10, 28), Vector2(4, 10), Vector2(38, 10)])
+    var transformed := PackedVector2Array()
+    for p in points:
+        transformed.append(center + p * scale_factor)
+    canvas.draw_colored_polygon(transformed, color.darkened(0.35))
+    canvas.draw_polyline(transformed, color, 2.0, true)
+    canvas.draw_circle(center + Vector2(5, 0), 6, Color("#78e4ef"))
+    for offset in [-15, 15]:
+        canvas.draw_circle(center + Vector2(-32 * scale_factor, offset * scale_factor), 4, Color("#63c9ff"))
+    if style == int(empire["ship_style"]):
+        canvas.draw_rect(Rect2(2, 2, w - 4, h - 4), GOLD, false, 2)
+
+func _ship_preview() -> void:
+    var canvas := Control.new()
+    canvas.custom_minimum_size = Vector2(600, 150)
+    canvas.draw.connect(func(): _draw_ship(canvas, int(empire["ship_style"]), int(world["ship_design"]["hull"])))
+    root.add_child(canvas)
+
+func _planet_preview() -> void:
+    var canvas := Control.new()
+    canvas.custom_minimum_size = Vector2(850, 175)
+    canvas.draw.connect(func(): _draw_planet_preview(canvas))
+    root.add_child(canvas)
+
+func _draw_planet_preview(canvas: Control) -> void:
+    var w := canvas.size.x
+    canvas.draw_rect(Rect2(0, 0, w, 175), Color("#0e1d35"))
+    var star: Dictionary = world["stars"][selected]
+    var system := GalaxyCelestials.generate(int(world["settings"]["seed"]), star)
+    var planets: Array = system["planets"]
+    var target: Dictionary = planets[mini(1, planets.size() - 1)]
+    var colors := [Color("#ae9981"), Color("#cba676"), Color("#9bc7df"), Color("#3c91b5"), Color("#c9a36d"), Color("#d87e5e"), Color("#69a980"), Color("#afc4d4")]
+    var center := Vector2(w * 0.28, 90)
+    canvas.draw_circle(center + Vector2(9, 0), 72, Color("#213853"))
+    canvas.draw_circle(center, 65, colors[int(target["type_id"])])
+    canvas.draw_circle(center + Vector2(-22, -20), 17, Color("#dce8e7", 0.15))
+    canvas.draw_circle(center + Vector2(17, 24), 25, Color("#182d4a", 0.16))
+    canvas.draw_string(ThemeDB.fallback_font, Vector2(w * 0.48, 60), str(target["type"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 23, GOLD)
+    canvas.draw_string(ThemeDB.fallback_font, Vector2(w * 0.48, 95), "%d Planeten  /  %d Asteroidengürtel" % [planets.size(), int(system["asteroids"])], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, WHITE)
+    canvas.draw_string(ThemeDB.fallback_font, Vector2(w * 0.48, 125), "Sternklasse: " + str(system["star_class"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, WHITE)
