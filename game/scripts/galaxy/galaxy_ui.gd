@@ -197,6 +197,7 @@ func _start_game() -> void:
     world = GalaxyModel.generate(settings, empire)
     selected = 0
     GalaxyStrategy.prepare(world)
+    _ensure_home_colony()
     _show_galaxy()
 
 func _load_game() -> void:
@@ -208,11 +209,25 @@ func _load_game() -> void:
         _button("ZURÜCK", _show_menu)
         return
     world = loaded
-    GalaxySystems.prepare(world)
+    GalaxyStrategy.prepare(world)
+    _ensure_home_colony()
     settings = world["settings"].duplicate(true)
     empire = world["empire"].duplicate(true)
     selected = clampi(int(world.get("selected", 0)), 0, world["stars"].size() - 1)
     _show_galaxy()
+
+func _ensure_home_colony() -> void:
+    GalaxyStrategy.prepare(world)
+    var star: Dictionary = world["stars"][0]
+    var system := GalaxyCelestials.generate(int(world["settings"]["seed"]), star)
+    var index := 0
+    for i in range(system["planets"].size()):
+        if bool(system["planets"][i]["habitable"]):
+            index = i
+            break
+    var key := GalaxyStrategy.planet_key(0, index)
+    if not world["planet_colonies"].has(key):
+        world["planet_colonies"][key] = {"population": 2, "buildings": {}}
 
 func _show_galaxy() -> void:
     screen = "galaxy"
@@ -528,21 +543,48 @@ func _construction() -> void:
     _clear()
     GalaxyStrategy.prepare(world)
     var star: Dictionary = world["stars"][selected]
-    _title("PLANETENVERWALTUNG / " + str(star["name"]))
-    _label("Rohstoffstufe %d  •  Credits %d  •  Legierungen %d" % [int(star["resource"]), int(world["credits"]), int(world["alloys"])])
+    var system := GalaxyCelestials.generate(int(world["settings"]["seed"]), star)
+    selected_planet = clampi(selected_planet, 0, system["planets"].size() - 1)
+    var planet: Dictionary = system["planets"][selected_planet]
+    _title("PLANETENVERWALTUNG / " + str(planet["name"]))
+    _label("%s  •  Ressourcen %d  •  Credits %d  •  Legierungen %d" % [planet["type"], int(planet["resources"]), int(world["credits"]), int(world["alloys"])])
     _planet_preview()
+    var navigation := HBoxContainer.new()
+    root.add_child(navigation)
+    for i in range(system["planets"].size()):
+        var index := i
+        var button := Button.new()
+        button.text = str(i + 1) + (" ◆" if selected_planet == i else "")
+        button.pressed.connect(func():
+            selected_planet = index
+            notice = ""
+            _construction()
+        )
+        navigation.add_child(button)
     if notice != "":
         _label(notice)
-    var built: Dictionary = world["buildings"].get(str(selected), {})
-    for spec in [["mine", "MINE", "Credits"], ["lab", "FORSCHUNGSLABOR", "Forschung"], ["factory", "WERFT", "Legierungen"], ["fort", "VERTEIDIGUNG", "Befestigung"]]:
-        var kind: String = spec[0]
-        _label("%s  •  Stufe %d / 3" % [spec[1], int(built.get(kind, 0))])
-        _button("%s BAUEN (%d Credits)" % [spec[1], GalaxyStrategy.building_cost(kind)], func(): _build(kind))
-    _button("ZURÜCK", _show_galaxy)
+    var colony := GalaxyStrategy.planet_colony(world, selected, selected_planet)
+    if colony.is_empty():
+        if bool(planet["habitable"]):
+            _label("Besiedelbare Welt • Noch keine Kolonie")
+            _button("KOLONIE GRÜNDEN (50 Credits)", func():
+                notice = "Kolonie gegründet." if GalaxyStrategy.settle_planet(world, selected, selected_planet) else "Kolonisierung nicht möglich."
+                _construction()
+            )
+        else:
+            _label("Unbewohnbare Welt • Eine Kolonie ist derzeit nicht möglich.")
+    else:
+        _label("Kolonie • Bevölkerung %d" % int(colony.get("population", 1)))
+        var built: Dictionary = colony.get("buildings", {})
+        for spec in [["mine", "MINE"], ["lab", "FORSCHUNGSLABOR"], ["factory", "WERFT"], ["fort", "VERTEIDIGUNG"]]:
+            var kind: String = spec[0]
+            _label("%s  •  Stufe %d / 3" % [spec[1], int(built.get(kind, 0))])
+            _button("%s BAUEN (%d Credits)" % [spec[1], GalaxyStrategy.building_cost(kind)], func():
+                notice = "Gebäude errichtet: " + kind if GalaxyStrategy.construct_planet(world, selected, selected_planet, kind) else "Bau nicht möglich: Credits oder Baulimit."
+                _construction()
+            )
+    _button("ZURÜCK ZUM STERNSYSTEM", _show_star_system)
 
-func _build(kind: String) -> void:
-    notice = "Bauprojekt abgeschlossen: " + kind if GalaxyStrategy.construct(world, selected, kind) else "Bau nicht möglich: Credits, Eigentum oder Baulimit."
-    _construction()
 
 func _politics() -> void:
     screen = "politics"
@@ -659,6 +701,8 @@ func _show_star_system() -> void:
             _show_star_system()
         )
         navigation.add_child(button)
+    if int(star["owner"]) == 0:
+        _button("AUSGEWÄHLTEN PLANETEN VERWALTEN", _construction)
     _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
 
 func _draw_star_system(canvas: Control, system: Dictionary) -> void:
@@ -812,7 +856,7 @@ func _draw_planet_preview(canvas: Control) -> void:
     var star: Dictionary = world["stars"][selected]
     var system := GalaxyCelestials.generate(int(world["settings"]["seed"]), star)
     var planets: Array = system["planets"]
-    var target: Dictionary = planets[mini(1, planets.size() - 1)]
+    var target: Dictionary = planets[clampi(selected_planet, 0, planets.size() - 1)]
     var colors := [Color("#ae9981"), Color("#cba676"), Color("#9bc7df"), Color("#3c91b5"), Color("#c9a36d"), Color("#d87e5e"), Color("#69a980"), Color("#afc4d4")]
     var center := Vector2(w * 0.28, 90)
     canvas.draw_circle(center + Vector2(9, 0), 72, Color("#213853"))
