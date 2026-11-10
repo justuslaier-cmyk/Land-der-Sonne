@@ -11,7 +11,7 @@ static func prepare(world: Dictionary) -> void:
     rng.seed = seed * 9176 + 403
     var name: String = names[rng.randi_range(0, names.size() - 1)]
     var ruins: Array = []
-    var count := world["stars"].size()
+    var count: int = world["stars"].size()
     for i in range(3):
         var id := 1 + int(rng.randi_range(0, count - 2))
         while ruins.has(id):
