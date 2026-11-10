@@ -251,5 +251,8 @@ static func tick(world: Dictionary) -> void:
         world["credits"] = int(world["credits"]) + 4
     if int(world["stability"]) < 25:
         world["credits"] = maxi(0, int(world["credits"]) - 5)
+        if int(world["tick"]) % 5 == 0 and str(world["pending_event"]) == "":
+            world["pending_event"] = "political_crisis"
+            world["history"].append("Politische Krise: Proteste und Unruhen erschüttern die Kolonien.")
     # Autonomous rival behavior advances with the same simulation clock.
     GalaxyAI.tick(world)
