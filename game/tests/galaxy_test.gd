@@ -11,6 +11,7 @@ func _run() -> void:
         _fail("Galactic scripts or scene could not load")
         return
     var settings: Dictionary = model.defaults()
+    settings["seed"] = 314159
     var empire: Dictionary = model.empire_defaults()
     if model.validate(settings, empire) != "":
         _fail("Default setup invalid")
