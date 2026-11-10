@@ -21,10 +21,47 @@ var drag_origin := Vector2.ZERO
 var map_offset_origin := Vector2.ZERO
 var selected_planet: int = 0
 var galaxy_details: VBoxContainer
+var simulation_speed: int = 1
+var simulation_paused: bool = true
+var simulation_elapsed: float = 0.0
+var time_status: Label
 
 func _ready() -> void:
     get_window().title = "Land der Sonne | Galaktische Chroniken"
     _show_menu()
+
+func _process(delta: float) -> void:
+    if world.is_empty() or simulation_paused or screen != "galaxy":
+        return
+    simulation_elapsed += delta * float(simulation_speed)
+    var steps := 0
+    while simulation_elapsed >= 4.0 and steps < 8:
+        simulation_elapsed -= 4.0
+        GalaxyStrategy.tick(world)
+        steps += 1
+        if str(world.get("pending_event", "")) != "":
+            simulation_paused = true
+            _show_event()
+            return
+    if steps > 0:
+        _refresh_status()
+        if is_instance_valid(map_area):
+            map_area.queue_redraw()
+        _show_selection()
+    _refresh_time_status()
+
+func _toggle_pause() -> void:
+    simulation_paused = not simulation_paused
+    _refresh_time_status()
+
+func _set_speed(speed: int) -> void:
+    simulation_speed = speed
+    simulation_paused = false
+    _refresh_time_status()
+
+func _refresh_time_status() -> void:
+    if is_instance_valid(time_status):
+        time_status.text = ("PAUSE" if simulation_paused else "ZEIT LÄUFT") + "  •  %dx  •  %.1fs bis nächstes Jahr" % [simulation_speed, maxf(0.0, (4.0 - simulation_elapsed) / float(simulation_speed))]
 
 func _clear() -> void:
     for child in get_children():
@@ -85,7 +122,7 @@ func _show_menu() -> void:
     _button("SPIEL LADEN", _load_game)
     _button("EINSTELLUNGEN", _show_options)
     _button("BEENDEN", func(): get_tree().quit())
-    _label("Früher Prototyp • Galaxie und Reiche werden aus einem Seed erzeugt")
+    _label("Früher Prototyp • Jede neue Galaxie wird zufällig generiert.")
 
 func _show_options() -> void:
     screen = "options"
@@ -198,6 +235,8 @@ func _start_game() -> void:
     selected = 0
     GalaxyStrategy.prepare(world)
     _ensure_home_colony()
+    simulation_elapsed = 0.0
+    simulation_paused = false
     _show_galaxy()
 
 func _load_game() -> void:
@@ -236,9 +275,11 @@ func _show_galaxy() -> void:
     _title("GALAXIE / %s" % world["empire"]["name"], 29)
     status = _label("")
     _refresh_status()
+    time_status = _label("")
+    _refresh_time_status()
     var bar := HBoxContainer.new()
     root.add_child(bar)
-    for spec in [["ZEIT +1", _advance], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
+    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
         var button := Button.new()
         button.text = spec[0]
         button.pressed.connect(spec[1])
@@ -266,6 +307,7 @@ func _show_galaxy() -> void:
     side.add_child(galaxy_details)
     _show_selection()
     if str(world["pending_event"]) != "":
+        simulation_paused = true
         _show_event()
 
 func _refresh_status() -> void:
