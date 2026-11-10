@@ -253,6 +253,8 @@ func _load_game() -> void:
     settings = world["settings"].duplicate(true)
     empire = world["empire"].duplicate(true)
     selected = clampi(int(world.get("selected", 0)), 0, world["stars"].size() - 1)
+    simulation_elapsed = 0.0
+    simulation_paused = true
     _show_galaxy()
 
 func _ensure_home_colony() -> void:
@@ -477,6 +479,7 @@ func _advance() -> void:
     _show_galaxy()
 
 func _save() -> void:
+    world["selected"] = selected
     var ok := GalaxyModel.save_game(world)
     _label("Spielstand gespeichert." if ok else "Speichern fehlgeschlagen.")
 
@@ -572,6 +575,7 @@ func _show_event() -> void:
 
 func _resolve_system_event(option: int) -> void:
     GalaxySystems.resolve_event(world, option)
+    simulation_paused = false
     _show_galaxy()
 
 func _illustration(kind: String) -> void:
