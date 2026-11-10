@@ -19,6 +19,8 @@ var map_offset: Vector2 = Vector2.ZERO
 var map_dragging := false
 var drag_origin := Vector2.ZERO
 var map_offset_origin := Vector2.ZERO
+var selected_planet: int = 0
+var galaxy_details: VBoxContainer
 
 func _ready() -> void:
     get_window().title = "Land der Sonne | Galaktische Chroniken"
@@ -231,11 +233,22 @@ func _show_galaxy() -> void:
     var info := _label("Linksklick: System wählen   •   Rechte Maustaste ziehen: Kamera   •   Mausrad: Zoom zum Cursor")
     info.add_theme_font_size_override("font_size", 13)
     map_area = Control.new()
-    map_area.custom_minimum_size = Vector2(850, 510)
+    map_area.custom_minimum_size = Vector2(760, 500)
     map_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     map_area.draw.connect(_draw_map)
     map_area.gui_input.connect(_map_input)
-    root.add_child(map_area)
+    var workspace := HBoxContainer.new()
+    workspace.add_theme_constant_override("separation", 20)
+    workspace.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    root.add_child(workspace)
+    map_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    workspace.add_child(map_area)
+    var side := PanelContainer.new()
+    side.custom_minimum_size = Vector2(335, 500)
+    workspace.add_child(side)
+    galaxy_details = VBoxContainer.new()
+    galaxy_details.add_theme_constant_override("separation", 9)
+    side.add_child(galaxy_details)
     _show_selection()
     if str(world["pending_event"]) != "":
         _show_event()
@@ -320,29 +333,55 @@ func _map_input(event: InputEvent) -> void:
             _show_galaxy()
 
 func _show_selection() -> void:
+    if not is_instance_valid(galaxy_details):
+        return
+    for child in galaxy_details.get_children():
+        galaxy_details.remove_child(child)
+        child.queue_free()
     var star: Dictionary = world["stars"][selected]
     var known: bool = world["known"].has(selected)
     var owner := int(star["owner"])
-    _label("SYSTEM: %s  •  %s" % [str(star["name"]) if known else "Unkartiert", GalaxySystems.empire_name(world, owner) if known and owner >= 0 else "Unbeansprucht / Unbekannt"])
+    _side_label("SYSTEM / " + (str(star["name"]) if known else "Unkartiert"), true)
+    _side_label(GalaxySystems.empire_name(world, owner) if known and owner >= 0 else "Unbeansprucht / Unbekannt")
     if not known:
-        _label("Unbekannte Systeme müssen vor der Kolonisierung kartografiert werden.")
-        _button("ERKUNDEN", _explore)
+        _side_label("Noch keine Kartografiedaten vorhanden.")
+        _side_button("SYSTEM ERKUNDEN", _explore)
     else:
-        _label("Rohstoffstufe %d  •  %s" % [int(star["resource"]), "Bewohnbar" if bool(star["habitable"]) else "Unbewohnbar"])
-        _button("STERNSYSTEM ANSEHEN", _show_star_system)
+        var system := GalaxyCelestials.generate(int(world["settings"]["seed"]), star)
+        _side_label("%s  •  %d Planeten" % [system["star_class"], system["planets"].size()])
+        _side_label("Rohstoffe %d  •  %s" % [int(star["resource"]), "Bewohnbar" if bool(star["habitable"]) else "Unbewohnbar"])
+        _side_button("SYSTEMANSICHT", _show_star_system)
         if int(world["fleets"][0]["location"]) != selected:
-            _button("FLOTTE HIERHER SCHICKEN", _move_fleet)
+            _side_button("FLOTTE ENTSENDEN", _move_fleet)
         if owner == 0:
-            _button("PLANETARE BAUPROJEKTE", _construction)
+            _side_button("PLANETENVERWALTUNG", _construction)
         if owner > 0 and world["wars"].has(owner):
-            _button("ANGREIFEN", _attack)
+            _side_button("ANGREIFEN", _attack)
         if owner == -1 and bool(star["habitable"]):
-            _button("KOLONISIEREN (50 Credits)", _colonize)
+            _side_button("KOLONISIEREN (50)", _colonize)
         if owner > 0:
-            _button("DIPLOMATIE MIT DIESEM REICH", func(): _diplomacy(owner))
+            _side_button("DIPLOMATIE", func(): _diplomacy(owner))
     var fleet: Dictionary = world["fleets"][0]
-    _label("Flotte: Stärke %d  •  Standort %s  •  Reisezeit %d" % [int(fleet["strength"]), world["stars"][int(fleet["location"])]["name"], int(fleet["eta"])])
-    _label("Letzter Chronikeintrag: " + str(world["history"].back()))
+    _side_label("FLOTTE / Stärke %d" % int(fleet["strength"]), true)
+    _side_label("Reisezeit: %d" % int(fleet["eta"]))
+    _side_label("CHRONIK", true)
+    var history: Array = world["history"]
+    _side_label(str(history.back()) if not history.is_empty() else "Keine Einträge")
+
+func _side_label(value: String, heading: bool = false) -> void:
+    var label := Label.new()
+    label.text = value
+    label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    label.add_theme_font_size_override("font_size", 19 if heading else 15)
+    label.add_theme_color_override("font_color", GOLD if heading else WHITE)
+    galaxy_details.add_child(label)
+
+func _side_button(value: String, callback: Callable) -> void:
+    var button := Button.new()
+    button.text = value
+    button.custom_minimum_size.y = 40
+    button.pressed.connect(callback)
+    galaxy_details.add_child(button)
 
 func _move_fleet() -> void:
     notice = "Flottenroute festgelegt." if GalaxySystems.move_fleet(world, selected) else "Route nicht möglich: Ziel zu weit entfernt oder Flotte unterwegs."
@@ -557,16 +596,56 @@ func _show_star_system() -> void:
     _clear()
     var star: Dictionary = world["stars"][selected]
     var system := GalaxyCelestials.generate(int(world["settings"]["seed"]), star)
+    selected_planet = clampi(selected_planet, 0, system["planets"].size() - 1)
     _title("STERNSYSTEM / " + str(star["name"]))
-    _label("Sternklasse: %s  •  Oberflächentemperatur: %d K" % [system["star_class"], int(system["temperature"])])
-    _label("%d Planeten  •  %d Asteroidengürtel  •  %d Kometen" % [system["planets"].size(), int(system["asteroids"]), int(system["comets"])])
+    _label("%s  •  %d K  •  %d Planeten  •  %d Asteroidengürtel  •  %d Kometen" % [system["star_class"], int(system["temperature"]), system["planets"].size(), int(system["asteroids"]), int(system["comets"])])
     var canvas := Control.new()
-    canvas.custom_minimum_size = Vector2(950, 320)
+    canvas.custom_minimum_size = Vector2(950, 300)
     canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     canvas.draw.connect(func(): _draw_star_system(canvas, system))
+    canvas.gui_input.connect(func(event: InputEvent):
+        if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+            var count: int = system["planets"].size()
+            var step := (canvas.size.x - 180.0) / float(maxi(1, count))
+            var nearest := -1
+            var distance := 30.0
+            for i in range(count):
+                var pos := Vector2(150.0 + float(i) * step, canvas.size.y * 0.5 + sin(float(i) * 2.4) * 55.0)
+                var d := pos.distance_to(event.position)
+                if d < distance:
+                    nearest = i
+                    distance = d
+            if nearest >= 0:
+                selected_planet = nearest
+                _show_star_system()
+    )
     root.add_child(canvas)
-    for planet in system["planets"]:
-        _label("%s  •  %s  •  %d Monde  •  Rohstoffe %d%s" % [planet["name"], planet["type"], planet["moons"].size(), int(planet["resources"]), "  •  Bewohnbar" if bool(planet["habitable"]) else ""])
+    var chosen: Dictionary = system["planets"][selected_planet]
+    var section := HBoxContainer.new()
+    section.add_theme_constant_override("separation", 24)
+    root.add_child(section)
+    var info := VBoxContainer.new()
+    section.add_child(info)
+    var title := Label.new()
+    title.text = "%s / %s" % [chosen["name"], chosen["type"]]
+    title.add_theme_font_size_override("font_size", 25)
+    title.add_theme_color_override("font_color", GOLD)
+    info.add_child(title)
+    for detail in ["Ressourcen: %d" % int(chosen["resources"]), "Monde: %d" % chosen["moons"].size(), "Orbit: %d" % int(chosen["orbit"]), "Besiedelbar: %s" % ("Ja" if bool(chosen["habitable"]) else "Nein")]:
+        var item := Label.new()
+        item.text = detail
+        info.add_child(item)
+    var navigation := VBoxContainer.new()
+    section.add_child(navigation)
+    for i in range(system["planets"].size()):
+        var index := i
+        var button := Button.new()
+        button.text = str(system["planets"][i]["name"]) + ("  ◀" if selected_planet == i else "")
+        button.pressed.connect(func():
+            selected_planet = index
+            _show_star_system()
+        )
+        navigation.add_child(button)
     _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
 
 func _draw_star_system(canvas: Control, system: Dictionary) -> void:
@@ -594,6 +673,8 @@ func _draw_star_system(canvas: Control, system: Dictionary) -> void:
         if bool(planet["rings"]):
             canvas.draw_arc(p, radius + 9.0, -0.5, PI + 0.5, 28, Color("#c9bb9a"), 3.0)
         canvas.draw_circle(p, radius, colors[int(planet["type_id"])])
+        if i == selected_planet:
+            canvas.draw_arc(p, radius + 14.0, 0.0, TAU, 40, GOLD, 2.0)
         canvas.draw_arc(p, radius, -PI * 0.4, PI * 0.65, 24, Color("#e2e5f2", 0.3), 2.0)
         for j in range(planet["moons"].size()):
             canvas.draw_circle(p + Vector2(radius + 11 + j * 8, -radius - 8 + j * 8), 3.0, Color("#a6a9b8"))
