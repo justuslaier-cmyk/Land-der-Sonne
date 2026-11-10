@@ -45,6 +45,8 @@ jobs:
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_planet_economy_test.gd
       - name: Test ancient history and branching events
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_lore_test.gd
+      - name: Test autonomous rival empires
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_ai_test.gd
       - name: Load main scene
         run: godot --headless --path game --quit-after 10
 
