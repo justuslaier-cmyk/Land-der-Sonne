@@ -37,6 +37,8 @@ jobs:
         run: timeout 100s godot --headless --path game --script res://tests/galaxy_test.gd
       - name: Test strategic simulation systems
         run: timeout 100s godot --headless --path game --script res://tests/galaxy_systems_test.gd
+      - name: Test empire strategy and shipbuilding
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_strategy_test.gd
       - name: Load main scene
         run: godot --headless --path game --quit-after 10
 
