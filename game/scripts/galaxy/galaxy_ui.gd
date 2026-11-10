@@ -456,6 +456,11 @@ func _chronicle() -> void:
         _label("ARCHÄOLOGISCHES ARCHIV / " + str(lore["civilization"]))
         _label("Geschätztes Alter: %d Jahre  •  Fundorte: %d" % [int(lore["age"]), lore["discovered"].size()])
         _label("Die Vergangenheit wird aus tatsächlichen Funden und Entscheidungen rekonstruiert.")
+    var artifacts: Array = world.get("artifacts", [])
+    if not artifacts.is_empty():
+        _label("RELIKTE VERGESSENER ZIVILISATIONEN")
+        for artifact in artifacts:
+            _label("• %s  |  %s  |  Fundort: %s" % [artifact["culture"], artifact["discipline"], artifact["origin"]])
     var history: Array = world["history"]
     for i in range(maxi(0, history.size() - 35), history.size()):
         _label("• " + str(history[i]))
