@@ -25,6 +25,7 @@ static func generate(settings: Dictionary, empire: Dictionary) -> Dictionary:
     rng.seed = int(settings["seed"])
     if rng.seed == 0:
         rng.randomize()
+        rng.seed = rng.randi_range(1, 2147483647)
     var actual_settings := settings.duplicate(true)
     actual_settings["seed"] = int(rng.seed)
     var stars: Array = []
