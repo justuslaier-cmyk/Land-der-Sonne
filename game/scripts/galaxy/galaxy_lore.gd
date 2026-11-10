@@ -38,12 +38,16 @@ static func inspect(world: Dictionary, star_id: int) -> bool:
 static func tick(world: Dictionary) -> void:
     prepare(world)
     var lore: Dictionary = world["ancient_history"]
-    if int(lore["stage"]) != 2 or str(world.get("pending_event", "")) != "":
+    if not [2, 5].has(int(lore["stage"])) or str(world.get("pending_event", "")) != "":
         return
     lore["timer"] = int(lore["timer"]) - 1
     if int(lore["timer"]) <= 0:
-        lore["stage"] = 3
-        world["pending_event"] = "ancient_echo"
+        if int(lore["stage"]) == 2:
+            lore["stage"] = 3
+            world["pending_event"] = "ancient_echo"
+        else:
+            lore["stage"] = 6
+            world["pending_event"] = "ancient_awakening"
 
 static func resolve(world: Dictionary, kind: String, option: int) -> void:
     prepare(world)
@@ -60,8 +64,8 @@ static func resolve(world: Dictionary, kind: String, option: int) -> void:
             world["stability"] = maxi(0, int(world["stability"]) - 3)
             world["history"].append("Antike Relikte wurden geborgen; die Kolonien sind beunruhigt.")
     elif kind == "ancient_echo" and int(lore["stage"]) == 3:
-        lore["stage"] = 4
-        lore["completed"] = true
+        lore["stage"] = 5
+        lore["timer"] = 3
         if option == 0:
             world["science"] = int(world["science"]) + (48 if int(lore["choice"]) == 0 else 24)
             world["history"].append("Das Echo der Alten entschlüsselt: vergessene Sternkarten gesichert.")
@@ -69,16 +73,35 @@ static func resolve(world: Dictionary, kind: String, option: int) -> void:
             world["credits"] = int(world["credits"]) + 55
             world["stability"] = maxi(0, int(world["stability"]) - 8)
             world["history"].append("Das Echo verkauft. Unruhen wegen des verlorenen Erbes.")
+    elif kind == "ancient_awakening" and int(lore["stage"]) == 6:
+        lore["stage"] = 7
+        lore["completed"] = true
+        lore["final_choice"] = option
+        if option == 0:
+            world["science"] = int(world["science"]) + 65
+            world["stability"] = mini(100, int(world["stability"]) + 8)
+            world["history"].append("Das erwachte Archiv wird unter Aufsicht erforscht. Die Sternenreiche erfahren von den Ersten.")
+        else:
+            world["alloys"] = int(world.get("alloys", 0)) + 35
+            world["credits"] = int(world["credits"]) + 60
+            world["stability"] = maxi(0, int(world["stability"]) - 12)
+            world["history"].append("Das erwachte Archiv wurde zerlegt. Antike Maschinen treiben die Industrie an; Unruhen folgen.")
     world["pending_event"] = ""
 
 static func event_title(kind: String) -> String:
-    return "DIE STIMMEN DER ERSTEN" if kind == "ancient_signal" else "DAS ECHO UNTER DEM STAUB"
+    if kind == "ancient_signal":
+        return "DIE STIMMEN DER ERSTEN"
+    if kind == "ancient_echo":
+        return "DAS ECHO UNTER DEM STAUB"
+    return "DAS ERWACHEN DES ARCHIVS"
 
 static func event_text(world: Dictionary, kind: String) -> String:
     var lore: Dictionary = world["ancient_history"]
     if kind == "ancient_signal":
         return "Auf einer verlassenen Welt ruhen Bauwerke von %s, einer Zivilisation, die vor etwa %d Jahren verschwand. Aus den Tiefen antwortet ein Signal, das kein heutiges Reich versteht." % [lore["civilization"], int(lore["age"])]
-    return "Zwei Jahre nach der Entdeckung erwachen die Ruinen. Die geborgenen Daten tragen dieselbe Signatur wie das Signal. Was zunächst wie ein Fund wirkte, könnte eine Warnung sein."
+    if kind == "ancient_echo":
+        return "Zwei Jahre nach der Entdeckung erwachen die Ruinen. Die geborgenen Daten tragen dieselbe Signatur wie das Signal. Was zunächst wie ein Fund wirkte, könnte eine Warnung sein."
+    return "Drei Jahre nach dem Echo entfaltet sich über den Ruinen ein Netzwerk uralter Maschinen. Das Archiv bietet Wissen, das eine ganze Epoche verändern könnte. Doch die Kolonien fürchten die Macht seiner Erbauer. Soll das Netzwerk bewahrt oder ausgeschlachtet werden?"
 
 # Independent lost cultures coexist with the primary story arc. Discoveries are
 # tied to actual exploration, not random menu prompts.
