@@ -112,9 +112,36 @@ static func _discover_site(world: Dictionary, star_id: int) -> bool:
             continue
         site["discovered"] = true
         site["artifact"] = true
-        var artifact := {"culture": site["culture"], "discipline": site["discipline"], "origin": world["stars"][star_id]["name"]}
+        var artifact := {"culture": site["culture"], "discipline": site["discipline"], "origin": world["stars"][star_id]["name"], "analyzed": false}
         world["artifacts"].append(artifact)
         world["science"] = int(world["science"]) + 8
         world["history"].append("Relikt der %s in %s entdeckt: %s (+8 Forschung)." % [site["culture"], artifact["origin"], site["discipline"]])
         return true
     return false
+
+static func analyze_artifact(world: Dictionary, index: int) -> bool:
+    prepare(world)
+    if index < 0 or index >= world["artifacts"].size() or int(world.get("science", 0)) < 30:
+        return false
+    var artifact: Dictionary = world["artifacts"][index]
+    if bool(artifact.get("analyzed", false)):
+        return false
+    world["science"] = int(world["science"]) - 30
+    artifact["analyzed"] = true
+    if not world.has("ancient_technology"):
+        world["ancient_technology"] = []
+    var discipline := str(artifact["discipline"])
+    if not world["ancient_technology"].has(discipline):
+        world["ancient_technology"].append(discipline)
+    world["history"].append("Antikes Relikt entschlüsselt: %s. Neue Technologie: %s." % [artifact["culture"], discipline])
+    return true
+
+static func artifact_bonus(world: Dictionary, field: String) -> int:
+    var technology: Array = world.get("ancient_technology", [])
+    if field == "science":
+        return (3 if technology.has("Quantenkommunikation") else 0) + (2 if technology.has("Biotechnologie") else 0)
+    if field == "alloys":
+        return 3 if technology.has("Sternenmetallurgie") else 0
+    if field == "credits":
+        return 4 if technology.has("Gravitationsarchitektur") else 0
+    return 0
