@@ -45,7 +45,13 @@ func _initialize() -> void:
         _fail("Follow-up event missing")
         return
     GalaxySystems.resolve_event(world, 0)
-    if not bool(world["ancient_history"]["completed"]):
+    for i in range(3):
+        GalaxyLore.tick(world)
+    if str(world["pending_event"]) != "ancient_awakening":
+        _fail("Third story chapter did not awaken")
+        return
+    GalaxySystems.resolve_event(world, 0)
+    if not bool(world["ancient_history"]["completed"]) or int(world["ancient_history"]["final_choice"]) != 0:
         _fail("Story did not conclude")
         return
     if GalaxyLore.inspect(world, ruin):
