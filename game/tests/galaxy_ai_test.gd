@@ -21,6 +21,13 @@ func _initialize() -> void:
     if world["ai_fleets"][0]["strength"] <= 10:
         _fail("AI did not build fleets")
         return
+    var total_owned := 0
+    for star in world["stars"]:
+        if int(star["owner"]) > 0:
+            total_owned += 1
+    if total_owned <= 3:
+        _fail("AI empires never expanded")
+        return
     if not GalaxyModel.save_game(world):
         _fail("AI state could not be saved")
         return
