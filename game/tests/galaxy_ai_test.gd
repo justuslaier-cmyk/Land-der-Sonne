@@ -33,12 +33,19 @@ func _initialize() -> void:
     if not GalaxyStrategy.propose_non_aggression(world, 1):
         _fail("Non-aggression diplomacy failed")
         return
+    if GalaxyStrategy.declare_war(world, 1):
+        _fail("Non-aggression pact did not prevent war")
+        return
+    world["non_aggression"].erase(1)
     if not GalaxyStrategy.declare_war(world, 1):
         _fail("War declaration failed")
         return
     world["credits"] = 100
     if not GalaxyStrategy.offer_peace(world, 1):
         _fail("Peace negotiation failed")
+        return
+    if GalaxyStrategy.declare_war(world, 1):
+        _fail("Postwar truce was violated")
         return
     world["pending_event"] = "political_crisis"
     world["stability"] = 12
