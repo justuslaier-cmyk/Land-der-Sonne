@@ -56,6 +56,27 @@ func _run() -> void:
     if ui.screen != "galaxy":
         _fail("New game flow did not reach map")
         return
+    if ui.simulation_paused:
+        _fail("New game real-time simulation did not start")
+        return
+    ui._set_speed(4)
+    if ui.simulation_speed != 4:
+        _fail("Real-time speed selection failed")
+        return
+    ui._toggle_pause()
+    if not ui.simulation_paused:
+        _fail("Pause control failed")
+        return
+    var paused_tick := int(ui.world["tick"])
+    ui._process(12.0)
+    if int(ui.world["tick"]) != paused_tick:
+        _fail("Simulation advanced while paused")
+        return
+    ui._toggle_pause()
+    ui._process(1.0)
+    if int(ui.world["tick"]) != paused_tick + 1:
+        _fail("Real-time simulation did not advance")
+        return
     print("GALAXY_STAGE: finished")
     ui.queue_free()
     print("GALAXY_TEST_PASS: deterministic galaxy, AI, tick, save/load, menu and new game")
