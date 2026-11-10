@@ -138,7 +138,7 @@ static func build_ships(world: Dictionary) -> bool:
 
 static func declare_war(world: Dictionary, rival_id: int) -> bool:
     prepare(world)
-    if not world["contacts"].has(rival_id) or world["wars"].has(rival_id):
+    if not world["contacts"].has(rival_id) or world["wars"].has(rival_id) or world.get("non_aggression", []).has(rival_id) or int(world.get("truce_until", {}).get(str(rival_id), 0)) > int(world["tick"]):
         return false
     world["wars"].append(rival_id)
     world["relations"][str(rival_id)] = -100
@@ -167,6 +167,9 @@ static func offer_peace(world: Dictionary, rival_id: int) -> bool:
         world["credits"] = treasury - 70
     world["wars"].erase(rival_id)
     world["relations"][str(rival_id)] = -25
+    if not world.has("truce_until"):
+        world["truce_until"] = {}
+    world["truce_until"][str(rival_id)] = int(world["tick"]) + 5
     world["history"].append("Friedensvertrag mit %s geschlossen." % GalaxySystems.empire_name(world, rival_id))
     return true
 
