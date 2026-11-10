@@ -155,6 +155,35 @@ static func sign_trade(world: Dictionary, rival_id: int) -> bool:
     world["history"].append("Dauerhafter Handelsvertrag mit %s geschlossen." % GalaxySystems.empire_name(world, rival_id))
     return true
 
+static func offer_peace(world: Dictionary, rival_id: int) -> bool:
+    prepare(world)
+    if not world["wars"].has(rival_id):
+        return false
+    var relation := int(world["relations"].get(str(rival_id), -100))
+    var treasury := int(world["credits"])
+    if relation < -80 and treasury < 70:
+        return false
+    if relation < -80:
+        world["credits"] = treasury - 70
+    world["wars"].erase(rival_id)
+    world["relations"][str(rival_id)] = -25
+    world["history"].append("Friedensvertrag mit %s geschlossen." % GalaxySystems.empire_name(world, rival_id))
+    return true
+
+static func propose_non_aggression(world: Dictionary, rival_id: int) -> bool:
+    prepare(world)
+    if not world["contacts"].has(rival_id) or world["wars"].has(rival_id):
+        return false
+    if int(world["relations"].get(str(rival_id), 0)) < 35:
+        return false
+    if not world.has("non_aggression"):
+        world["non_aggression"] = []
+    if world["non_aggression"].has(rival_id):
+        return false
+    world["non_aggression"].append(rival_id)
+    world["history"].append("Nichtangriffspakt mit %s vereinbart." % GalaxySystems.empire_name(world, rival_id))
+    return true
+
 static func attack(world: Dictionary, star_id: int) -> String:
     prepare(world)
     if star_id < 0 or star_id >= world["stars"].size():
