@@ -581,6 +581,11 @@ func _show_event() -> void:
         else:
             _button("VERGESSENE STERNKARTEN ENTSCHLÜSSELN (+Forschung)", func(): _resolve_system_event(0))
             _button("ARCHIV VERKAUFEN (+55 Credits, -8 Stabilität)", func(): _resolve_system_event(1))
+    elif kind == "political_crisis":
+        _title("EREIGNIS / AUFSTAND IN DEN KOLONIEN")
+        _label("Die Stabilität des Reiches ist eingebrochen. Demonstrationen und Versorgungsengpässe bedrohen den Zusammenhalt. Der Rat verlangt eine Entscheidung.")
+        _button("SOZIALPROGRAMM (-45 Credits, +22 Stabilität)", func(): _resolve_system_event(0))
+        _button("PROTESTE UNTERDRÜCKEN (+20 Credits, -12 Stabilität)", func(): _resolve_system_event(1))
     elif kind == "colonies":
         _title("EREIGNIS / DER KOLONIALRAT")
         _label("Die jüngsten Kolonien fordern eine neue politische und wirtschaftliche Ausrichtung.")
@@ -638,6 +643,12 @@ func _draw_illustration(canvas: Control, kind: String) -> void:
         else:
             canvas.draw_colored_polygon(PackedVector2Array([Vector2(width * 0.23, 125), Vector2(width * 0.3, 99), Vector2(width * 0.39, 125), Vector2(width * 0.3, 145)]), Color("#92a9bc"))
             canvas.draw_circle(Vector2(width * 0.3, 125), 7, glow)
+    elif kind == "political_crisis":
+        canvas.draw_circle(Vector2(width * 0.75, 98), 85, Color("#713b50"))
+        for i in range(11):
+            var x := width * 0.45 + float(i) * 24.0
+            canvas.draw_rect(Rect2(x, 135.0 - float(i % 4) * 18.0, 18, 65 + float(i % 4) * 18.0), Color("#282d4d"))
+            canvas.draw_line(Vector2(x + 8, 145), Vector2(x + 8, 105 - float(i % 3) * 16), Color("#e5a57b"), 2.0)
     elif kind == "colonies":
         canvas.draw_circle(Vector2(width * 0.7, 110), 90, Color("#486a72"))
         canvas.draw_circle(Vector2(width * 0.68, 90), 72, Color("#719f88"))
