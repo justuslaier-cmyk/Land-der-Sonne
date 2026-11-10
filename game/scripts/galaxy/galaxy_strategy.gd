@@ -222,5 +222,5 @@ static func tick(world: Dictionary) -> void:
         world["credits"] = int(world["credits"]) + 4
     if int(world["stability"]) < 25:
         world["credits"] = maxi(0, int(world["credits"]) - 5)
-    # AI colonies and their strategic presence are already updated by GalaxySystems.tick.
-    # Wars only resolve on player-ordered attacks; no arbitrary automatic conquest.
+    # Autonomous rival behavior advances with the same simulation clock.
+    GalaxyAI.tick(world)
