@@ -11,6 +11,16 @@ func _initialize() -> void:
     if original != other["ancient_history"]:
         _fail("Ancient history not deterministic")
         return
+    if world["ancient_sites"].size() < 3:
+        _fail("Missing independent fallen cultures")
+        return
+    var site := int(world["ancient_sites"][0]["star_id"])
+    if not GalaxyLore.inspect(world, site) or world["artifacts"].size() != 1:
+        _fail("Ancient artifact discovery failed")
+        return
+    if GalaxyLore.inspect(world, site):
+        _fail("Artifact discovered twice")
+        return
     var ruin := int(original["ruins"][0])
     if not GalaxyLore.inspect(world, ruin) or str(world["pending_event"]) != "ancient_signal":
         _fail("Ruins did not trigger opening event")
