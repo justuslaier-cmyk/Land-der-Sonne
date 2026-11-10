@@ -197,7 +197,16 @@ static func resolve_event(world: Dictionary, option: int) -> void:
         GalaxyLore.resolve(world, kind, option)
         world["event_counter"] = int(world["event_counter"]) + 1
         return
-    if kind == "colonies":
+    if kind == "political_crisis":
+        if option == 0:
+            world["credits"] = maxi(0, int(world["credits"]) - 45)
+            world["stability"] = mini(100, int(world["stability"]) + 22)
+            world["history"].append("Politische Krise: Sozialprogramm finanziert; Unruhen beruhigt.")
+        else:
+            world["credits"] = int(world["credits"]) + 20
+            world["stability"] = maxi(0, int(world["stability"]) - 12)
+            world["history"].append("Politische Krise: Proteste niedergeschlagen; Bevölkerung radikalisiert.")
+    elif kind == "colonies":
         if option == 0:
             world["credits"] = int(world["credits"]) - 20
             world["science"] = int(world["science"]) + 35
