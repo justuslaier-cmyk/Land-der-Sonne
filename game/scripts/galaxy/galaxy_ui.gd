@@ -459,8 +459,17 @@ func _chronicle() -> void:
     var artifacts: Array = world.get("artifacts", [])
     if not artifacts.is_empty():
         _label("RELIKTE VERGESSENER ZIVILISATIONEN")
-        for artifact in artifacts:
+        for i in range(artifacts.size()):
+            var artifact: Dictionary = artifacts[i]
             _label("• %s  |  %s  |  Fundort: %s" % [artifact["culture"], artifact["discipline"], artifact["origin"]])
+            if bool(artifact.get("analyzed", false)):
+                _label("Technologie entschlüsselt: dauerhafter Produktionsbonus")
+            else:
+                var artifact_index := i
+                _button("RELIKT ERFORSCHEN (30 Forschung)", func():
+                    notice = "Relikt entschlüsselt." if GalaxyLore.analyze_artifact(world, artifact_index) else "Nicht genügend Forschung oder bereits entschlüsselt."
+                    _chronicle()
+                )
     var history: Array = world["history"]
     for i in range(maxi(0, history.size() - 35), history.size()):
         _label("• " + str(history[i]))
