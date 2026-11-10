@@ -184,7 +184,7 @@ func _start_game() -> void:
         return
     world = GalaxyModel.generate(settings, empire)
     selected = 0
-    GalaxySystems.prepare(world)
+    GalaxyStrategy.prepare(world)
     _show_galaxy()
 
 func _load_game() -> void:
@@ -211,7 +211,7 @@ func _show_galaxy() -> void:
     _refresh_status()
     var bar := HBoxContainer.new()
     root.add_child(bar)
-    for spec in [["ZEIT +1", _advance], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
+    for spec in [["ZEIT +1", _advance], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
         var button := Button.new()
         button.text = spec[0]
         button.pressed.connect(spec[1])
@@ -231,7 +231,7 @@ func _show_galaxy() -> void:
         _show_event()
 
 func _refresh_status() -> void:
-    status.text = "Jahr %d  •  Credits %d  •  Forschung %d  •  %d Sternensysteme  •  %d KI-Reiche" % [int(world["tick"]) + 2200, int(world["credits"]), int(world["science"]), world["stars"].size(), world["ai"].size()]
+    status.text = "Jahr %d  •  Credits %d  •  Forschung %d  •  Legierungen %d  •  Stabilität %d%%  •  %d Systeme  •  %d KI-Reiche" % [int(world["tick"]) + 2200, int(world["credits"]), int(world["science"]), int(world["alloys"]), int(world["stability"]), world["stars"].size(), world["ai"].size()]
 
 func _star_pos(star: Dictionary) -> Vector2:
     return Vector2(430, 245) + map_offset + Vector2(float(star["x"]), float(star["y"])) * zoom
@@ -305,6 +305,10 @@ func _show_selection() -> void:
         _label("Rohstoffstufe %d  •  %s" % [int(star["resource"]), "Bewohnbar" if bool(star["habitable"]) else "Unbewohnbar"])
         if int(world["fleets"][0]["location"]) != selected:
             _button("FLOTTE HIERHER SCHICKEN", _move_fleet)
+        if owner == 0:
+            _button("PLANETARE BAUPROJEKTE", _construction)
+        if owner > 0 and world["wars"].has(owner):
+            _button("ANGREIFEN", _attack)
         if owner == -1 and bool(star["habitable"]):
             _button("KOLONISIEREN (50 Credits)", _colonize)
         if owner > 0:
@@ -332,7 +336,7 @@ func _colonize() -> void:
     _show_galaxy()
 
 func _advance() -> void:
-    GalaxySystems.tick(world)
+    GalaxyStrategy.tick(world)
     notice = ""
     _show_galaxy()
 
@@ -372,10 +376,11 @@ func _diplomacy(rival_id: int = -1) -> void:
         _button("GESCHENK SENDEN (-30 Credits)", func(): _diplomatic_choice(id, "gift"))
         _button("HANDELSABKOMMEN", func(): _diplomatic_choice(id, "trade"))
         _button("ULTIMATUM", func(): _diplomatic_choice(id, "threat"))
+        _button("KRIEG ERKLÄREN", func(): _war(id))
     _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
 
 func _diplomatic_choice(id: int, action: String) -> void:
-    notice = GalaxySystems.diplomatic_action(world, id, action)
+    notice = "Handelsvertrag geschlossen." if action == "trade" and GalaxyStrategy.sign_trade(world, id) else GalaxySystems.diplomatic_action(world, id, action) if action != "trade" else "Handelsvertrag benötigt +15 Beziehung, Erstkontakt und Frieden."
     _show_galaxy()
 
 func _show_event() -> void:
@@ -438,3 +443,78 @@ func _draw_illustration(canvas: Control, kind: String) -> void:
         canvas.draw_arc(Vector2(width * 0.75, 95), 84, 0, TAU, 64, Color("#7ccad3"), 3.0)
         canvas.draw_line(Vector2(width * 0.2, 115), Vector2(width * 0.38, 115), Color("#e5c47e"), 5.0)
         canvas.draw_colored_polygon(PackedVector2Array([Vector2(width * 0.3, 92), Vector2(width * 0.37, 115), Vector2(width * 0.3, 138)]), Color("#a1b7cc"))
+
+func _construction() -> void:
+    screen = "construction"
+    _clear()
+    GalaxyStrategy.prepare(world)
+    var star: Dictionary = world["stars"][selected]
+    _title("PLANETENVERWALTUNG / " + str(star["name"]))
+    _label("Rohstoffstufe %d  •  Credits %d  •  Legierungen %d" % [int(star["resource"]), int(world["credits"]), int(world["alloys"])])
+    var built: Dictionary = world["buildings"].get(str(selected), {})
+    for spec in [["mine", "MINE", "Credits"], ["lab", "FORSCHUNGSLABOR", "Forschung"], ["factory", "WERFT", "Legierungen"], ["fort", "VERTEIDIGUNG", "Befestigung"]]:
+        var kind: String = spec[0]
+        _label("%s  •  Stufe %d / 3" % [spec[1], int(built.get(kind, 0))])
+        _button("%s BAUEN (%d Credits)" % [spec[1], GalaxyStrategy.building_cost(kind)], func(): _build(kind))
+    _button("ZURÜCK", _show_galaxy)
+
+func _build(kind: String) -> void:
+    notice = "Bauprojekt abgeschlossen: " + kind if GalaxyStrategy.construct(world, selected, kind) else "Bau nicht möglich: Credits, Eigentum oder Baulimit."
+    _construction()
+
+func _politics() -> void:
+    screen = "politics"
+    _clear()
+    GalaxyStrategy.prepare(world)
+    _title("REICHSPOLITIK")
+    _label("Stabilität: %d%%  •  Politische Ausrichtung beeinflusst die Jahresproduktion." % int(world["stability"]))
+    _label("Schwerpunkt: %s" % ["Handel", "Wissenschaft", "Industrie"][int(world["policies"]["focus"])])
+    for i in range(3):
+        var index := i
+        _button(["HANDEL (+4 Credits)", "WISSENSCHAFT (+4 Forschung)", "INDUSTRIE (+3 Legierungen)"][i], func(): _set_policy(index, int(world["policies"]["tax"])))
+    _label("Steuersatz: %s" % ["Niedrig", "Normal", "Hoch"][int(world["policies"]["tax"])])
+    for i in range(3):
+        var index := i
+        _button(["NIEDRIG (Stabilität +1)", "NORMAL", "HOCH (+5 Credits, Stabilität -1)"][i], func(): _set_policy(int(world["policies"]["focus"]), index))
+    _button("ZURÜCK", _show_galaxy)
+
+func _set_policy(focus: int, tax: int) -> void:
+    GalaxyStrategy.set_policy(world, focus, tax)
+    _politics()
+
+func _shipyard() -> void:
+    screen = "shipyard"
+    _clear()
+    GalaxyStrategy.prepare(world)
+    _title("SCHIFFSKONSTRUKTION")
+    _label("Legierungen: %d  •  Credits: %d" % [int(world["alloys"]), int(world["credits"])])
+    var design: Dictionary = world["ship_design"]
+    _label("Rumpf: %s  •  Bewaffnung: %s  •  Antrieb: %s" % [["Leicht", "Mittel", "Schwer"][int(design["hull"])], ["Laser", "Plasma", "Kinetisch"][int(design["weapon"])], ["Impuls", "Ionen", "Warp"][int(design["engine"])]])
+    _label("Schiffsstärke: +%d" % GalaxyStrategy.ship_strength(world))
+    for i in range(3):
+        var index := i
+        _button("RUMPF: " + ["LEICHT", "MITTEL", "SCHWER"][i], func(): _design(index, int(design["weapon"]), int(design["engine"])))
+    for i in range(3):
+        var index := i
+        _button("WAFFE: " + ["LASER", "PLASMA", "KINETISCH"][i], func(): _design(int(design["hull"]), index, int(design["engine"])))
+    for i in range(3):
+        var index := i
+        _button("ANTRIEB: " + ["IMPULS", "IONEN", "WARP"][i], func(): _design(int(design["hull"]), int(design["weapon"]), index))
+    _button("SCHIFFE PRODUZIEREN", _produce_ships)
+    _button("ZURÜCK", _show_galaxy)
+
+func _design(hull: int, weapon: int, engine: int) -> void:
+    GalaxyStrategy.configure_ship(world, hull, weapon, engine)
+    _shipyard()
+
+func _produce_ships() -> void:
+    notice = "Neue Schiffe gebaut." if GalaxyStrategy.build_ships(world) else "Nicht genügend Credits oder Legierungen."
+    _shipyard()
+
+func _war(id: int) -> void:
+    notice = "Krieg erklärt." if GalaxyStrategy.declare_war(world, id) else "Kriegserklärung nicht möglich."
+    _show_galaxy()
+
+func _attack() -> void:
+    notice = GalaxyStrategy.attack(world, selected)
+    _show_galaxy()
