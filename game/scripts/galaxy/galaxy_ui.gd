@@ -322,7 +322,7 @@ func _move_fleet() -> void:
     _show_galaxy()
 
 func _explore() -> void:
-    notice = "System kartografiert (+4 Forschung)." if GalaxySystems.explore(world, selected) else "Außerhalb der Erkundungsreichweite (270)."
+    notice = "System kartografiert (+4 Forschung)." if GalaxySystems.explore(world, selected) else "Keine freie Flotte innerhalb von 170 Karteneinheiten."
     _show_galaxy()
 
 func _colonize() -> void:
@@ -451,6 +451,8 @@ func _construction() -> void:
     var star: Dictionary = world["stars"][selected]
     _title("PLANETENVERWALTUNG / " + str(star["name"]))
     _label("Rohstoffstufe %d  •  Credits %d  •  Legierungen %d" % [int(star["resource"]), int(world["credits"]), int(world["alloys"])])
+    if notice != "":
+        _label(notice)
     var built: Dictionary = world["buildings"].get(str(selected), {})
     for spec in [["mine", "MINE", "Credits"], ["lab", "FORSCHUNGSLABOR", "Forschung"], ["factory", "WERFT", "Legierungen"], ["fort", "VERTEIDIGUNG", "Befestigung"]]:
         var kind: String = spec[0]
@@ -488,6 +490,8 @@ func _shipyard() -> void:
     GalaxyStrategy.prepare(world)
     _title("SCHIFFSKONSTRUKTION")
     _label("Legierungen: %d  •  Credits: %d" % [int(world["alloys"]), int(world["credits"])])
+    if notice != "":
+        _label(notice)
     var design: Dictionary = world["ship_design"]
     _label("Rumpf: %s  •  Bewaffnung: %s  •  Antrieb: %s" % [["Leicht", "Mittel", "Schwer"][int(design["hull"])], ["Laser", "Plasma", "Kinetisch"][int(design["weapon"])], ["Impuls", "Ionen", "Warp"][int(design["engine"])]])
     _label("Schiffsstärke: +%d" % GalaxyStrategy.ship_strength(world))
