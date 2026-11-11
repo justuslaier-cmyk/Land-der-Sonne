@@ -4,6 +4,7 @@ class_name GalaxyStrategy
 # Pure, deterministic strategic rules. Existing saves are upgraded lazily.
 static func prepare(world: Dictionary) -> void:
     GalaxySystems.prepare(world)
+    GalaxyAI.prepare(world)
     GalaxyCivilians.prepare(world)
     GalaxyProgress.prepare(world)
     if not world.has("planet_colonies"):
