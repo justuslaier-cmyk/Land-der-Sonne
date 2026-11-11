@@ -31,6 +31,10 @@ static func tick(world: Dictionary) -> void:
             settlements[key] = {"population": 6, "capacity": 65 + int(star["resource"]) * 12, "jobs": 18 + int(star["resource"]) * 7, "satisfaction": 55, "private_capital": 20, "goods": 15, "output": 0, "taxes": 0}
     var tax_rate: int = [8, 17, 28][clampi(int(world["policies"]["tax"]), 0, 2)]
     var identity: Dictionary = GalaxyIdentity.modifiers(world["empire"])
+    var culture_effects: Dictionary = GalaxyIdentity.culture_modifiers(world.get("culture", {}))
+    identity["satisfaction"] = int(identity["satisfaction"]) + int(culture_effects["satisfaction"])
+    identity["capital"] = int(identity["capital"]) + int(culture_effects["capital"])
+    identity["production"] = int(identity["production"]) + int(culture_effects["science"])
     var total_taxes := 0
     var satisfaction_total := 0
     var population_total := 0
