@@ -114,6 +114,15 @@ static func advance_production(market: Dictionary, resource: int) -> Dictionary:
         "components_after": components_after, "manufactures_before": manufactures_before,
         "assembled": assembled, "manufactures_after": manufactures_after}
 
+# Finished products enter the household goods market only through a
+# recorded conversion: one manufacture becomes one consumer good.
+static func sell_manufactures(market: Dictionary, demand: int) -> int:
+    var stock: Dictionary = market.get("production_stock", production_defaults())
+    var sold := mini(maxi(0, int(stock.get("manufactures", 0))), maxi(0, demand))
+    stock["manufactures"] = int(stock.get("manufactures", 0)) - sold
+    market["production_stock"] = stock
+    return sold
+
 static func tick(world: Dictionary) -> void:
     prepare(world)
     var settlements: Dictionary = world["civilian_worlds"]
@@ -152,16 +161,22 @@ static func tick(world: Dictionary) -> void:
         var employment := mini(int(current_cohorts["working_age"]), int(market["jobs"]))
         var output := employment * (2 + int(world["stars"][sid]["resource"]) + int(identity["production"])) / 4
         var needs := maxi(1, population / 2 + int(identity["needs"]))
+        var chain: Dictionary = advance_production(market, int(world["stars"][sid]["resource"]))
+        var demand_gap := maxi(0, needs - maxi(0, int(market["goods"]) + output))
+        var sold := sell_manufactures(market, demand_gap)
+        chain["sold"] = sold
+        chain["manufactures_after"] = int(market["production_stock"]["manufactures"])
+        production_chains[key] = chain
         # Goods are conserved: actual household consumption cannot exceed stock.
-        var available := maxi(0, int(market["goods"]) + output)
+        var available := maxi(0, int(market["goods"]) + output + sold)
         var consumed := mini(available, needs)
         var stock := available - consumed
-        production_total += output
+        production_total += output + sold
         consumption_total += consumed
         var satisfaction := clampi(int(market["satisfaction"]) + (2 if consumed >= needs else -3) - (2 if tax_rate >= 28 else 0) + int(identity["satisfaction"]), 0, 100)
         var earnings := maxi(0, output * (40 + satisfaction) / 100)
         var taxes: int = earnings * tax_rate / 100
-        var capital := maxi(0, int(market["private_capital"]) + earnings - taxes - needs + int(identity["capital"]))
+        var capital := maxi(0, int(market["private_capital"]) + earnings + sold - taxes - needs + int(identity["capital"]))
         if capital > 80 and int(market["jobs"]) < int(market["capacity"]):
             market["jobs"] = mini(int(market["capacity"]), int(market["jobs"]) + 3)
             capital -= 15
@@ -171,7 +186,7 @@ static func tick(world: Dictionary) -> void:
         market["private_capital"] = capital
         market["output"] = output
         market["taxes"] = taxes
-        production_chains[key] = advance_production(market, int(world["stars"][sid]["resource"]))
+
         total_taxes += taxes
         satisfaction_total += satisfaction * int(market["population"])
         population_total += int(market["population"])
