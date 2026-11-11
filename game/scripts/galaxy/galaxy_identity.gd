@@ -135,6 +135,31 @@ static func modifiers(empire: Dictionary) -> Dictionary:
             result["legitimacy"] += 1
     return result
 
+# Persistent culture tracks are distinct from immutable biological traits.
+# A slow-moving cohort of traditions changes through lived conditions.
+static func culture_defaults(empire: Dictionary) -> Dictionary:
+    var ethic := str(empire.get("ethic", "pluralist"))
+    return {"tradition": 55 if ethic == "traditionalist" else 35,
+        "openness": 60 if ethic == "pluralist" else 45,
+        "solidarity": 60 if ethic == "collectivist" else 45,
+        "commercialism": 60 if ethic == "mercantile" else 40,
+        "generation": 0, "history": []}
+
+static func culture_tick(culture: Dictionary, empire: Dictionary, prosperity: int, satisfaction: int, year: int) -> void:
+    var ethic := str(empire.get("ethic", "pluralist"))
+    var change := 1 if satisfaction >= 65 else -1 if satisfaction < 35 else 0
+    culture["solidarity"] = clampi(int(culture.get("solidarity", 45)) + change, 0, 100)
+    culture["commercialism"] = clampi(int(culture.get("commercialism", 40)) + (1 if prosperity >= 65 else -1 if prosperity < 30 else 0), 0, 100)
+    culture["openness"] = clampi(int(culture.get("openness", 45)) + (1 if ethic == "pluralist" and satisfaction >= 50 else -1 if satisfaction < 30 else 0), 0, 100)
+    culture["tradition"] = clampi(int(culture.get("tradition", 35)) + (1 if ethic == "traditionalist" else -1 if int(culture.get("openness", 45)) >= 75 else 0), 0, 100)
+    if year > 0 and year % 20 == 0:
+        culture["generation"] = int(culture.get("generation", 0)) + 1
+        var memory: Array = culture.get("history", [])
+        memory.append({"year": year, "generation": int(culture["generation"]), "tradition": int(culture["tradition"]), "openness": int(culture["openness"]), "solidarity": int(culture["solidarity"]), "commercialism": int(culture["commercialism"])})
+        if memory.size() > 8:
+            memory.pop_front()
+        culture["history"] = memory
+
 static func assign_rival_identities(world: Dictionary) -> void:
     for rival in world["ai"]:
         if rival.has("civics") and rival.has("traits") and rival.has("ethic") and rival.has("government"):
