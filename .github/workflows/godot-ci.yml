@@ -35,6 +35,8 @@ jobs:
         run: godot --headless --path game --script res://tests/interaction_test.gd
       - name: Test galactic new game and persistence
         run: timeout 100s godot --headless --path game --script res://tests/galaxy_test.gd
+      - name: Verify long-term cultural stability, generations and AI replay
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_culture_longrun_test.gd
       - name: Verify cultural groups and economic simulation effects
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_culture_effects_test.gd
       - name: Verify cultural development, generations and save persistence
