@@ -15,6 +15,17 @@ func _initialize() -> void:
         GalaxyStrategy.tick(world)
         if str(world["pending_event"]) != "":
             GalaxySystems.resolve_event(world, 0)
+    if world["ai_societies"].size() != 3:
+        _fail("Rival social simulations not initialized")
+        return
+    for rival in world["ai"]:
+        var society: Dictionary = world["ai_societies"][str(rival["id"])]
+        if int(society["population"]) < 5 or int(society["prosperity"]) < 0 or int(society["prosperity"]) > 100:
+            _fail("Rival demographic or economic indicators invalid")
+            return
+        if not society["factions"].has("reform") or not society["factions"].has("commerce"):
+            _fail("Rival political factions missing")
+            return
     if world["ai_activity"].is_empty():
         _fail("AI never acted")
         return
