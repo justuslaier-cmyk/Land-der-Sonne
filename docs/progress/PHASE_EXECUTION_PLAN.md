@@ -33,3 +33,13 @@ Jeder Durchlauf: (a) aktuellen Branch und relevante Pflicht-IDs prüfen; (b) kon
 - **Änderungen:** `trait` in `trait_data` umbenannt; `achieved` explizit als `int` typisiert.
 - **Betroffene Pflicht-IDs:** P87, P90, P91, P96; **alle weiterhin offen**, bis die nötigen Abnahmen vorliegen.
 - **Verifikation:** Nachfolgende CI-Runs und ggf. neue Fehler separat protokollieren; nicht aus bloßen Commits auf Erfolg schließen.
+
+### Phase 01 — Durchlauf 02 (2026-11-11)
+- **Ziel:** Simulationsverträge, strukturelle Weltinvarianten und begrenzte deterministische Replay-Tests.
+- **CI-Ausgangsbefund:** Run `43088330913` nach den Parserkorrekturen: `render-check` und `windows-export` bestanden, `godot-smoke` scheiterte im Identitätstest mit `AI empire has no cultural identity`. Vorherige Galaxie-, Wirtschafts- und Strategietests meldeten PASS.
+- **Codekorrektur:** `GalaxyStrategy.prepare` initialisiert jetzt `GalaxyAI.prepare` vor weiteren Simulationen; dadurch sollen KI-Identitäten und Gesellschaftsdaten bereits vor dem ersten Tick existieren.
+- **Neue Verträge:** `GalaxyContracts.errors(world)` prüft ohne Mutation IDs, Eigentümer, ausgewählte zivile Bestände und Frachtdatensätze.
+- **Neue Tests:** `galaxy_contracts_test.gd` prüft Initialzustand, zwei gleich gestartete 12-Tick-Simulationen, Negativfälle und Save/Load. In CI aufgenommen.
+- **Dokumentation:** `docs/architecture/DATA_CONTRACTS.md` enthält das tatsächliche Galaxie-Schema, die Tick-Reihenfolge und offene Bilanzierungs-/Migrationsrisiken.
+- **Betroffene Pflicht-IDs:** P24, P75, P87, P88, P89, P90, P91, P96; **weiterhin offen**.
+- **Nachweisgrenze:** Neuer vollständiger CI-Lauf zum Stand der Änderungen war bei der letzten Abfrage noch nicht abgeschlossen. Tests gelten daher nicht als bestanden.
