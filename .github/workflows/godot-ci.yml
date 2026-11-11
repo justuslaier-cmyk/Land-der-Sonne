@@ -2,7 +2,7 @@ name: Godot foundation checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, design/galactic-grand-strategy-pivot]
   pull_request:
     branches: [main]
 
@@ -123,6 +123,22 @@ jobs:
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_contracts_test.gd
       - name: Test autonomous rival empires
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_ai_test.gd
+      - name: Verify Phase 13 story chains
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_story_chains_test.gd
+      - name: Verify Phase 13 narrative director
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_narrative_director_test.gd
+      - name: Verify Phase 14 AI priority planner
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_ai_planner_test.gd
+      - name: Verify Phase 14 ownership index
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_ai_scaling_test.gd
+      - name: Verify Phase 14 long-run deterministic replay
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_ai_soak_test.gd
+      - name: Verify Phase 15 visual theme
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_visual_theme_test.gd
+      - name: Verify Phase 15 event card
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_event_card_test.gd
+      - name: Verify Phase 15 responsive layout and contrast
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_ui_accessibility_test.gd
       - name: Load main scene
         run: godot --headless --path game --quit-after 10
 
