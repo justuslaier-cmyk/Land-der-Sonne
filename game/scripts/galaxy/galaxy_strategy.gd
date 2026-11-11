@@ -5,6 +5,7 @@ class_name GalaxyStrategy
 static func prepare(world: Dictionary) -> void:
     GalaxySystems.prepare(world)
     GalaxyCivilians.prepare(world)
+    GalaxyProgress.prepare(world)
     if not world.has("planet_colonies"):
         world["planet_colonies"] = {}
     if not world.has("buildings"):
@@ -343,6 +344,7 @@ static func tick(world: Dictionary) -> void:
         world["diplomatic_trust"][key] = clampi(trust + change, 0, 50)
     # Autonomous rival behavior advances with the same simulation clock.
     GalaxyAI.tick(world)
+    GalaxyProgress.tick(world)
     # Bounded economic history, persisted in ordinary saves.
     if not world.has("economy_history"):
         world["economy_history"] = []
