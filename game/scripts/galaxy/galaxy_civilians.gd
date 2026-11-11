@@ -107,6 +107,9 @@ static func tick(world: Dictionary) -> void:
     var petitions: Array = []
     var migration := 0
     var trade: Array = []
+    var opening_stock := 0
+    var production_total := 0
+    var consumption_total := 0
     var active: Array = []
     for key in settlements.keys():
         var sid := int(key)
@@ -114,14 +117,20 @@ static func tick(world: Dictionary) -> void:
             continue
         active.append(key)
         var market: Dictionary = settlements[key]
+        opening_stock += int(market["goods"])
         var population := int(market["population"])
         var old_population := population
         var current_cohorts: Dictionary = market.get("demographics", demographic_defaults(population))
         var employment := mini(int(current_cohorts["working_age"]), int(market["jobs"]))
         var output := employment * (2 + int(world["stars"][sid]["resource"]) + int(identity["production"])) / 4
         var needs := maxi(1, population / 2 + int(identity["needs"]))
-        var stock := int(market["goods"]) + output - needs
-        var satisfaction := clampi(int(market["satisfaction"]) + (2 if stock >= needs else -3) - (2 if tax_rate >= 28 else 0) + int(identity["satisfaction"]), 0, 100)
+        # Goods are conserved: actual household consumption cannot exceed stock.
+        var available := maxi(0, int(market["goods"]) + output)
+        var consumed := mini(available, needs)
+        var stock := available - consumed
+        production_total += output
+        consumption_total += consumed
+        var satisfaction := clampi(int(market["satisfaction"]) + (2 if consumed >= needs else -3) - (2 if tax_rate >= 28 else 0) + int(identity["satisfaction"]), 0, 100)
         var earnings := maxi(0, output * (40 + satisfaction) / 100)
         var taxes: int = earnings * tax_rate / 100
         var capital := maxi(0, int(market["private_capital"]) + earnings - taxes - needs + int(identity["capital"]))
@@ -186,6 +195,12 @@ static func tick(world: Dictionary) -> void:
         var market: Dictionary = settlements[key]
         satisfaction_total += int(market["satisfaction"]) * int(market["population"])
         population_total += int(market["population"])
+    var ending_stock := 0
+    for key in active:
+        ending_stock += int(settlements[key]["goods"])
+    world["civilian_goods_ledger"] = {"year": int(world["tick"]), "produced": production_total,
+        "consumed": consumption_total, "opening_stock": opening_stock, "ending_stock": ending_stock,
+        "shipments": trade.duplicate(true)}
     world["civilian_approval"] = satisfaction_total / maxi(1, population_total)
     world["civilian_petitions"] = petitions
     world["civilian_trade"] = trade
