@@ -18,6 +18,17 @@ static func generate(seed: int, star: Dictionary) -> Dictionary:
         for j in range(rng.randi_range(0, 4 if ptype == 1 else 2)):
             moons.append({"name": "%s %s-%d" % [star["name"], char(97 + i), j + 1], "size": rng.randi_range(2, 7)})
         (system["planets"] as Array).append({"name": "%s %s" % [star["name"], _roman(i + 1)], "type": types[ptype], "type_id": ptype, "size": rng.randi_range(5, 15), "orbit": i + 1, "moons": moons, "rings": ptype == 1 and rng.randf() < 0.7, "resources": rng.randi_range(1, 5), "habitable": (i == 1 and bool(star["habitable"])) or (ptype in [0, 3, 6] and (bool(star["habitable"]) or rng.randf() < 0.12))})
+    # Derived descriptors deliberately consume no additional random numbers:
+    # existing orbital layouts and colony keys remain stable across saves.
+    for planet in system["planets"]:
+        var type_id := int(planet["type_id"])
+        var climate := ["Gemäßigt", "Gasatmosphäre", "Polar", "Maritim", "Arid", "Vulkanisch", "Tropisch", "Subpolar"][type_id]
+        var ecology := ["Spärlich", "Keine Oberfläche", "Karg", "Ozeanisch", "Trocken", "Steril", "Artenreich", "Tundra"][type_id]
+        var pressure := clampi(int(planet["resources"]) * 8 + (20 if type_id in [4, 5] else 0), 0, 100)
+        planet["climate"] = climate
+        planet["ecology"] = ecology
+        planet["environmental_pressure"] = pressure
+        planet["terraformable"] = type_id in [0, 2, 3, 4, 6, 7] and not bool(planet["habitable"])
     return system
 
 static func _roman(n: int) -> String:
