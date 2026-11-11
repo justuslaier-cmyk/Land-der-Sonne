@@ -36,3 +36,24 @@ static func apply_button(button: Button) -> void:
     button.add_theme_stylebox_override("pressed", panel_style(BUTTON_PRESSED, GOLD, 2))
     button.add_theme_stylebox_override("focus", panel_style(Color.TRANSPARENT, FOCUS, 3))
     button.add_theme_stylebox_override("disabled", panel_style(PANEL, Color("#34445b")))
+
+# Scales margins down for smaller windows without sacrificing large-screen rhythm.
+static func gutters(viewport_size: Vector2) -> Vector2i:
+    var horizontal: int = clampi(int(viewport_size.x * 0.035), 12, 48)
+    var vertical: int = clampi(int(viewport_size.y * 0.042), 12, 30)
+    return Vector2i(horizontal, vertical)
+
+# WCAG-style relative luminance and contrast for opaque sRGB palette colors.
+static func relative_luminance(color: Color) -> float:
+    var channels := [color.r, color.g, color.b]
+    var result := 0.0
+    for i in range(3):
+        var value: float = float(channels[i])
+        var linear: float = value / 12.92 if value <= 0.04045 else pow((value + 0.055) / 1.055, 2.4)
+        result += linear * ([0.2126, 0.7152, 0.0722][i])
+    return result
+
+static func contrast_ratio(a: Color, b: Color) -> float:
+    var light: float = maxf(relative_luminance(a), relative_luminance(b))
+    var dark: float = minf(relative_luminance(a), relative_luminance(b))
+    return (light + 0.05) / (dark + 0.05)
