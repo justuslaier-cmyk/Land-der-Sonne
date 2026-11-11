@@ -49,7 +49,7 @@ static func route_preview(world: Dictionary, target: int) -> Dictionary:
     if origin_id < 0 or origin_id >= world["stars"].size():
         return {"allowed": false, "reason": "Ungültiger Flottenstandort", "distance": 0.0, "eta": 0}
     var separation := distance(world["stars"][origin_id], world["stars"][target])
-    var limit := 255.0 if str(world.get("fleet_doctrine", "balanced")) == "exploration" else 220.0
+    var limit := (255.0 if str(world.get("fleet_doctrine", "balanced")) == "exploration" else 220.0) + float(technology_bonuses(world)["fleet_range"])
     var reason := ""
     if int(fleet.get("owner", -1)) != 0:
         reason = "Keine eigene Flotte"
