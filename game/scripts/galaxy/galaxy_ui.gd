@@ -654,8 +654,8 @@ func _society_report() -> void:
         _label(str(civic["icon"]) + "  " + str(civic["name"]) + "  •  " + str(civic["description"]))
     _label("SPEZIES / " + str(identity["species"]))
     for trait_id in identity.get("traits", ["curious"]):
-        var trait: Dictionary = GalaxyIdentity.trait_info(str(trait_id))
-        _label(str(trait["icon"]) + "  " + str(trait["name"]) + "  •  " + str(trait["description"]))
+        var trait_data: Dictionary = GalaxyIdentity.trait_info(str(trait_id))
+        _label(str(trait_data["icon"]) + "  " + str(trait_data["name"]) + "  •  " + str(trait_data["description"]))
     _label("ÖFFENTLICHE ZUSTIMMUNG  •  %d%%" % int(world.get("civilian_approval", 65)))
     for petition in world.get("civilian_petitions", []):
         _label("⚑ Anliegen aus %s: %s" % [world["stars"][int(petition["system"])]["name"], petition["demand"]])
