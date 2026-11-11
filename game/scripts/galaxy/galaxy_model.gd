@@ -63,8 +63,26 @@ static func generate(settings: Dictionary, empire: Dictionary) -> Dictionary:
     stars[0]["owner"] = 0
     var ai: Array = []
     var names := ["Veyr-Konsortium", "Nexari-Synode", "Orionische Liga", "Khar-Dynastie", "Thalische Föderation", "Ophir-Kollektiv", "Astra-Orden", "Zirax-Kommune", "Eidolon-Reich", "Meridian-Pakt"]
+    var capitals: Array = [0]
     for j in range(int(settings["ai_count"])):
-        var index := 1 + int(float(j + 1) * float(count - 2) / float(int(settings["ai_count"]) + 1))
+        # Farthest-first placement maximizes the nearest capital distance.
+        # This is a spatial heuristic, not a guarantee of balanced resources.
+        var index := -1
+        var best_distance := -1.0
+        for candidate in range(1, count):
+            if capitals.has(candidate):
+                continue
+            var nearest := INF
+            var point := Vector2(float(stars[candidate]["x"]), float(stars[candidate]["y"]))
+            for capital in capitals:
+                var other := Vector2(float(stars[int(capital)]["x"]), float(stars[int(capital)]["y"]))
+                nearest = minf(nearest, point.distance_squared_to(other))
+            if nearest > best_distance:
+                best_distance = nearest
+                index = candidate
+        if index < 0:
+            break
+        capitals.append(index)
         stars[index]["owner"] = j + 1
         ai.append({"id": j + 1, "name": names[j % names.size()] if j < names.size() else "Imperium %d" % (j + 1), "capital": index, "temperament": rng.randi_range(0, 3)})
     return {"version": VERSION, "settings": actual_settings, "empire": empire.duplicate(true), "stars": stars, "ai": ai, "tick": 0, "credits": 100, "science": 0, "selected": 0, "event_done": false, "history": ["Gründung des Reiches " + str(empire["name"])]}
