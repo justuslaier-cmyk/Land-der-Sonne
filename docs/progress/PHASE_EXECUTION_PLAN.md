@@ -69,3 +69,13 @@ Jeder Durchlauf: (a) aktuellen Branch und relevante Pflicht-IDs prüfen; (b) kon
 - **Betroffene Pflichten:** P02–P04, P09, P90–P91. Alle **offen**.
 - **Noch offen:** Die Vorlagen sind vordefiniert, nicht dauerhaft vom Spieler speicherbar. Nicht alle theoretisch vorgesehenen Galaxieparameter sind implementiert; manche UI-Validierungen erfolgen erst bei Navigation; visuelle Interaktion und Windows-Start sind nicht abgenommen.
 - **CI-Status:** Der aktualisierte Testlauf für Durchlauf 02 war zum Zeitpunkt der Implementierung noch nicht abgeschlossen. Keine Aussage über dessen Bestehen.
+
+### Phase 02 — Durchlauf 03 (2026-11-11)
+- **Ziel:** End-to-end-Startfluss, konkrete Bedienungsfehler, Test- und Abnahmegrenzen prüfen.
+- **Befund:** Der zuvor erfolgreiche CI-Run `43089149418` betrifft Durchlauf 01. Neuere Runs für Durchlauf 02 wurden bei nachfolgenden Commits abgebrochen (GitHub-Actions-Concurrency); sie sind **kein** Testerfolgsnachweis.
+- **Korrekturen:** Bei Größenänderung der Galaxis wird die KI-Obergrenze erneut berechnet und `ai_count` nötigenfalls reduziert; die Reichserstellung meldet ungültige Einstellungen unmittelbar vor dem Wechsel zur Zusammenfassung; Hauptmenü und Einstellungen beschreiben die Seed-Funktion korrekt.
+- **Regression:** `galaxy_wizard_test.gd` prüft zusätzlich die 20-Sterne-Grenze mit 5 unzulässigen und 4 zulässigen KI-Reichen. Bereits bestehende Tests prüfen die Wizard-Zustände, Vorlagen, Validierung und Seed-Übernahme.
+- **Dokumentationskorrektur:** Pflichtcheckliste verweist jetzt auf die vom Nutzer festgelegten 16 × 3 = 48 geplanten Durchläufe; keine Fertigstellungsgarantie.
+- **CI bei letzter Abfrage:** Run `43089548236` für Code-SHA `7375fccad4b19b19c1c74fca0fb624000ce10340` war `queued`. Keine vollständige CI-Abnahme behaupten.
+- **Pflichtstatus:** P01–P04, P09, P90–P91 bleiben **offen**. Grund: fehlende vollständige UI-Einstellungen, persistente eigene Reichsvorlagen, alle geforderten Galaxieparameter, Tutorial, native/visuelle UX-Abnahme.
+- **Übergang:** Phase 03 / Durchlauf 01 beginnt mit Galaxiegenerator, sicheren Startbedingungen und Geografie; die unvollständigen Phase-02-Pflichten bleiben unabhängig als verbindliche offene Arbeit bestehen.
