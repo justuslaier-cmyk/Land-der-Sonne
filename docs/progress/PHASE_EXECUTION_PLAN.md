@@ -60,3 +60,12 @@ Jeder Durchlauf: (a) aktuellen Branch und relevante Pflicht-IDs prüfen; (b) kon
 - **Betroffene Pflichten:** P01–P04, P09, P90–P91; alle **offen** bis zur vollständigen Abnahme.
 - **Nicht in diesem Durchlauf umgesetzt:** UI-Fehlermeldungen unmittelbar auf jeder Wizard-Seite, vollständig konfigurierbare Galaxieparameter, Reichsvorlagen, Einstellungen-Persistenz, optische Abnahme und Tutorial.
 - **CI:** Der neue Workflow muss nach dem letzten Code-Commit abgeschlossen und ausgewertet werden, bevor ein Testerfolg behauptet wird.
+
+### Phase 02 — Durchlauf 02 (2026-11-11)
+- **Ziel:** Konfigurierbarer Seed, editierbare Reichsvorlagen, vollständigeres Eingabe-Feedback und neue Validierungstests.
+- **Bestätigter Ausgangsstand:** CI-Run `43089149418` für den letzten Stand von Durchlauf 01 vollständig `success`.
+- **Implementiert:** `GalaxyModel.validate` prüft Seed, Form, Schwierigkeit, Bewohnbarkeit, Ressourcen, Ereignisrate und Heimatwelt. Die UI besitzt einen Seed-SpinBox-Eingang (0 = zufällig), begrenzt die KI-Zahl anhand der aktuellen Sternenzahl, bietet drei vordefinierte Reichsprofile und zeigt den Seed in der Zusammenfassung. Der Wizard meldet ungültige Einstellungen beim Weiterklicken.
+- **Tests erweitert:** `galaxy_wizard_test.gd` prüft alle drei Vorlagen, Technokratie-Voreinstellung, ungültige Form, Bewohnbarkeit und fehlende Heimatwelt.
+- **Betroffene Pflichten:** P02–P04, P09, P90–P91. Alle **offen**.
+- **Noch offen:** Die Vorlagen sind vordefiniert, nicht dauerhaft vom Spieler speicherbar. Nicht alle theoretisch vorgesehenen Galaxieparameter sind implementiert; manche UI-Validierungen erfolgen erst bei Navigation; visuelle Interaktion und Windows-Start sind nicht abgenommen.
+- **CI-Status:** Der aktualisierte Testlauf für Durchlauf 02 war zum Zeitpunkt der Implementierung noch nicht abgeschlossen. Keine Aussage über dessen Bestehen.
