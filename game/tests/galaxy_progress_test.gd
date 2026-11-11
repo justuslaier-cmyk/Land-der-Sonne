@@ -20,7 +20,7 @@ func _initialize() -> void:
         if not world["milestones"].has(id):
             _fail("Missing earned goal " + id)
             return
-    var achieved := world["milestones"].size()
+    var achieved: int = world["milestones"].size()
     GalaxyProgress.tick(world)
     if world["milestones"].size() != achieved:
         _fail("Milestone awarded twice")
