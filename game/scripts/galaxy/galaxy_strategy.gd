@@ -217,8 +217,8 @@ static func attack(world: Dictionary, star_id: int) -> String:
 # unpredictable events, rival actions and one-off expenditure.
 static func income_forecast(world: Dictionary) -> Dictionary:
     prepare(world)
-    var credits := 0
-    var science := 0
+    var credits := 3 + (2 if int(world["empire"]["trait"]) == 1 else 0)
+    var science := 2 + (2 if int(world["empire"]["trait"]) == 0 else 0)
     var alloys := 2
     var owned := 0
     var production := 0
