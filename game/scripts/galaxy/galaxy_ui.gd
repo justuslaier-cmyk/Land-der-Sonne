@@ -352,7 +352,7 @@ func _show_galaxy() -> void:
     _refresh_time_status()
     var bar := HBoxContainer.new()
     root.add_child(bar)
-    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["GESELLSCHAFT", _society_report], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
+    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["ZIELE", _goals_report], ["GESELLSCHAFT", _society_report], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
         var button := Button.new()
         button.text = spec[0]
         button.pressed.connect(spec[1])
@@ -621,6 +621,22 @@ func _fleet_doctrine() -> void:
 func _fleet() -> void:
     notice = "Flotte verstärkt (+5)." if GalaxySystems.build_fleet(world) else "65 Credits für den Flottenausbau benötigt."
     _show_galaxy()
+
+func _goals_report() -> void:
+    screen = "goals"
+    _clear()
+    GalaxyProgress.prepare(world)
+    _title("GALAKTISCHE ZIELE / DEIN VERMÄCHTNIS")
+    _label("Deine Zivilisation schreibt ihre eigene Geschichte. Alle Wege bleiben offen.")
+    var current: Dictionary = GalaxyProgress.measures(world)
+    var required: Dictionary = GalaxyProgress.targets()
+    for milestone in GalaxyProgress.MILESTONES:
+        var id := str(milestone["id"])
+        var completed: bool = world["milestones"].has(id)
+        _label(("%s  " % ("✓" if completed else "○")) + str(milestone["icon"]) + "  " + str(milestone["name"]))
+        _label("    " + str(milestone["description"]) + "  •  %d / %d" % [mini(int(current[id]), int(required[id])), int(required[id])])
+    _label("Erreicht: %d / %d  •  Die Simulation läuft auch nach allen Meilensteinen weiter." % [world["milestones"].size(), GalaxyProgress.MILESTONES.size()])
+    _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
 
 func _society_report() -> void:
     screen = "society"
