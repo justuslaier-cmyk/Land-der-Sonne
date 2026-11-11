@@ -1,5 +1,9 @@
 # Binding AI development rules
 
+## Binding independent completion checklist
+
+The user-approved mandatory acceptance register is [BINDING_GAME_REQUIREMENTS_CHECKLIST.md](vision/BINDING_GAME_REQUIREMENTS_CHECKLIST.md). Read it at the start of each game-development session alongside the vision and status documents. Its 98 independently tracked requirements are **mandatory** and may not be silently removed, reclassified or checked off based on implementation claims alone. Mark `[x]` only after integrated implementation and documented successful acceptance evidence (commit, executed tests, observed outcome, visual/native evidence where applicable); uncheck regressions. Cite affected requirement IDs in progress reports. The tentative 36-pass framework is not a promise or verified completion estimate.
+
 ## Source of truth
 Read this document, GAME_VISION.md, PROJECT_STATUS.md and applicable architecture/quality files at the start of every development session. The repository, not chat memory, is the authoritative project record. Preserve user-approved decisions; record proposed changes in decision records.
 
