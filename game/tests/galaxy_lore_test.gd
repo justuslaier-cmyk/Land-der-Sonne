@@ -57,6 +57,29 @@ func _initialize() -> void:
     if GalaxyLore.inspect(world, ruin):
         _fail("Ruins rediscovered twice")
         return
+    # The opposing archaeological decisions must also complete and persist.
+    var alternate := GalaxyModel.generate(settings, GalaxyModel.empire_defaults())
+    GalaxySystems.prepare(alternate)
+    if not GalaxyLore.inspect(alternate, ruin):
+        _fail("Alternate story discovery failed")
+        return
+    GalaxySystems.resolve_event(alternate, 1)
+    GalaxyLore.tick(alternate)
+    GalaxyLore.tick(alternate)
+    GalaxySystems.resolve_event(alternate, 1)
+    for i in range(3):
+        GalaxyLore.tick(alternate)
+    if str(alternate["pending_event"]) != "ancient_awakening":
+        _fail("Alternate story finale missing")
+        return
+    var previous_alloys := int(alternate.get("alloys", 0))
+    GalaxySystems.resolve_event(alternate, 1)
+    if not bool(alternate["ancient_history"]["completed"]) or int(alternate["ancient_history"]["final_choice"]) != 1:
+        _fail("Alternate story did not conclude")
+        return
+    if int(alternate["alloys"]) != previous_alloys + 35 or str(alternate["pending_event"]) != "":
+        _fail("Alternate story reward or event cleanup failed")
+        return
     print("GALAXY_LORE_PASS")
     quit(0)
 
