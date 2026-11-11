@@ -59,6 +59,32 @@ static func advance_demographics(market: Dictionary, population_before: int, _po
         "births": births, "deaths": deaths, "employed": employed, "unemployed": workers - employed,
         "health": health}
 
+# Move a real member of an age cohort; preserve totals on both worlds.
+# Prefer working-age migrants, then children or elders if necessary.
+static func transfer_migrant(source: Dictionary, destination: Dictionary) -> bool:
+    if int(source.get("population", 0)) <= 1 or int(destination.get("population", 0)) >= int(destination.get("capacity", 0)):
+        return false
+    var origin: Dictionary = source.get("demographics", demographic_defaults(int(source["population"])))
+    var arrival: Dictionary = destination.get("demographics", demographic_defaults(int(destination["population"])))
+    var cohort := ""
+    for candidate in ["working_age", "children", "elders"]:
+        if int(origin.get(candidate, 0)) > 0:
+            cohort = candidate
+            break
+    if cohort == "":
+        return false
+    origin[cohort] = int(origin[cohort]) - 1
+    arrival[cohort] = int(arrival.get(cohort, 0)) + 1
+    source["population"] = int(source["population"]) - 1
+    destination["population"] = int(destination["population"]) + 1
+    for market in [source, destination]:
+        var demographic: Dictionary = origin if market == source else arrival
+        var workers := int(demographic["working_age"])
+        demographic["employed"] = mini(workers, maxi(0, int(market["jobs"])))
+        demographic["unemployed"] = workers - int(demographic["employed"])
+        market["demographics"] = demographic
+    return true
+
 static func tick(world: Dictionary) -> void:
     prepare(world)
     var settlements: Dictionary = world["civilian_worlds"]
@@ -149,19 +175,15 @@ static func tick(world: Dictionary) -> void:
                     continue
                 var source: Dictionary = settlements[key]
                 if int(source["population"]) > 8 and int(source["satisfaction"]) + 12 < int(settlements[destination_key]["satisfaction"]):
-                    source["population"] = int(source["population"]) - 1
-                    settlements[destination_key]["population"] = int(settlements[destination_key]["population"]) + 1
-                    migration += 1
-    # Reconcile cohorts after autonomous migration.
+                    if transfer_migrant(source, settlements[destination_key]):
+                        migration += 1
+    # Approval is weighted by the population after migration, not before it.
+    satisfaction_total = 0
+    population_total = 0
     for key in active:
         var market: Dictionary = settlements[key]
-        var cohort: Dictionary = market.get("demographics", demographic_defaults(int(market["population"])))
-        var sum_cohorts := int(cohort["children"]) + int(cohort["working_age"]) + int(cohort["elders"])
-        var difference := int(market["population"]) - sum_cohorts
-        cohort["working_age"] = maxi(0, int(cohort["working_age"]) + difference)
-        cohort["employed"] = mini(int(cohort["working_age"]), int(market["jobs"]))
-        cohort["unemployed"] = int(cohort["working_age"]) - int(cohort["employed"])
-        market["demographics"] = cohort
+        satisfaction_total += int(market["satisfaction"]) * int(market["population"])
+        population_total += int(market["population"])
     world["civilian_approval"] = satisfaction_total / maxi(1, population_total)
     world["civilian_petitions"] = petitions
     world["civilian_trade"] = trade
