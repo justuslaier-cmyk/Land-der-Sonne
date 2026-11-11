@@ -22,6 +22,10 @@ static func prepare(world: Dictionary) -> void:
         world["research_fields"] = {"propulsion": 0, "industry": 0, "society": 0}
     if not world.has("research_history"):
         world["research_history"] = []
+    if not world.has("research_insights"):
+        world["research_insights"] = {"propulsion": 0, "industry": 0, "society": 0}
+    if not world.has("research_breakthroughs"):
+        world["research_breakthroughs"] = []
     if not world.has("pending_event"):
         world["pending_event"] = ""
     if not world.has("event_counter"):
@@ -173,13 +177,38 @@ static func technology_bonuses(world: Dictionary) -> Dictionary:
         "industry_alloys": int(levels.get("industry", 0)) * research_labs(world),
         "society_stability": int(levels.get("society", 0))}
 
+# Ancient discoveries supply a one-time insight for a matching research field.
+# A discipline can never be awarded twice, including after save/load.
+static func register_archaeological_insight(world: Dictionary, discipline: String) -> bool:
+    prepare(world)
+    var mapping := {
+        "Sternensegel": "propulsion", "Gravitationsarchitektur": "propulsion",
+        "Traumkartografie": "propulsion", "Chronometrie": "propulsion",
+        "Sternenmetallurgie": "industry", "Nebelchemie": "industry",
+        "Dunkelmaterie-Forschung": "industry", "Resonanztechnik": "industry",
+        "Biotechnologie": "society", "Symbiotische Ökologie": "society",
+        "Quantenkommunikation": "society", "Präkognitive Sensorik": "society"}
+    if not mapping.has(discipline):
+        return false
+    for discovery in world["research_breakthroughs"]:
+        if str(discovery.get("discipline", "")) == discipline:
+            return false
+    var field: String = mapping[discipline]
+    world["research_insights"][field] = int(world["research_insights"].get(field, 0)) + 1
+    world["research_breakthroughs"].append({"year": int(world["tick"]),
+        "discipline": discipline, "field": field, "consumed": false})
+    world["history"].append("Archäologischer Durchbruch: %s erschliesst %s-Forschung." % [discipline, field])
+    return true
+
 static func research_preview(world: Dictionary, field: String) -> Dictionary:
     prepare(world)
     if not ["propulsion", "industry", "society"].has(field):
         return {"allowed": false, "reason": "Unbekanntes Forschungsgebiet", "cost": 0}
     var levels: Dictionary = world["research_fields"]
     var level := int(levels.get(field, 0))
-    var cost := 25 + level * 20
+    var base_cost := 25 + level * 20
+    var insight := int(world["research_insights"].get(field, 0)) > 0
+    var cost := maxi(10, base_cost - (10 if insight else 0))
     var prerequisite := ""
     if field == "propulsion" and level >= 1 and int(levels.get("industry", 0)) < 1:
         prerequisite = "Industrie Stufe 1"
@@ -200,6 +229,12 @@ static func start_research(world: Dictionary, field: String = "propulsion") -> b
     if not bool(preview["allowed"]):
         return false
     world["science"] = int(world["science"]) - int(preview["cost"])
+    if int(world["research_insights"].get(field, 0)) > 0:
+        world["research_insights"][field] = int(world["research_insights"][field]) - 1
+        for breakthrough in world["research_breakthroughs"]:
+            if str(breakthrough.get("field", "")) == field and not bool(breakthrough.get("consumed", false)):
+                breakthrough["consumed"] = true
+                break
     world["research_fields"][field] = int(world["research_fields"][field]) + 1
     world["research_level"] = int(world["research_level"]) + 1
     world["research_history"].append({"year": int(world["tick"]), "field": field,
