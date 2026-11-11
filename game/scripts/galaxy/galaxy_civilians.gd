@@ -158,9 +158,44 @@ static func freight_hops(world: Dictionary, origin: int, destination: int) -> in
 static func freight_capacity(market: Dictionary) -> int:
     return mini(10, maxi(0, int(market.get("demographics", {}).get("employed", 0))) / 2)
 
+# Freight is held in transit until the arrival tick. Invalidated routes
+# return cargo to the origin instead of creating or destroying goods.
+static func settle_freight(world: Dictionary) -> Array:
+    var remaining: Array = []
+    var arrivals: Array = []
+    var markets: Dictionary = world["civilian_worlds"]
+    for shipment in world.get("civilian_freight_transit", []):
+        var origin := str(shipment["from"])
+        var target := str(shipment["to"])
+        var quantity := int(shipment["goods"])
+        if int(shipment["arrival_tick"]) > int(world["tick"]):
+            remaining.append(shipment)
+            continue
+        var valid_target := markets.has(target) and freight_hops(world, int(shipment["from"]), int(shipment["to"])) > 0
+        if valid_target:
+            markets[target]["goods"] = int(markets[target]["goods"]) + quantity
+            arrivals.append(shipment)
+        elif markets.has(origin):
+            markets[origin]["goods"] = int(markets[origin]["goods"]) + quantity
+        else:
+            # Keep goods in transit if the origin no longer exists.
+            remaining.append(shipment)
+    world["civilian_freight_transit"] = remaining
+    return arrivals
+
+static func transit_goods(world: Dictionary) -> int:
+    var total := 0
+    for shipment in world.get("civilian_freight_transit", []):
+        total += int(shipment["goods"])
+    return total
+
 static func tick(world: Dictionary) -> void:
     prepare(world)
     var settlements: Dictionary = world["civilian_worlds"]
+    if not world.has("civilian_freight_transit"):
+        world["civilian_freight_transit"] = []
+    var transit_before := transit_goods(world)
+    var arrivals: Array = settle_freight(world)
     # A newly acquired system creates its own civilian market; lost systems no
     # longer contribute to domestic taxation or migration.
     for star in world["stars"]:
@@ -180,6 +215,7 @@ static func tick(world: Dictionary) -> void:
     var freight_cost_total := 0
     var trade: Array = []
     var production_chains: Dictionary = {}
+    var dispatched_total := 0
     var opening_stock := 0
     var production_total := 0
     var consumption_total := 0
@@ -250,11 +286,14 @@ static func tick(world: Dictionary) -> void:
             var cost := hops * amount
             if amount > 0 and int(source["private_capital"]) >= cost:
                 source["goods"] = int(source["goods"]) - amount
-                settlements[best_key]["goods"] = int(settlements[best_key]["goods"]) + amount
                 source["private_capital"] = int(source["private_capital"]) - cost
                 freight_cost_total += cost
-                trade.append({"from": int(source_key), "to": int(best_key), "goods": amount,
-                    "hops": hops, "cost": cost, "capacity": freight_capacity(source)})
+                dispatched_total += amount
+                var shipment := {"from": int(source_key), "to": int(best_key), "goods": amount,
+                    "hops": hops, "cost": cost, "capacity": freight_capacity(source),
+                    "departure_tick": int(world["tick"]), "arrival_tick": int(world["tick"]) + hops}
+                world["civilian_freight_transit"].append(shipment)
+                trade.append(shipment.duplicate(true))
     # Families move for opportunity, independently of the government's wishes.
     if active.size() >= 2:
         var destination_key := ""
@@ -280,13 +319,19 @@ static func tick(world: Dictionary) -> void:
         var market: Dictionary = settlements[key]
         satisfaction_total += int(market["satisfaction"]) * int(market["population"])
         population_total += int(market["population"])
+    var arrival_total := 0
+    for shipment in arrivals:
+        arrival_total += int(shipment["goods"])
     var ending_stock := 0
     for key in active:
         ending_stock += int(settlements[key]["goods"])
     world["civilian_production_ledger"] = {"year": int(world["tick"]), "systems": production_chains}
     world["civilian_goods_ledger"] = {"year": int(world["tick"]), "produced": production_total,
         "consumed": consumption_total, "opening_stock": opening_stock, "ending_stock": ending_stock,
-        "freight_cost": freight_cost_total, "shipments": trade.duplicate(true)}
+        "freight_cost": freight_cost_total, "dispatched": dispatched_total,
+        "arrived": arrival_total, "transit_before": transit_before,
+        "transit_after": transit_goods(world), "shipments": trade.duplicate(true),
+        "arrivals": arrivals.duplicate(true)}
     world["civilian_approval"] = satisfaction_total / maxi(1, population_total)
     world["civilian_petitions"] = petitions
     world["civilian_trade"] = trade
