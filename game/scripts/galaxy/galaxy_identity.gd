@@ -35,7 +35,7 @@ static func civic(id: String) -> Dictionary:
             return item
     return {}
 
-static func trait(id: String) -> Dictionary:
+static func trait_info(id: String) -> Dictionary:
     for item in TRAITS:
         if item["id"] == id:
             return item
@@ -54,10 +54,10 @@ static func validate(empire: Dictionary) -> String:
     var points := 0
     var seen: Array = []
     for id in traits:
-        if seen.has(id) or trait(str(id)).is_empty():
+        if seen.has(id) or trait_info(str(id)).is_empty():
             return "Ungültige oder doppelte Speziesmerkmale."
         seen.append(id)
-        points += int(trait(str(id))["cost"])
+        points += int(trait_info(str(id))["cost"])
     if points > 3 or points < -3:
         return "Speziesmerkmale überschreiten das Genetikbudget."
     if traits.has("fertile") and traits.has("slow_breeding"):
