@@ -115,13 +115,31 @@ func _button(value: String, callback: Callable) -> void:
     button.pressed.connect(callback)
     root.add_child(button)
 
+func _begin_new_game() -> void:
+    # A fresh wizard must not inherit settings or identity from a previous game.
+    settings = GalaxyModel.defaults()
+    empire = GalaxyModel.empire_defaults()
+    notice = ""
+    _show_settings()
+
+func _reset_new_game() -> void:
+    settings = GalaxyModel.defaults()
+    empire = GalaxyModel.empire_defaults()
+    _show_settings()
+
+func _cancel_new_game() -> void:
+    # Cancel discards the draft; continuing a running game is a separate action.
+    settings = GalaxyModel.defaults()
+    empire = GalaxyModel.empire_defaults()
+    _show_menu()
+
 func _show_menu() -> void:
     screen = "menu"
     _clear()
     _title("LAND DER SONNE", 52)
     _label("GALAKTISCHE CHRONIKEN  •  Ein Universum. Unzählige Geschichten.")
     _illustration("menu")
-    _button("NEUES SPIEL", _show_settings)
+    _button("NEUES SPIEL", _begin_new_game)
     _button("SPIEL LADEN", _load_game)
     _button("EINSTELLUNGEN", _show_options)
     _button("BEENDEN", func(): get_tree().quit())
@@ -195,7 +213,8 @@ func _show_settings() -> void:
     _spin("Ereignishäufigkeit (%)", "events", 1, 100)
     _choice("Schwierigkeit", ["Entspannt", "Normal", "Herausfordernd"], settings, "difficulty")
     _button("WEITER: REICH ERSTELLEN", _show_empire)
-    _button("ZURÜCK ZUM MENÜ", _show_menu)
+    _button("STANDARDWERTE WIEDERHERSTELLEN", _reset_new_game)
+    _button("ABBRECHEN", _cancel_new_game)
 
 func _show_empire() -> void:
     screen = "empire"
@@ -272,7 +291,8 @@ func _show_empire() -> void:
     _label("Schiffsarchitektur – Vorschau")
     _ship_gallery()
     _button("WEITER: ZUSAMMENFASSUNG", _show_review)
-    _button("ZURÜCK ZUR GALAXIE", _show_settings)
+    _button("ZURÜCK ZU GALAXIEEINSTELLUNGEN", _show_settings)
+    _button("ABBRECHEN", _cancel_new_game)
 
 func _show_review() -> void:
     screen = "review"
@@ -291,11 +311,12 @@ func _show_review() -> void:
     else:
         _button("GALAXIE ERSCHAFFEN", _start_game)
     _button("ZURÜCK ZUR REICHSERSTELLUNG", _show_empire)
+    _button("ABBRECHEN", _cancel_new_game)
 
 func _start_game() -> void:
     if GalaxyModel.validate(settings, empire) != "":
         return
-    settings["seed"] = 0
+    # Use the selected seed if supplied; 0 requests a new random galaxy.
     world = GalaxyModel.generate(settings, empire)
     selected = 0
     GalaxyStrategy.prepare(world)
