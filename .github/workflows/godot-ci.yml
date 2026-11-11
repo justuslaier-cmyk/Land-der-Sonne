@@ -35,6 +35,8 @@ jobs:
         run: godot --headless --path game --script res://tests/interaction_test.gd
       - name: Test galactic new game and persistence
         run: timeout 100s godot --headless --path game --script res://tests/galaxy_test.gd
+      - name: Verify ship blueprints, roles and propulsion research gates
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_ship_blueprints_test.gd
       - name: Verify espionage, intelligence levels and counterintelligence
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_espionage_test.gd
       - name: Verify alliances, dependencies and war protection
