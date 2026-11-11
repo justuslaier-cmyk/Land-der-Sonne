@@ -7,6 +7,8 @@ static func prepare(world: Dictionary) -> void:
     GalaxyAI.prepare(world)
     GalaxyCivilians.prepare(world)
     GalaxyProgress.prepare(world)
+    if not world.has("culture"):
+        world["culture"] = GalaxyIdentity.culture_defaults(world["empire"])
     if not world.has("planet_colonies"):
         world["planet_colonies"] = {}
     if not world.has("buildings"):
@@ -336,6 +338,7 @@ static func tick(world: Dictionary) -> void:
     var opening := {"credits": int(world["credits"]), "science": int(world["science"]), "alloys": int(world["alloys"]), "stability": int(world["stability"])}
     GalaxySystems.tick(world)
     GalaxyCivilians.tick(world)
+    GalaxyIdentity.culture_tick(world["culture"], world["empire"], clampi(int(world.get("credits", 0)) / 4, 0, 100), int(world.get("civilian_approval", 50)), int(world["tick"]))
     advance_colonies(world)
     var science_bonus := 0
     var alloy_bonus := 0
