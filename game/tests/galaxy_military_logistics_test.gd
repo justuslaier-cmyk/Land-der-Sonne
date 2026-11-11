@@ -71,6 +71,7 @@ func _initialize() -> void:
     if int(report["supply_after"]) != 80:
         _fail("Battle supply expenditure missing")
         return
+    world["stars"][hostile]["owner"] = enemy
     fleet["location"] = hostile
     fleet["destination"] = -1
     world["fleet_logistics"]["supply"] = 0
