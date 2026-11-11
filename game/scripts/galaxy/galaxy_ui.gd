@@ -634,7 +634,7 @@ func _draw_illustration(canvas: Control, kind: String) -> void:
         canvas.draw_circle(Vector2(width * 0.76 - 11, 102), 77, Color("#487e94"))
         canvas.draw_arc(Vector2(width * 0.76, 110), 112, -0.6, 2.4, 90, Color("#d3b47c", 0.8), 4.0)
         canvas.draw_circle(Vector2(width * 0.21, 80), 16, Color("#e9c780"))
-    elif kind in ["ancient_signal", "ancient_echo"]:
+    elif kind in ["ancient_signal", "ancient_echo", "ancient_awakening"]:
         var glow := Color("#58b3c1") if kind == "ancient_signal" else Color("#edbd7b") if kind == "ancient_awakening" else Color("#ba78d8")
         canvas.draw_circle(Vector2(width * 0.73, 100), 100, Color(glow, 0.08))
         canvas.draw_circle(Vector2(width * 0.73, 100), 72, Color("#26334c"))
