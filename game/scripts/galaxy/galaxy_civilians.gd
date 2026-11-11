@@ -28,41 +28,36 @@ static func demographic_defaults(population: int) -> Dictionary:
     return {"children": children, "working_age": count - children - elders, "elders": elders,
         "births": 0, "deaths": 0, "employed": 0, "unemployed": 0}
 
-static func advance_demographics(market: Dictionary, population_before: int, population_after: int, year: int) -> void:
+# Births, deaths and ageing are separate demographic flows. The final
+# population is derived from cohorts, not overwritten by a growth target.
+static func advance_demographics(market: Dictionary, population_before: int, _population_after: int, year: int) -> void:
     var demographic: Dictionary = market.get("demographics", demographic_defaults(population_before))
     var children := maxi(0, int(demographic.get("children", 0)))
     var workers := maxi(0, int(demographic.get("working_age", 0)))
     var elders := maxi(0, int(demographic.get("elders", 0)))
     var delta := population_before - children - workers - elders
     workers = maxi(0, workers + delta)
-    var births := 0
-    var deaths := 0
-    if year > 0 and year % 5 == 0 and children > 0:
-        children -= 1
-        workers += 1
-    if year > 0 and year % 12 == 0 and workers > 1:
-        workers -= 1
-        elders += 1
-    if year > 0 and year % 15 == 0 and elders > 0:
-        elders -= 1
-        deaths = 1
-    var target := maxi(1, population_after)
-    var current := children + workers + elders
-    if current < target:
-        births = target - current
-        children += births
-    elif current > target:
-        var excess := current - target
-        var take := mini(excess, workers)
-        workers -= take
-        excess -= take
-        take = mini(excess, children)
-        children -= take
-        excess -= take
-        elders = maxi(0, elders - excess)
+    var satisfaction := clampi(int(market.get("satisfaction", 50)), 0, 100)
+    var goods := maxi(0, int(market.get("goods", 0)))
+    var capacity := maxi(1, int(market.get("capacity", population_before)))
+    var health := clampi((satisfaction + mini(100, goods * 2)) / 2, 0, 100)
+    var ageing_children := mini(children, children / 12)
+    var ageing_workers := mini(workers, workers / 40)
+    children -= ageing_children
+    workers += ageing_children - ageing_workers
+    elders += ageing_workers
+    var deaths := mini(elders, elders * (120 - health) / 800 + (1 if elders >= 8 and year % 4 == 0 else 0))
+    elders -= deaths
+    var birth_pool := maxi(0, workers / 8)
+    var births := mini(birth_pool, maxi(0, capacity - children - workers - elders))
+    if satisfaction < 45 or goods < maxi(1, population_before / 4):
+        births = births / 2
+    children += births
     var employed := mini(workers, maxi(0, int(market.get("jobs", 0))))
+    market["population"] = children + workers + elders
     market["demographics"] = {"children": children, "working_age": workers, "elders": elders,
-        "births": births, "deaths": deaths, "employed": employed, "unemployed": workers - employed}
+        "births": births, "deaths": deaths, "employed": employed, "unemployed": workers - employed,
+        "health": health}
 
 static func tick(world: Dictionary) -> void:
     prepare(world)
@@ -93,7 +88,8 @@ static func tick(world: Dictionary) -> void:
         var market: Dictionary = settlements[key]
         var population := int(market["population"])
         var old_population := population
-        var employment := mini(population, int(market["jobs"]))
+        var current_cohorts: Dictionary = market.get("demographics", demographic_defaults(population))
+        var employment := mini(int(current_cohorts["working_age"]), int(market["jobs"]))
         var output := employment * (2 + int(world["stars"][sid]["resource"]) + int(identity["production"])) / 4
         var needs := maxi(1, population / 2 + int(identity["needs"]))
         var stock := int(market["goods"]) + output - needs
@@ -104,11 +100,9 @@ static func tick(world: Dictionary) -> void:
         if capital > 80 and int(market["jobs"]) < int(market["capacity"]):
             market["jobs"] = mini(int(market["capacity"]), int(market["jobs"]) + 3)
             capital -= 15
-        var growth: int = maxi(0, 1 + int(identity["growth"])) if satisfaction >= 55 and stock >= 0 and population < int(market["capacity"]) else 0
-        market["population"] = maxi(1, mini(int(market["capacity"]), population + growth))
-        advance_demographics(market, old_population, int(market["population"]), int(world["tick"]))
         market["satisfaction"] = satisfaction
         market["goods"] = maxi(0, stock)
+        advance_demographics(market, old_population, old_population, int(world["tick"]))
         market["private_capital"] = capital
         market["output"] = output
         market["taxes"] = taxes
