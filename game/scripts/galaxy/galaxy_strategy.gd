@@ -292,6 +292,7 @@ static func income_forecast(world: Dictionary) -> Dictionary:
     if next_stability < 25:
         credits -= 5
     credits -= colony_upkeep(world)
+    science += int(GalaxyIdentity.culture_modifiers(world.get("culture", {}))["science"])
     return {"credits": credits, "science": science, "alloys": alloys}
 
 # Colonies are bounded by their carrying capacity. Industrial pressure reduces
@@ -372,6 +373,7 @@ static func tick(world: Dictionary) -> void:
     var tax := int(world["policies"]["tax"])
     world["credits"] = int(world["credits"]) + credits_bonus + (tax - 1) * 5 + world["trade_pacts"].size() * 6 + GalaxyLore.artifact_bonus(world, "credits")
     world["credits"] = int(world["credits"]) - colony_upkeep(world)
+    world["science"] = maxi(0, int(world["science"]) + int(GalaxyIdentity.culture_modifiers(world["culture"])["science"]))
     world["science"] = int(world["science"]) + science_bonus + (4 if focus == 1 else 0) + GalaxyLore.artifact_bonus(world, "science")
     world["alloys"] = int(world["alloys"]) + 2 + alloy_bonus + (3 if focus == 2 else 0) + GalaxyLore.artifact_bonus(world, "alloys")
     world["stability"] = clampi(int(world["stability"]) + (1 if tax == 0 else -1 if tax == 2 else 0), 0, 100)
