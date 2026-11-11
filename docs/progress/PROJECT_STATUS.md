@@ -1,27 +1,30 @@
-# Project status — 2026-11-08 — galactic pivot
+# Projektstatus — 2026-11-11 — galaktisches Strategiespiel
 
-## Current phase
-Design migration and architecture review for a new 2D pixel-art galactic grand strategy game. User approved replacing the former fantasy RPG concept. This file supersedes the earlier outdated phase-0 status.
+## Aktueller Arbeitsauftrag
+**Phase 01 / Durchlauf 01** nach [16-Phasen-Produktionsplan](PHASE_EXECUTION_PLAN.md). Die [98-Punkte-Pflichtcheckliste](../vision/BINDING_GAME_REQUIREMENTS_CHECKLIST.md) ist der unabhängige, verbindliche Abnahmekatalog. **Keine der 98 Pflichten ist bislang als vollständig abgenommen dokumentiert.** Ein Prototyp zählt nicht als fertig.
 
-## Verified in this design branch
-- User requirements documented in docs/vision/GALACTIC_GAME_VISION.md.
-- Main menu, Load Game, New Game, detailed galaxy settings, species/empire creator and initial playable loop specified in docs/design/FRONTEND_AND_NEW_GAME_FLOW.md.
-- Migration safety and old concept preservation documented in docs/decisions/ADR-001-GENRE-PIVOT.md.
-- Previous fantasy concept remains in Git history; no existing code or foundation files intentionally deleted.
+## Vorhandene Prototypen (Codebestand, keine Endabnahme)
+- Godot-4.3-Projekt mit galaktischem Hauptmenü, Neues-Spiel-Assistent, Reichserstellung, Galaxiekarte und Zeitsteuerung.
+- Deterministische Galaxiegenerierung mit 20–250 Sternen und konfigurierbaren KI-Reichen; prozedurale Himmelskörper.
+- Wirtschaft, Bauwesen, Flotten, Diplomatie, KI-Reiche, Gesellschaftsidentitäten, zivile Bevölkerung und Handel als frühe Simulationen.
+- Forschung, Artefakte, Ereignisse, Chronik und sechs nichtlineare Meilensteine als Prototypen.
+- Versionierte JSON-Speicherung und GitHub-Actions-Tests, Rendering-Prüfung sowie experimenteller Windows-Export.
 
-## Existing foundation (from earlier handoff; must be reverified)
-Godot 4.3 experimental terrain/movement prototype, deterministic chunk helpers, JSON save prototype, tests and CI/export were reported. These are **not** evidence that any new galaxy game mechanics exist.
+## Letzte tatsächlich beobachtete Qualität
+- GitHub Actions Run `43086718250` auf `1d178dbe789ec9b8c8a1cf9dbdcfc42764e5f982`: **FAILURE**.
+- `render-check`: success; `windows-export`: success; `godot-smoke`: failure.
+- Beobachtete Fehler: `game/scripts/galaxy/galaxy_ui.gd:657` reservierter Variablenname `trait`; `game/tests/galaxy_progress_test.gd:23` unzulässige Typinferenz.
+- Beide Stellen im Rahmen Phase 01 / Durchlauf 01 im Quellcode korrigiert. **Ob die Korrekturen den vollständigen CI-Lauf bestehen, muss erneut überprüft werden.**
+- Erfolgreicher Export ist kein Nachweis eines nativ gestarteten Windows-Spiels.
 
-## Not implemented or verified
-New main menu, new/load flow, galaxy setup, empire creator, galactic map, AI empires, galactic simulation, event cards, actual new-game pixel-art assets, save/load for galaxy data, new CI or Windows launch.
+## Risiken und offene Grundlagen
+- Simulation ist derzeit über mehrere GDScript-Dictionaries gekoppelt; versionierte Datenverträge, Ownership und Bilanzinvarianten müssen geprüft und ggf. vereinheitlicht werden.
+- Projektvision und Implementierung sind deutlich unterschiedlich weit; keine vollständige Produktionsgrafik oder geprüfte Releasequalität.
+- Die ehemals hier stehende Statusbeschreibung vom 8. November war durch spätere Commits überholt.
+- Die Planung sieht 16 Phasen mit je drei geplanten Durchläufen vor. 48 ist eine Organisationszahl, **keine garantierte Fertigstellungszahl**.
 
-## Immediate next steps
-1. Verify current main branch and CI, inventory reusable foundation.
-2. Create migration architecture/contracts without silently breaking old prototype tests.
-3. Implement launch menu, settings and New/Load navigation with actual Godot rendering and tests.
-4. Implement wizard, empire creator and seeded small galaxy.
-5. Build the first end-to-end playable slice with AI, causal events and save/load.
-6. Review screenshots, export and native Windows launch; update evidence per commit.
-
-## Safety
-Never touch Grenzmark. Do not delete legacy content before inventory and preservation. Keep changes in feature branches/PRs; distinguish plans from implemented and tested work.
+## Nächste Schritte
+1. CI nach Parserkorrekturen überprüfen und verbleibende echte Fehler isolieren.
+2. Simulations- und Speicherdatenverträge inventarisieren; testbare Invarianten definieren.
+3. Jede Änderung an Pflicht-IDs koppeln und nur bei vollständiger, nachgewiesener Abnahme abhaken.
+4. Bestehenden PR prüfen; nichts ungeprüft nach `main` mergen. Das unabhängige Fantasy-Altprojekt Grenzmark bleibt unberührt.
