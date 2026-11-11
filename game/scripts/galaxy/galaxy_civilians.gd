@@ -27,7 +27,7 @@ static func tick(world: Dictionary) -> void:
         var key := str(star["id"])
         if int(star["owner"]) == 0 and not settlements.has(key):
             settlements[key] = {"population": 6, "capacity": 65 + int(star["resource"]) * 12, "jobs": 18 + int(star["resource"]) * 7, "satisfaction": 55, "private_capital": 20, "goods": 15, "output": 0, "taxes": 0}
-    var tax_rate := [8, 17, 28][clampi(int(world["policies"]["tax"]), 0, 2)]
+    var tax_rate: int = [8, 17, 28][clampi(int(world["policies"]["tax"]), 0, 2)]
     var identity: Dictionary = GalaxyIdentity.modifiers(world["empire"])
     var total_taxes := 0
     var migration := 0
@@ -46,12 +46,12 @@ static func tick(world: Dictionary) -> void:
         var stock := int(market["goods"]) + output - needs
         var satisfaction := clampi(int(market["satisfaction"]) + (2 if stock >= needs else -3) - (2 if tax_rate >= 28 else 0) + int(identity["satisfaction"]), 0, 100)
         var earnings := maxi(0, output * (40 + satisfaction) / 100)
-        var taxes := earnings * tax_rate / 100
+        var taxes: int = earnings * tax_rate / 100
         var capital := maxi(0, int(market["private_capital"]) + earnings - taxes - needs + int(identity["capital"]))
         if capital > 80 and int(market["jobs"]) < int(market["capacity"]):
             market["jobs"] = mini(int(market["capacity"]), int(market["jobs"]) + 3)
             capital -= 15
-        var growth := maxi(0, 1 + int(identity["growth"])) if satisfaction >= 55 and stock >= 0 and population < int(market["capacity"]) else 0
+        var growth: int = maxi(0, 1 + int(identity["growth"])) if satisfaction >= 55 and stock >= 0 and population < int(market["capacity"]) else 0
         market["population"] = maxi(1, mini(int(market["capacity"]), population + growth))
         market["satisfaction"] = satisfaction
         market["goods"] = maxi(0, stock)
