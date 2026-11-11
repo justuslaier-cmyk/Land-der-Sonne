@@ -27,6 +27,10 @@ static func prepare(world: Dictionary) -> void:
         world["diplomatic_negotiations"] = []
     if not world.has("diplomatic_treaties"):
         world["diplomatic_treaties"] = []
+    if not world.has("alliances"):
+        world["alliances"] = []
+    if not world.has("diplomatic_dependencies"):
+        world["diplomatic_dependencies"] = {}
     if not world.has("policies"):
         world["policies"] = {"focus": 0, "tax": 1}
     if not world.has("stability"):
@@ -281,7 +285,7 @@ static func declare_war(world: Dictionary, rival_id: int) -> bool:
 # the diplomatic situation at the time of ratification.
 static func negotiate_treaty(world: Dictionary, rival_id: int, kind: String) -> bool:
     prepare(world)
-    if not ["trade", "non_aggression"].has(kind):
+    if not ["trade", "non_aggression", "alliance", "dependency"].has(kind):
         return false
     if not world["contacts"].has(rival_id) or world["wars"].has(rival_id):
         return false
@@ -295,9 +299,13 @@ static func negotiate_treaty(world: Dictionary, rival_id: int, kind: String) -> 
         return false
     if kind == "non_aggression" and world.get("non_aggression", []).has(rival_id):
         return false
+    if kind == "alliance" and world["alliances"].has(rival_id):
+        return false
+    if kind == "dependency" and world["diplomatic_dependencies"].has(str(rival_id)):
+        return false
     var score := int(world["relations"].get(str(rival_id), 0)) + int(world["diplomatic_trust"].get(str(rival_id), 0))
-    var required := 15 if kind == "trade" else 35
-    var deposit := 15 if kind == "trade" else 20
+    var required: int = {"trade": 15, "non_aggression": 35, "alliance": 65, "dependency": 55}[kind]
+    var deposit: int = {"trade": 15, "non_aggression": 20, "alliance": 40, "dependency": 30}[kind]
     if score < required or int(world["credits"]) < deposit:
         return false
     world["credits"] = int(world["credits"]) - deposit
@@ -319,13 +327,54 @@ static func advance_diplomacy(world: Dictionary) -> void:
         if world["wars"].has(rival) or score < int(negotiation["required"]):
             world["history"].append("Verhandlungen mit %s gescheitert: %s." % [GalaxySystems.empire_name(world, rival), kind])
             continue
-        var accepted := sign_trade(world, rival) if kind == "trade" else propose_non_aggression(world, rival)
+        var accepted := false
+        if kind == "trade":
+            accepted = sign_trade(world, rival)
+        elif kind == "non_aggression":
+            accepted = propose_non_aggression(world, rival)
+        elif kind == "alliance":
+            accepted = ratify_alliance(world, rival)
+        elif kind == "dependency":
+            accepted = ratify_dependency(world, rival)
         if accepted:
             world["diplomatic_treaties"].append({"rival": rival, "kind": kind,
                 "signed": int(world["tick"]), "deposit": int(negotiation["deposit"])})
         else:
             world["history"].append("Verhandlungen ohne Abschluss: %s." % kind)
     world["diplomatic_negotiations"] = waiting
+
+# Defensive alliances share no automatic fleet ownership, but a rival's
+# attack on the player is disallowed while the alliance is in force.
+static func ratify_alliance(world: Dictionary, rival_id: int) -> bool:
+    prepare(world)
+    if not world["contacts"].has(rival_id) or world["wars"].has(rival_id) or world["alliances"].has(rival_id):
+        return false
+    var score := int(world["relations"].get(str(rival_id), 0)) + int(world["diplomatic_trust"].get(str(rival_id), 0))
+    if score < 65:
+        return false
+    world["alliances"].append(rival_id)
+    world["history"].append("Verteidigungsbuendnis mit %s ratifiziert." % GalaxySystems.empire_name(world, rival_id))
+    return true
+
+# Dependency is a voluntary economic arrangement, not a conquest or vassal state.
+static func ratify_dependency(world: Dictionary, rival_id: int) -> bool:
+    prepare(world)
+    if not world["contacts"].has(rival_id) or world["wars"].has(rival_id) or world["diplomatic_dependencies"].has(str(rival_id)):
+        return false
+    var score := int(world["relations"].get(str(rival_id), 0)) + int(world["diplomatic_trust"].get(str(rival_id), 0))
+    if score < 55:
+        return false
+    world["diplomatic_dependencies"][str(rival_id)] = {"tribute": 4, "signed": int(world["tick"])}
+    world["history"].append("Wirtschaftliches Abhaengigkeitsabkommen mit %s ratifiziert." % GalaxySystems.empire_name(world, rival_id))
+    return true
+
+static func dependency_income(world: Dictionary) -> int:
+    prepare(world)
+    var total := 0
+    for key in world["diplomatic_dependencies"].keys():
+        if not world["wars"].has(int(key)):
+            total += int(world["diplomatic_dependencies"][key].get("tribute", 0))
+    return total
 
 static func sign_trade(world: Dictionary, rival_id: int) -> bool:
     prepare(world)
@@ -455,7 +504,7 @@ static func income_forecast(world: Dictionary) -> Dictionary:
     alloys += int(GalaxySystems.technology_bonuses(world)["industry_alloys"])
     var focus := int(world["policies"]["focus"])
     var tax := int(world["policies"]["tax"])
-    credits += (tax - 1) * 5 + world["trade_pacts"].size() * 6 + (4 if focus == 0 else 0) + GalaxyLore.artifact_bonus(world, "credits")
+    credits += (tax - 1) * 5 + world["trade_pacts"].size() * 6 + dependency_income(world) + (4 if focus == 0 else 0) + GalaxyLore.artifact_bonus(world, "credits")
     science += (4 if focus == 1 else 0) + GalaxyLore.artifact_bonus(world, "science")
     alloys += (3 if focus == 2 else 0) + GalaxyLore.artifact_bonus(world, "alloys")
     var next_stability := clampi(int(world["stability"]) + (1 if tax == 0 else -1 if tax == 2 else 0) + int(world["governance"]["rights"]) - 1 + int(GalaxySystems.technology_bonuses(world)["society_stability"]), 0, 100)
@@ -544,7 +593,7 @@ static func tick(world: Dictionary) -> void:
         alloy_bonus += int(built.get("factory", 0)) * 3
     var focus := int(world["policies"]["focus"])
     var tax := int(world["policies"]["tax"])
-    world["credits"] = int(world["credits"]) + credits_bonus + (tax - 1) * 5 + world["trade_pacts"].size() * 6 + GalaxyLore.artifact_bonus(world, "credits")
+    world["credits"] = int(world["credits"]) + credits_bonus + (tax - 1) * 5 + world["trade_pacts"].size() * 6 + dependency_income(world) + GalaxyLore.artifact_bonus(world, "credits")
     world["credits"] = int(world["credits"]) - colony_upkeep(world)
     world["science"] = maxi(0, int(world["science"]) + int(GalaxyIdentity.culture_modifiers(world["culture"])["science"]))
     world["science"] = int(world["science"]) + science_bonus + (4 if focus == 1 else 0) + GalaxyLore.artifact_bonus(world, "science")
