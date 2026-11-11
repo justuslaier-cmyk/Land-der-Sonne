@@ -13,6 +13,11 @@ Never label a feature finished without defined acceptance criteria and executed 
 ## Workflow
 Inspect existing code and dependencies -> research as necessary -> define acceptance tests -> implement a cohesive vertical slice -> run relevant checks -> review visual output in the real engine -> document changes and open risks. Prefer working integrations over large unverified code dumps.
 
+## Binding art-with-feature rule (approved 2026-11-11)
+Every newly implemented gameplay function that has a visible representation **must ship with its own original, style-consistent graphic in the same change**. Do not defer visual assets to a later phase or reuse generic placeholders as final art. Use the approved detailed science-fiction pixel-art language: deep navy, petrol, cyan/teal, violet/magenta and warm amber; readable silhouettes, pixel-grid discipline, lighting, material depth and coherent UI borders. Source files must be committed in `game/assets/art/`, referenced from the actual Godot screen or interactive element, and covered by a resource/import regression test. For features without a meaningful graphic, explicitly document the rationale. Verify copyright ownership; user-supplied stock/watermarked images are style references, never direct imports. No feature is considered visually complete without an actual Godot-rendered screenshot and review.
+
+For each feature PR/commit report: function → asset path → integration point → import test → real render verification status. Do not claim that adding a decorative banner completes sprite, animation, icon or HUD work.
+
 ## Quality gates
 No silent disabling of tests, hiding of warnings, placeholder features presented as finished, broken asset references or regressions in core gameplay. A passing headless test does not prove graphics. A screenshot does not prove interaction. Visual quality requires real rendered scenes and review against approved references.
 
