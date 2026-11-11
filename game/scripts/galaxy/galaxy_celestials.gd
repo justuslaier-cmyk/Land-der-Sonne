@@ -6,7 +6,7 @@ static func generate(seed: int, star: Dictionary) -> Dictionary:
     var rng := RandomNumberGenerator.new()
     rng.seed = int(seed) * 131071 + int(star["id"]) * 1000003 + 17
     var classes := ["Gelber Zwerg", "Blauer Riese", "Roter Zwerg", "Weißer Stern", "Orangefarbener Zwerg", "Roter Überriese", "Doppelstern"]
-    var kind := int(star["kind"])
+    var kind := clampi(int(star["kind"]), 0, classes.size() - 1)
     var system := {"star_class": classes[kind % classes.size()], "temperature": 2500 + kind * 1150 + rng.randi_range(0, 1500), "planets": [], "asteroids": rng.randi_range(0, 3), "comets": rng.randi_range(0, 2), "binary": kind == 6}
     var types := ["Gesteinswelt", "Gasriese", "Eiswelt", "Ozeanwelt", "Wüstenwelt", "Lavawelt", "Dschungelwelt", "Tundrawelt"]
     var count := rng.randi_range(2, 9)
@@ -17,7 +17,7 @@ static func generate(seed: int, star: Dictionary) -> Dictionary:
         var moons: Array = []
         for j in range(rng.randi_range(0, 4 if ptype == 1 else 2)):
             moons.append({"name": "%s %s-%d" % [star["name"], char(97 + i), j + 1], "size": rng.randi_range(2, 7)})
-        (system["planets"] as Array).append({"name": "%s %s" % [star["name"], _roman(i + 1)], "type": types[ptype], "type_id": ptype, "size": rng.randi_range(5, 15), "orbit": i + 1, "moons": moons, "rings": ptype == 1 and rng.randf() < 0.7, "resources": rng.randi_range(1, 5), "habitable": ptype in [0, 3, 6] and (bool(star["habitable"]) or rng.randf() < 0.12)})
+        (system["planets"] as Array).append({"name": "%s %s" % [star["name"], _roman(i + 1)], "type": types[ptype], "type_id": ptype, "size": rng.randi_range(5, 15), "orbit": i + 1, "moons": moons, "rings": ptype == 1 and rng.randf() < 0.7, "resources": rng.randi_range(1, 5), "habitable": (i == 1 and bool(star["habitable"])) or (ptype in [0, 3, 6] and (bool(star["habitable"]) or rng.randf() < 0.12))})
     return system
 
 static func _roman(n: int) -> String:
