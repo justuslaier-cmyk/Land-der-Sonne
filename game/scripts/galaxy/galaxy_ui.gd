@@ -787,11 +787,13 @@ func _society_report() -> void:
     var ledger: Dictionary = world.get("civilian_goods_ledger", {})
     if not ledger.is_empty():
         _label("Güterbilanz: Anfang %d  + Produktion %d  − Verbrauch %d  = Bestand %d" % [int(ledger["opening_stock"]), int(ledger["produced"]), int(ledger["consumed"]), int(ledger["ending_stock"])])
+    if not ledger.is_empty():
+        _label("Transportkosten gesamt: %d Privatkapital" % int(ledger.get("freight_cost", 0)))
     var trade: Array = world.get("civilian_trade", [])
     if trade.is_empty():
         _label("Keine aktuellen Warenlieferungen zwischen den Kolonien.")
     for shipment in trade:
-        _label("◇ %s → %s  •  %d Gütereinheiten" % [world["stars"][int(shipment["from"])]["name"], world["stars"][int(shipment["to"])]["name"], int(shipment["goods"])])
+        _label("◇ %s → %s  •  %d Güter  •  %d Sprünge  •  %d Transportkosten" % [world["stars"][int(shipment["from"])]["name"], world["stars"][int(shipment["to"])]["name"], int(shipment["goods"]), int(shipment.get("hops", 0)), int(shipment.get("cost", 0))])
     _label("FREMDE GESELLSCHAFTEN / BEKANNTE REICHE")
     for rival in world["ai"]:
         var id := int(rival["id"])
