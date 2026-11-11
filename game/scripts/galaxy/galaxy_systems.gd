@@ -3,6 +3,8 @@ class_name GalaxySystems
 
 # Version-1 extensions are optional, preserving existing save games.
 static func prepare(world: Dictionary) -> void:
+    if not world.has("lanes"):
+        world["lanes"] = GalaxyRoutes.build(world["stars"])
     if not world.has("fleets"):
         world["fleets"] = [{"owner": 0, "location": 0, "strength": 12, "destination": -1, "eta": 0}]
     if not world.has("relations"):
