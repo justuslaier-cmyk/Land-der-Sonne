@@ -61,7 +61,7 @@ static func settle_planet(world: Dictionary, star_id: int, planet_index: int) ->
     if world["planet_colonies"].has(key) or int(world["credits"]) < 50:
         return false
     world["credits"] = int(world["credits"]) - 50
-    world["planet_colonies"][key] = {"population": 1, "buildings": {}}
+    world["planet_colonies"][key] = {"population": 1, "buildings": {}, "environmental_pressure": int(planet["environmental_pressure"]), "capacity": maxi(2, int(planet["size"]) - int(planet["environmental_pressure"]) / 20)}
     world["history"].append("Kolonie auf %s gegründet." % str(planet["name"]))
     return true
 
@@ -81,6 +81,8 @@ static func construct_planet(world: Dictionary, star_id: int, planet_index: int,
     world["credits"] = int(world["credits"]) - building_cost(kind)
     built[kind] = int(built.get(kind, 0)) + 1
     colony["buildings"] = built
+    if kind == "mine" or kind == "factory":
+        colony["environmental_pressure"] = mini(100, int(colony.get("environmental_pressure", 0)) + (6 if kind == "mine" else 4))
     world["planet_colonies"][key] = colony
     world["history"].append("%s auf Planet %d in %s errichtet." % [kind, planet_index + 1, world["stars"][star_id]["name"]])
     return true
