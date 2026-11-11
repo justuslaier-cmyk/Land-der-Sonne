@@ -51,3 +51,12 @@ Jeder Durchlauf: (a) aktuellen Branch und relevante Pflicht-IDs prüfen; (b) kon
 - **Fazit:** Die bislang bekannten CI-Blocker sind im Smoke-Test behoben. Eine begrenzte technische Regression-Baseline ist vorhanden. Die Produktionsarchitektur ist **nicht** fertig: kein vollständiges Ressourcenledger, keine versionierte Save-Migration, keine unabhängigen RNG-Streams, keine langfristigen Soak- und nativen Interaktionstests.
 - **Betroffene Pflicht-IDs:** P87–P92, P96; **alle offen**, da die jeweiligen umfassenden Akzeptanzkriterien noch nicht erfüllt sind.
 - **Folgearbeit:** Phase 02 / Durchlauf 01 fokussiert Hauptmenü und vollständige Startflows. Architektur- und Bilanzierungsrisiken bleiben parallele Aufgaben und dürfen nicht als „Phase 1 erledigt“ verschwinden.
+
+### Phase 02 — Durchlauf 01 (2026-11-11)
+- **Ziel:** Einstieg, Startassistent, Zustandswechsel und Navigation überprüfen und konkrete Lücken beheben.
+- **Ist-Befund:** Der Menüeintrag `NEUES SPIEL` öffnete zuvor die Einstellungen ohne Zurücksetzen eines älteren Entwurfs. `_start_game` setzte den Seed immer auf 0, selbst wenn ein fester Seed im Einstellungszustand vorhanden war. Der Wizard hatte keine eigene Abbrechen-/Zurücksetzen-Funktion.
+- **Implementiert:** `_begin_new_game` setzt den neuen Entwurf auf Defaults zurück; `_cancel_new_game` verwirft ihn; `_reset_new_game` setzt alle Werte zurück. Die drei Wizard-Seiten bieten jetzt Abbrechen und die Einstellungen bieten Zurücksetzen. Vorwärts-/Rückwärtsnavigation bewahrt den laufenden Entwurf. `_start_game` respektiert einen gesetzten Seed; 0 erzeugt weiterhin zufällige Galaxien.
+- **Test:** `game/tests/galaxy_wizard_test.gd` deckt Menüzustand, Navigation, Entwurfserhalt, Reset, Abbrechen, Validierung und Seed-Erhalt ab; im Godot-CI-Workflow registriert.
+- **Betroffene Pflichten:** P01–P04, P09, P90–P91; alle **offen** bis zur vollständigen Abnahme.
+- **Nicht in diesem Durchlauf umgesetzt:** UI-Fehlermeldungen unmittelbar auf jeder Wizard-Seite, vollständig konfigurierbare Galaxieparameter, Reichsvorlagen, Einstellungen-Persistenz, optische Abnahme und Tutorial.
+- **CI:** Der neue Workflow muss nach dem letzten Code-Commit abgeschlossen und ausgewertet werden, bevor ein Testerfolg behauptet wird.
