@@ -4,6 +4,7 @@ class_name GalaxyAI
 # Deterministic strategic AI: rival economies, patrols, tensions and defensive battles.
 # Each empire acts on the same calendar, independent of UI or player clicks.
 static func prepare(world: Dictionary) -> void:
+    GalaxyIdentity.assign_rival_identities(world)
     if not world.has("ai_intentions"):
         world["ai_intentions"] = {}
     if not world.has("ai_conflicts"):
@@ -102,6 +103,7 @@ static func _society_tick(world: Dictionary, rival: Dictionary, treasury: int, y
     var id := int(rival["id"])
     var key := str(id)
     var society: Dictionary = world["ai_societies"][key]
+    var identity: Dictionary = GalaxyIdentity.modifiers(rival)
     var owned := 0
     var resources := 0
     for star in world["stars"]:
@@ -115,13 +117,13 @@ static func _society_tick(world: Dictionary, rival: Dictionary, treasury: int, y
     var capacity := maxi(12, owned * 28)
     var employment := mini(100, int(float(capacity) / float(maxi(1, population)) * 100.0))
     var material_change := (2 if treasury > 80 else -2 if treasury < 15 else 0) + (1 if resources >= owned * 3 else -1)
-    prosperity = clampi(prosperity + material_change - (2 if employment < 75 else 0), 0, 100)
+    prosperity = clampi(prosperity + material_change - (2 if employment < 75 else 0) + int(identity["capital"]), 0, 100)
     inequality = clampi(inequality + (1 if prosperity < 35 else -1 if prosperity > 70 else 0), 0, 100)
     var faction_reform := clampi(20 + inequality / 2 + (35 - prosperity) / 2, 0, 100)
     var faction_security := clampi(15 + int(rival["temperament"]) * 12 + (50 - legitimacy) / 3, 0, 100)
     var faction_commerce := clampi(20 + prosperity / 3 - inequality / 5, 0, 100)
-    legitimacy = clampi(legitimacy + (1 if prosperity >= 55 else -2 if prosperity < 30 else 0) - (1 if inequality >= 60 else 0), 0, 100)
-    var growth := 1 if prosperity >= 40 and population < capacity else 0
+    legitimacy = clampi(legitimacy + (1 if prosperity >= 55 else -2 if prosperity < 30 else 0) - (1 if inequality >= 60 else 0) + int(identity["legitimacy"]), 0, 100)
+    var growth := maxi(0, 1 + int(identity["growth"])) if prosperity >= 40 and population < capacity else 0
     var emigration := 1 if prosperity < 25 and population > 10 else 0
     population = maxi(5, population + growth - emigration)
     society["population"] = population
