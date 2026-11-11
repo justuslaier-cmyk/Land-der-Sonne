@@ -55,15 +55,19 @@ static func tick(world: Dictionary) -> void:
             else:
                 fleet["location"] = capital
         if year % 9 == id % 9:
+            var society: Dictionary = world["ai_societies"][key]
+            var factions: Dictionary = society["factions"]
             var stance := "expansion"
-            if temperament >= 2 and int(fleet["strength"]) >= 18:
+            if int(society["legitimacy"]) < 35 or int(factions["reform"]) >= 65:
+                stance = "reformen"
+            elif int(factions["security"]) >= 60 and int(fleet["strength"]) >= 18:
                 stance = "militarisierung"
-            elif treasury >= 100:
+            elif int(factions["commerce"]) >= 40 or treasury >= 100:
                 stance = "handel"
             world["ai_intentions"][key] = {"stance": stance, "last_action": year}
-        if year % 6 == id % 6 and treasury >= 45:
+        if year % 6 == id % 6 and treasury >= 45 and str(world["ai_intentions"][key]["stance"]) != "reformen":
             _expand(world, rival, fleet)
-        if year % 12 == id % 12 and temperament >= 2:
+        if year % 12 == id % 12 and temperament >= 2 and str(world["ai_intentions"][key]["stance"]) == "militarisierung":
             _rival_tension(world, rival, fleet)
         # Player systems are attacked only during a declared war.
         if not world["wars"].has(id) or year % 4 != id % 4:
