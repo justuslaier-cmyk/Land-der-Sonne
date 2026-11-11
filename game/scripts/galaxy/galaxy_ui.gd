@@ -77,10 +77,11 @@ func _clear() -> void:
     add_child(backdrop)
     var margin := MarginContainer.new()
     margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    margin.add_theme_constant_override("margin_left", 48)
-    margin.add_theme_constant_override("margin_right", 48)
-    margin.add_theme_constant_override("margin_top", 30)
-    margin.add_theme_constant_override("margin_bottom", 30)
+    var gutters: Vector2i = GalaxyVisualTheme.gutters(get_viewport_rect().size)
+    margin.add_theme_constant_override("margin_left", gutters.x)
+    margin.add_theme_constant_override("margin_right", gutters.x)
+    margin.add_theme_constant_override("margin_top", gutters.y)
+    margin.add_theme_constant_override("margin_bottom", gutters.y)
     add_child(margin)
     var scroll := ScrollContainer.new()
     scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -101,6 +102,7 @@ func _title(value: String, size: int = 36) -> void:
 func _label(value: String) -> Label:
     var label := Label.new()
     label.text = value
+    label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     label.add_theme_font_size_override("font_size", 17)
     label.add_theme_color_override("font_color", WHITE)
     root.add_child(label)
@@ -109,9 +111,10 @@ func _label(value: String) -> Label:
 func _button(value: String, callback: Callable) -> void:
     var button := Button.new()
     button.text = value
-    button.custom_minimum_size = Vector2(320, 43)
+    button.custom_minimum_size = Vector2(0, 44)
     button.add_theme_font_size_override("font_size", 16)
     button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+    button.clip_text = true
     GalaxyVisualTheme.apply_button(button)
     button.pressed.connect(callback)
     root.add_child(button)
