@@ -29,6 +29,15 @@ static func prepare(world: Dictionary) -> void:
         world["stability"] = 70
     if not world.has("governance"):
         world["governance"] = {"rights": 1, "pending": {}, "last_reform": -100}
+    var governance: Dictionary = world["governance"]
+    if not governance.has("legitimacy"):
+        governance["legitimacy"] = 60
+    if not governance.has("mandate"):
+        governance["mandate"] = 0
+    if not governance.has("next_transition"):
+        governance["next_transition"] = int(world.get("tick", 0)) + [8, 12, 10, 6][clampi(int(world["empire"].get("government", 0)), 0, 3)]
+    if not governance.has("crisis_years"):
+        governance["crisis_years"] = 0
     if not world.has("alloys"):
         world["alloys"] = 30
     if not world.has("ship_design"):
@@ -186,6 +195,49 @@ static func advance_governance(world: Dictionary) -> void:
     var opposition := int(pending.get("opposition", 0))
     world["stability"] = clampi(int(world["stability"]) - abs(new_rights - old_rights) * 3 - opposition / 25, 0, 100)
     world["history"].append("Bürgerrechtsreform in Kraft: Stufe %d." % new_rights)
+
+# Abstract institutional transitions: elections, dynastic succession,
+# expert appointments and council rotation have distinct cadences.
+# This is not yet a seat-by-seat parliamentary or character simulation.
+static func advance_institutions(world: Dictionary) -> void:
+    prepare(world)
+    var governance: Dictionary = world["governance"]
+    var government := clampi(int(world["empire"].get("government", 0)), 0, 3)
+    var approval := clampi(int(world.get("civilian_approval", 50)), 0, 100)
+    var stability := clampi(int(world.get("stability", 70)), 0, 100)
+    var legitimacy := clampi(int(governance["legitimacy"]), 0, 100)
+    var groups: Dictionary = GalaxyIdentity.social_groups(world["culture"])
+    var dominant := 0
+    var weights: Array = [int(groups["traditionalists"]), int(groups["reformers"]), int(groups["merchants"])]
+    for i in range(1, weights.size()):
+        if int(weights[i]) > int(weights[dominant]):
+            dominant = i
+    if int(world["tick"]) >= int(governance["next_transition"]):
+        var old_mandate := int(governance["mandate"])
+        if government == 0:
+            governance["mandate"] = dominant
+        elif government == 1:
+            governance["mandate"] = (old_mandate + 1) % 3
+        elif government == 2:
+            governance["mandate"] = 1 if int(world.get("science", 0)) >= 20 else 2
+        else:
+            governance["mandate"] = (old_mandate + 1) % 3
+        var cadence: int = [8, 12, 10, 6][government]
+        governance["next_transition"] = int(world["tick"]) + cadence
+        legitimacy = clampi(legitimacy + (5 if approval >= 50 else -5), 0, 100)
+        world["history"].append("%s: institutioneller Machtwechsel, Mandat %d." % [GalaxyIdentity.GOVERNMENTS[government], int(governance["mandate"])])
+    var legitimacy_delta := (1 if approval >= 60 else -2 if approval < 35 else 0)
+    if stability < 30:
+        legitimacy_delta -= 2
+    legitimacy = clampi(legitimacy + legitimacy_delta, 0, 100)
+    governance["legitimacy"] = legitimacy
+    if legitimacy < 25:
+        governance["crisis_years"] = int(governance["crisis_years"]) + 1
+        world["stability"] = maxi(0, int(world["stability"]) - 2)
+        if int(governance["crisis_years"]) == 3:
+            world["history"].append("Legitimitaetskrise: Die politische Ordnung verliert Rueckhalt.")
+    else:
+        governance["crisis_years"] = 0
 
 static func configure_ship(world: Dictionary, hull: int, weapon: int, engine: int) -> bool:
     prepare(world)
@@ -403,6 +455,7 @@ static func tick(world: Dictionary) -> void:
     GalaxySystems.tick(world)
     GalaxyCivilians.tick(world)
     advance_governance(world)
+    advance_institutions(world)
     GalaxyIdentity.culture_tick(world["culture"], world["empire"], clampi(int(world.get("credits", 0)) / 4, 0, 100), int(world.get("civilian_approval", 50)), int(world["tick"]))
     advance_colonies(world)
     var science_bonus := 0
