@@ -779,6 +779,9 @@ func _society_report() -> void:
         _label("    Gesundheitsindex: %d/100  •  Geburten und Sterbefälle beeinflussen die Einwohnerzahl" % int(cohorts.get("health", 50)))
     _label("BEVÖLKERUNG GESAMT: %d  •  ZIVILE STEUERN: %d  •  WANDERUNGEN: %d" % [population, int(world.get("civilian_taxes", 0)), int(world.get("civilian_migration", 0))])
     _label("HANDELSROUTEN DER PRIVATWIRTSCHAFT")
+    var ledger: Dictionary = world.get("civilian_goods_ledger", {})
+    if not ledger.is_empty():
+        _label("Güterbilanz: Anfang %d  + Produktion %d  − Verbrauch %d  = Bestand %d" % [int(ledger["opening_stock"]), int(ledger["produced"]), int(ledger["consumed"]), int(ledger["ending_stock"])])
     var trade: Array = world.get("civilian_trade", [])
     if trade.is_empty():
         _label("Keine aktuellen Warenlieferungen zwischen den Kolonien.")
