@@ -4,10 +4,10 @@ func _initialize() -> void:
     var settings := GalaxyModel.defaults()
     settings["seed"] = 271828
     var world := GalaxyModel.generate(settings, GalaxyModel.empire_defaults())
-    GalaxySystems.prepare(world)
+    GalaxyStrategy.prepare(world)
     var original: Dictionary = world["ancient_history"].duplicate(true)
     var other := GalaxyModel.generate(settings, GalaxyModel.empire_defaults())
-    GalaxySystems.prepare(other)
+    GalaxyStrategy.prepare(other)
     if original != other["ancient_history"]:
         _fail("Ancient history not deterministic")
         return
@@ -59,7 +59,7 @@ func _initialize() -> void:
         return
     # The opposing archaeological decisions must also complete and persist.
     var alternate := GalaxyModel.generate(settings, GalaxyModel.empire_defaults())
-    GalaxySystems.prepare(alternate)
+    GalaxyStrategy.prepare(alternate)
     if not GalaxyLore.inspect(alternate, ruin):
         _fail("Alternate story discovery failed")
         return
