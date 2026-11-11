@@ -35,6 +35,8 @@ jobs:
         run: godot --headless --path game --script res://tests/interaction_test.gd
       - name: Test galactic new game and persistence
         run: timeout 100s godot --headless --path game --script res://tests/galaxy_test.gd
+      - name: Verify fertility, mortality, ageing and labor accounting
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_demographic_flows_test.gd
       - name: Verify civilian demographics, employment and save compatibility
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_demographics_test.gd
       - name: Verify long-term cultural stability, generations and AI replay
