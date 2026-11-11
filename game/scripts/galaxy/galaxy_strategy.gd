@@ -64,6 +64,10 @@ static func prepare(world: Dictionary) -> void:
         world["fleet_command"] = {"order": "hold", "admiral": "none", "assignment_year": -1}
     if not world.has("fleet_command_history"):
         world["fleet_command_history"] = []
+    if not world.has("fleet_logistics"):
+        world["fleet_logistics"] = {"supply": 100, "last_service": -1}
+    if not world.has("battle_reports"):
+        world["battle_reports"] = []
     if not world.has("ai_fleets"):
         var fleets: Array = []
         for rival in world["ai"]:
@@ -580,12 +584,63 @@ static func fleet_command_bonuses(world: Dictionary) -> Dictionary:
         "travel_reduction": 1 if admiral == "navigator" else 0
     }
 
+# Supply is an aggregate percentage for the single player fleet.
+# It is replenished in friendly territory, consumed in transit and combat.
+static func fleet_upkeep(world: Dictionary) -> int:
+    prepare(world)
+    return maxi(1, ceili(float(maxi(0, int(world["fleets"][0]["strength"]))) / 20.0))
+
+static func service_fleet(world: Dictionary) -> bool:
+    prepare(world)
+    var fleet: Dictionary = world["fleets"][0]
+    var location := int(fleet.get("location", -1))
+    if location < 0 or location >= world["stars"].size() or int(fleet.get("destination", -1)) >= 0:
+        return false
+    if int(world["stars"][location]["owner"]) != 0:
+        return false
+    var supply := clampi(int(world["fleet_logistics"].get("supply", 100)), 0, 100)
+    var strength := maxi(0, int(fleet["strength"]))
+    if supply >= 100 and strength >= 12:
+        return false
+    var alloy_cost := 4
+    var credit_cost := 10
+    if int(world["alloys"]) < alloy_cost or int(world["credits"]) < credit_cost:
+        return false
+    world["alloys"] = int(world["alloys"]) - alloy_cost
+    world["credits"] = int(world["credits"]) - credit_cost
+    world["fleet_logistics"]["supply"] = mini(100, supply + 35)
+    fleet["strength"] = mini(12, strength + 2) if strength < 12 else strength
+    world["fleet_logistics"]["last_service"] = int(world["tick"])
+    world["history"].append("Flottenservice: Nachschub aufgefuellt und gegebenenfalls repariert.")
+    return true
+
+static func advance_fleet_logistics(world: Dictionary) -> void:
+    prepare(world)
+    var fleet: Dictionary = world["fleets"][0]
+    var upkeep := fleet_upkeep(world)
+    world["credits"] = maxi(0, int(world["credits"]) - upkeep)
+    var location := int(fleet.get("location", -1))
+    var friendly := location >= 0 and location < world["stars"].size() and int(world["stars"][location]["owner"]) == 0
+    var transit := int(fleet.get("destination", -1)) >= 0
+    var logistics: Dictionary = world["fleet_logistics"]
+    var supply := clampi(int(logistics.get("supply", 100)), 0, 100)
+    if transit or not friendly:
+        supply = maxi(0, supply - (12 if transit else 7))
+    else:
+        supply = mini(100, supply + 8)
+    logistics["supply"] = supply
+    if supply == 0 and int(fleet["strength"]) > 0:
+        fleet["strength"] = maxi(0, int(fleet["strength"]) - 1)
+        world["history"].append("Flottenverluste durch fehlenden Nachschub.")
+
 static func fleet_attack_power(world: Dictionary) -> int:
     prepare(world)
     var base := int(world["fleets"][0]["strength"])
     var experience := mini(8, int(world["fleet_experience"]) / 3)
     var doctrine := str(world["fleet_doctrine"])
-    return base + experience + (6 if doctrine == "assault" else 0) + int(fleet_command_bonuses(world)["attack"])
+    var supply := clampi(int(world["fleet_logistics"].get("supply", 100)), 0, 100)
+    var supply_penalty := 0 if supply >= 50 else maxi(1, ceili(float(base) * float(50 - supply) / 100.0))
+    return maxi(0, base + experience + (6 if doctrine == "assault" else 0) + int(fleet_command_bonuses(world)["attack"]) - supply_penalty)
 
 static func attack(world: Dictionary, star_id: int) -> String:
     prepare(world)
@@ -598,22 +653,35 @@ static func attack(world: Dictionary, star_id: int) -> String:
     var fleet: Dictionary = world["fleets"][0]
     if int(fleet["location"]) != star_id or int(fleet["destination"]) >= 0:
         return "Flotte muss sich im Zielsystem befinden."
+    if int(fleet["strength"]) <= 0:
+        return "Keine einsatzfähige Flotte."
     var defense := 8 + int(star["resource"]) * 2 + int(world["tick"]) / 8
     for rival_fleet in world["ai_fleets"]:
         if int(rival_fleet["owner"]) == defender and int(rival_fleet["location"]) == star_id:
             defense += int(rival_fleet["strength"])
+    var before := int(fleet["strength"])
+    var supply_before := clampi(int(world["fleet_logistics"].get("supply", 100)), 0, 100)
     var power := fleet_attack_power(world)
-    if power > defense:
+    var victory := power > defense
+    if victory:
         star["owner"] = 0
-        fleet["strength"] = maxi(1, power - maxi(3, defense / 2))
+        fleet["strength"] = maxi(1, before - maxi(3, defense / 2))
         world["stability"] = maxi(0, int(world["stability"]) - 3)
         world["fleet_experience"] = mini(60, int(world["fleet_experience"]) + 3)
-        world["history"].append("%s im Krieg erobert. Flottenstärke: %d." % [star["name"], int(fleet["strength"])])
-        return "Sieg! System erobert."
-    fleet["strength"] = maxi(0, int(fleet["strength"]) - maxi(3, defense / 2))
-    world["fleet_experience"] = mini(60, int(world["fleet_experience"]) + 1)
-    world["history"].append("Angriff auf %s gescheitert." % star["name"])
-    return "Niederlage! Flotte beschädigt."
+    else:
+        fleet["strength"] = maxi(0, before - maxi(3, defense / 2))
+        world["fleet_experience"] = mini(60, int(world["fleet_experience"]) + 1)
+    world["fleet_logistics"]["supply"] = maxi(0, supply_before - 20)
+    var report := {"year": int(world["tick"]), "system": star_id, "defender": defender,
+        "attack": power, "defense": defense, "victory": victory,
+        "strength_before": before, "strength_after": int(fleet["strength"]),
+        "losses": before - int(fleet["strength"]), "supply_before": supply_before,
+        "supply_after": int(world["fleet_logistics"]["supply"])}
+    world["battle_reports"].append(report)
+    if world["battle_reports"].size() > 40:
+        world["battle_reports"].pop_front()
+    world["history"].append("%s: %s; Angriff %d, Verteidigung %d, Verluste %d." % [str(star["name"]), "Sieg" if victory else "Niederlage", power, defense, int(report["losses"])])
+    return "Sieg! System erobert." if victory else "Niederlage! Flotte beschädigt."
 
 # Transparent projection of player-controlled recurring income. Excludes
 # unpredictable events, rival actions and one-off expenditure.
@@ -662,6 +730,7 @@ static func income_forecast(world: Dictionary) -> Dictionary:
     if next_stability < 25:
         credits -= 5
     credits -= colony_upkeep(world)
+    credits -= fleet_upkeep(world)
     science += int(GalaxyIdentity.culture_modifiers(world.get("culture", {}))["science"])
     return {"credits": credits, "science": science, "alloys": alloys}
 
@@ -708,6 +777,7 @@ static func tick(world: Dictionary) -> void:
     prepare(world)
     var opening := {"credits": int(world["credits"]), "science": int(world["science"]), "alloys": int(world["alloys"]), "stability": int(world["stability"])}
     GalaxySystems.tick(world)
+    advance_fleet_logistics(world)
     GalaxyCivilians.tick(world)
     advance_diplomacy(world)
     advance_intelligence(world)
