@@ -1032,6 +1032,10 @@ func _politics() -> void:
     var culture: Dictionary = world["culture"]
     _label("Kulturentwicklung • Generation %d" % int(culture.get("generation", 0)))
     _label("Tradition %d  •  Offenheit %d  •  Zusammenhalt %d  •  Handelsorientierung %d" % [int(culture["tradition"]), int(culture["openness"]), int(culture["solidarity"]), int(culture["commercialism"])])
+    var groups: Dictionary = GalaxyIdentity.social_groups(culture)
+    _label("Gesellschaftliche Strömungen: Tradition %d%%  •  Reform %d%%  •  Handel %d%%" % [int(groups["traditionalists"]), int(groups["reformers"]), int(groups["merchants"])])
+    var effects: Dictionary = GalaxyIdentity.culture_modifiers(culture)
+    _label("Kulturelle Effekte/Jahr: Zufriedenheit %+d  •  Privatkapital %+d  •  Forschung %+d  •  Legitimität %+d" % [int(effects["satisfaction"]), int(effects["capital"]), int(effects["science"]), int(effects["legitimacy"])])
     _label("Kulturelle Entwicklung ist gesellschaftlich bedingt und nicht direkt steuerbar.")
     _label("Stabilität: %d%%  •  Politische Ausrichtung beeinflusst die Jahresproduktion." % int(world["stability"]))
     _label("Schwerpunkt: %s" % ["Handel", "Wissenschaft", "Industrie"][int(world["policies"]["focus"])])
