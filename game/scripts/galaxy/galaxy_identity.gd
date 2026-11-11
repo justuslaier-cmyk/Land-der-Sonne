@@ -152,7 +152,8 @@ static func culture_tick(culture: Dictionary, empire: Dictionary, prosperity: in
     culture["commercialism"] = clampi(int(culture.get("commercialism", 40)) + (1 if prosperity >= 65 else -1 if prosperity < 30 else 0), 0, 100)
     culture["openness"] = clampi(int(culture.get("openness", 45)) + (1 if ethic == "pluralist" and satisfaction >= 50 else -1 if satisfaction < 30 else 0), 0, 100)
     culture["tradition"] = clampi(int(culture.get("tradition", 35)) + (1 if ethic == "traditionalist" else -1 if int(culture.get("openness", 45)) >= 75 else 0), 0, 100)
-    if year > 0 and year % 20 == 0:
+    if year > 0 and year % 20 == 0 and int(culture.get("last_generation_year", -1)) != year:
+        culture["last_generation_year"] = year
         culture["generation"] = int(culture.get("generation", 0)) + 1
         var memory: Array = culture.get("history", [])
         memory.append({"year": year, "generation": int(culture["generation"]), "tradition": int(culture["tradition"]), "openness": int(culture["openness"]), "solidarity": int(culture["solidarity"]), "commercialism": int(culture["commercialism"])})
