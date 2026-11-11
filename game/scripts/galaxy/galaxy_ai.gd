@@ -112,6 +112,9 @@ static func _society_tick(world: Dictionary, rival: Dictionary, treasury: int, y
     var key := str(id)
     var society: Dictionary = world["ai_societies"][key]
     var identity: Dictionary = GalaxyIdentity.modifiers(rival)
+    var culture_effects: Dictionary = GalaxyIdentity.culture_modifiers(world["ai_cultures"][key])
+    identity["capital"] = int(identity["capital"]) + int(culture_effects["capital"])
+    identity["legitimacy"] = int(identity["legitimacy"]) + int(culture_effects["legitimacy"])
     var owned := 0
     var resources := 0
     for star in world["stars"]:
