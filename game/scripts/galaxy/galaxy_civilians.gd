@@ -34,7 +34,6 @@ static func tick(world: Dictionary) -> void:
     var culture_effects: Dictionary = GalaxyIdentity.culture_modifiers(world.get("culture", {}))
     identity["satisfaction"] = int(identity["satisfaction"]) + int(culture_effects["satisfaction"])
     identity["capital"] = int(identity["capital"]) + int(culture_effects["capital"])
-    identity["production"] = int(identity["production"]) + int(culture_effects["science"])
     var total_taxes := 0
     var satisfaction_total := 0
     var population_total := 0
