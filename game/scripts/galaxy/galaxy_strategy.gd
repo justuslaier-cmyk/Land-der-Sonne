@@ -213,6 +213,52 @@ static func attack(world: Dictionary, star_id: int) -> String:
     world["history"].append("Angriff auf %s gescheitert." % star["name"])
     return "Niederlage! Flotte beschädigt."
 
+# Transparent projection of player-controlled recurring income. Excludes
+# unpredictable events, rival actions and one-off expenditure.
+static func income_forecast(world: Dictionary) -> Dictionary:
+    prepare(world)
+    var credits := 0
+    var science := 0
+    var alloys := 2
+    var owned := 0
+    var production := 0
+    for star in world["stars"]:
+        if int(star["owner"]) == 0:
+            owned += 1
+            production += int(star["resource"])
+    credits += owned * 2 + int(production / 3)
+    for key in world["buildings"].keys():
+        var sid := int(key)
+        if sid < 0 or sid >= world["stars"].size() or int(world["stars"][sid]["owner"]) != 0:
+            continue
+        var built: Dictionary = world["buildings"][key]
+        credits += int(built.get("mine", 0)) * (2 + int(world["stars"][sid]["resource"]))
+        science += int(built.get("lab", 0)) * 4
+        alloys += int(built.get("factory", 0)) * 3
+    for key in world["planet_colonies"].keys():
+        var parts := str(key).split(":")
+        if parts.size() != 2:
+            continue
+        var sid := int(parts[0])
+        var pid := int(parts[1])
+        if sid < 0 or sid >= world["stars"].size() or int(world["stars"][sid]["owner"]) != 0:
+            continue
+        var planets: Array = GalaxyCelestials.generate(int(world["settings"]["seed"]), world["stars"][sid])["planets"]
+        if pid < 0 or pid >= planets.size():
+            continue
+        var built: Dictionary = world["planet_colonies"][key].get("buildings", {})
+        credits += int(built.get("mine", 0)) * (2 + int(planets[pid]["resources"]))
+        science += int(built.get("lab", 0)) * 4
+        alloys += int(built.get("factory", 0)) * 3
+    var focus := int(world["policies"]["focus"])
+    var tax := int(world["policies"]["tax"])
+    credits += (tax - 1) * 5 + world["trade_pacts"].size() * 6 + (4 if focus == 0 else 0) + GalaxyLore.artifact_bonus(world, "credits")
+    science += (4 if focus == 1 else 0) + GalaxyLore.artifact_bonus(world, "science")
+    alloys += (3 if focus == 2 else 0) + GalaxyLore.artifact_bonus(world, "alloys")
+    if int(world["stability"]) < 25:
+        credits -= 5
+    return {"credits": credits, "science": science, "alloys": alloys}
+
 static func tick(world: Dictionary) -> void:
     prepare(world)
     GalaxySystems.tick(world)
