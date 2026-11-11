@@ -69,6 +69,18 @@ func _run() -> void:
         _fail("Missing homeworld accepted")
         return
     ui._apply_empire_template(0)
+    ui._show_settings()
+    ui.settings["size"] = 20
+    ui.settings["ai_count"] = 5
+    ui._show_settings()
+    if GalaxyModel.validate(ui.settings, ui.empire) == "":
+        _fail("Oversubscribed small galaxy accepted")
+        return
+    ui.settings["ai_count"] = 4
+    ui._show_settings()
+    if GalaxyModel.validate(ui.settings, ui.empire) != "":
+        _fail("Valid small galaxy rejected")
+        return
     ui._begin_new_game()
     ui.settings["seed"] = 314159
     ui.empire["name"] = ""
