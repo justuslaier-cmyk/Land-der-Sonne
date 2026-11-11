@@ -123,6 +123,41 @@ static func sell_manufactures(market: Dictionary, demand: int) -> int:
     market["production_stock"] = stock
     return sold
 
+# Civilian freight uses geographic star lanes. A route may cross owned
+# intermediate systems, but cannot pass through foreign territory.
+static func freight_hops(world: Dictionary, origin: int, destination: int) -> int:
+    if origin == destination:
+        return 0
+    var stars: Array = world.get("stars", [])
+    if origin < 0 or destination < 0 or origin >= stars.size() or destination >= stars.size():
+        return -1
+    if int(stars[origin]["owner"]) != 0 or int(stars[destination]["owner"]) != 0:
+        return -1
+    var lanes: Array = world.get("lanes", [])
+    var queue: Array = [origin]
+    var distance: Dictionary = {origin: 0}
+    while not queue.is_empty():
+        var current := int(queue.pop_front())
+        for lane in lanes:
+            if typeof(lane) != TYPE_ARRAY or lane.size() != 2:
+                continue
+            var left := int(lane[0])
+            var right := int(lane[1])
+            var neighbor := right if left == current else (left if right == current else -1)
+            if neighbor < 0 or neighbor >= stars.size() or distance.has(neighbor):
+                continue
+            if int(stars[neighbor]["owner"]) != 0:
+                continue
+            distance[neighbor] = int(distance[current]) + 1
+            if neighbor == destination:
+                return int(distance[neighbor])
+            queue.append(neighbor)
+    return -1
+
+# One unit of freight capacity per two employed workers, capped at ten.
+static func freight_capacity(market: Dictionary) -> int:
+    return mini(10, maxi(0, int(market.get("demographics", {}).get("employed", 0))) / 2)
+
 static func tick(world: Dictionary) -> void:
     prepare(world)
     var settlements: Dictionary = world["civilian_worlds"]
@@ -142,6 +177,7 @@ static func tick(world: Dictionary) -> void:
     var population_total := 0
     var petitions: Array = []
     var migration := 0
+    var freight_cost_total := 0
     var trade: Array = []
     var production_chains: Dictionary = {}
     var opening_stock := 0
@@ -205,15 +241,20 @@ static func tick(world: Dictionary) -> void:
                 continue
             var destination: Dictionary = settlements[destination_key]
             var demand := maxi(0, int(destination["population"]) / 2 - int(destination["goods"]))
-            if demand > shortage:
+            if demand > shortage and freight_hops(world, int(source_key), int(destination_key)) > 0:
                 shortage = demand
                 best_key = str(destination_key)
         if best_key != "":
-            var amount := mini(10, mini(shortage, int(source["goods"]) - 15))
-            if amount > 0:
+            var hops := freight_hops(world, int(source_key), int(best_key))
+            var amount := mini(freight_capacity(source), mini(shortage, int(source["goods"]) - 15))
+            var cost := hops * amount
+            if amount > 0 and int(source["private_capital"]) >= cost:
                 source["goods"] = int(source["goods"]) - amount
                 settlements[best_key]["goods"] = int(settlements[best_key]["goods"]) + amount
-                trade.append({"from": int(source_key), "to": int(best_key), "goods": amount})
+                source["private_capital"] = int(source["private_capital"]) - cost
+                freight_cost_total += cost
+                trade.append({"from": int(source_key), "to": int(best_key), "goods": amount,
+                    "hops": hops, "cost": cost, "capacity": freight_capacity(source)})
     # Families move for opportunity, independently of the government's wishes.
     if active.size() >= 2:
         var destination_key := ""
@@ -245,7 +286,7 @@ static func tick(world: Dictionary) -> void:
     world["civilian_production_ledger"] = {"year": int(world["tick"]), "systems": production_chains}
     world["civilian_goods_ledger"] = {"year": int(world["tick"]), "produced": production_total,
         "consumed": consumption_total, "opening_stock": opening_stock, "ending_stock": ending_stock,
-        "shipments": trade.duplicate(true)}
+        "freight_cost": freight_cost_total, "shipments": trade.duplicate(true)}
     world["civilian_approval"] = satisfaction_total / maxi(1, population_total)
     world["civilian_petitions"] = petitions
     world["civilian_trade"] = trade
