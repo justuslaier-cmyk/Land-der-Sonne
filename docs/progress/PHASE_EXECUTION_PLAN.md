@@ -79,3 +79,12 @@ Jeder Durchlauf: (a) aktuellen Branch und relevante Pflicht-IDs prüfen; (b) kon
 - **CI bei letzter Abfrage:** Run `43089548236` für Code-SHA `7375fccad4b19b19c1c74fca0fb624000ce10340` war `queued`. Keine vollständige CI-Abnahme behaupten.
 - **Pflichtstatus:** P01–P04, P09, P90–P91 bleiben **offen**. Grund: fehlende vollständige UI-Einstellungen, persistente eigene Reichsvorlagen, alle geforderten Galaxieparameter, Tutorial, native/visuelle UX-Abnahme.
 - **Übergang:** Phase 03 / Durchlauf 01 beginnt mit Galaxiegenerator, sicheren Startbedingungen und Geografie; die unvollständigen Phase-02-Pflichten bleiben unabhängig als verbindliche offene Arbeit bestehen.
+
+### Phase 03 — Durchlauf 01 (2026-11-11)
+- **Ziel:** Deterministische Sternverteilung und sicherere, räumlich getrennte Startpositionen.
+- **Befund:** Der Generator verteilte gegnerische Hauptwelten bisher nach Array-Index, nicht nach räumlicher Distanz. Bei spiralförmiger, elliptischer und ringförmiger Galaxie kann Indexabstand eine schlechte räumliche Trennung bedeuten. Die Spielerhauptwelt war bereits immer bewohnbar und besessen.
+- **Implementiert:** Deterministisches farthest-first-Verfahren wählt für jedes KI-Reich den noch freien Stern, dessen minimale quadratische Entfernung zu allen bereits gesetzten Hauptwelten maximal ist. Stabiler Tie-Break durch aufsteigende Stern-ID. Bestehende `star.id`-Indizes und `ai[].capital`-Referenzen bleiben gültig. Keine neue Save-Schema-Version.
+- **Test:** `galaxy_start_spacing_test.gd` prüft 12 feste Seed/Form-Kombinationen mit jeweils 100 Sternen und 12 Rivalen auf deterministische Gleichheit, Weltstruktur, Spielerhauptwelt, eindeutige KI-Hauptwelten und farthest-first-Auswahl; in CI registriert.
+- **Einschränkungen:** Keine garantierten Ressourcen-/Technologie-/Nachbar-Gleichheiten, keine Sternrouten-/Erreichbarkeitsgarantie, keine Kollisionsfreiheit aller Sternkoordinaten. Diese Anforderungen bleiben offen und sind Gegenstand weiterer Phase-03-Durchläufe.
+- **Betroffene Pflichten:** P11–P12, P14–P15, P87–P91. **Keine Pflicht als vollständig abgenommen markiert.**
+- **CI:** Ergebnisse zum neuen Code-SHA abwarten und gegebenenfalls Fehler korrigieren.
