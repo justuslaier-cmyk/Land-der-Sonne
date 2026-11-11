@@ -132,3 +132,12 @@ Jeder Durchlauf: (a) aktuellen Branch und relevante Pflicht-IDs prüfen; (b) kon
 - **Grenzen:** Es handelt sich um ein vereinfachtes Bevölkerungskapazitäts- und Umweltkostenmodell, noch ohne planetare Klimadynamik, Terraforming, artspezifische Lebensräume, Ressourcenerschöpfung, Ökosystemrückkopplungen oder separate Kolonialverwaltung mit differenzierten Bevölkerungsklassen. Die visuellen Spieltests und CI-Abnahme sind ausstehend.
 - **Pflichtstatus:** P13, P16–P17, P87–P91 bleiben offen. Phase 04 ist als drei Durchläufe bearbeitet, nicht vollständig abgenommen.
 - **Nächster Planabschnitt:** Phase 05 / Durchlauf 01: Spezies und Kulturen. Die nicht erfüllten Planetensystem-Pflichten bleiben verbindlich offen.
+
+### Phase 05 — Durchlauf 01 (2026-11-11)
+- **Ziel:** Bereits bestehende Spezies-/Staatsidentitäten um einen eigenständigen, zeitlich veränderlichen Kulturzustand erweitern.
+- **Bestand:** `GalaxyIdentity` definiert sechs Civics, acht Traits, vier Ethiken, vier Regierungsformen, Budget-/Konfliktprüfung und numerische Modifikatoren. Spieler- und KI-Reiche nutzen diese bereits teilweise in Zivilwirtschaft und KI-Gesellschaft.
+- **Implementiert:** `GalaxyIdentity.culture_defaults` legt vier Kulturachsen (Tradition, Offenheit, Zusammenhalt, Handelsorientierung) als Werte 0–100 an. `culture_tick` verändert sie deterministisch anhand von Wohlstand, Zufriedenheit und Ethik; alle 20 Jahre entsteht eine Generation mit begrenztem historischem Snapshot (max. acht Einträge). `GalaxyStrategy` und `GalaxyAI` führen unabhängige Spieler- bzw. KI-Kulturen in der Jahressimulation; das Politikmenü zeigt den Spielerzustand.
+- **Regression:** `galaxy_culture_test.gd` prüft Spieler-/KI-Initialisierung, idempotente Vorbereitung, 20-Jahres-Generationen, Wertebereich, Determinismus, getrennte KI-Entwicklung und Save-/Load-Persistenz; im CI-Workflow registriert.
+- **Kompatibilität:** Vorhandene Saves erhalten fehlende Kulturzustände beim nächsten `prepare` automatisch. Bestehende biologische Traits und Civics werden nicht geändert.
+- **Grenzen:** Kulturachsen sind bisher **beschreibende Simulationszustände** ohne eigene politische, religiöse, diplomatische oder wirtschaftliche Wirkungen. Keine Kulturverbreitung, Assimilation, Minderheiten, Herkunfts-/Flaggen-Editoren oder strukturellen Regierungssysteme. Generationschronik erfasst nur numerische Zustände, keine historischen Personen oder Ereignisinterpretationen.
+- **Pflichtstatus:** P18–P24 und P87–P91 bleiben offen. CI-Bestätigung und visuelle Abnahme ausstehend.
