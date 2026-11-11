@@ -53,6 +53,8 @@ jobs:
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_forecast_test.gd
       - name: Test optional exploration automation
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_automation_test.gd
+      - name: Verify civilization civics, species traits and persistence
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_identity_test.gd
       - name: Test autonomous rival empires
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_ai_test.gd
       - name: Load main scene
