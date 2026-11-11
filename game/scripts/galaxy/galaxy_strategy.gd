@@ -60,6 +60,10 @@ static func prepare(world: Dictionary) -> void:
         world["ship_role"] = "escort"
     if not world.has("ship_registry"):
         world["ship_registry"] = []
+    if not world.has("fleet_command"):
+        world["fleet_command"] = {"order": "hold", "admiral": "none", "assignment_year": -1}
+    if not world.has("fleet_command_history"):
+        world["fleet_command_history"] = []
     if not world.has("ai_fleets"):
         var fleets: Array = []
         for rival in world["ai"]:
@@ -538,12 +542,49 @@ static func set_fleet_doctrine(world: Dictionary, doctrine: String) -> bool:
     world["history"].append("Flottendoktrin geändert: %s." % doctrine)
     return true
 
+# Phase 12/2: the current simulation has one player fleet. Commands
+# are persistent fleet-wide orders, not independent ship or fleet entities.
+static func assign_admiral(world: Dictionary, admiral: String) -> bool:
+    prepare(world)
+    if not ["none", "tactician", "navigator", "quartermaster"].has(admiral):
+        return false
+    if str(world["fleet_command"]["admiral"]) == admiral:
+        return false
+    world["fleet_command"]["admiral"] = admiral
+    world["fleet_command"]["assignment_year"] = int(world["tick"])
+    world["fleet_command_history"].append({"year": int(world["tick"]), "type": "admiral", "value": admiral})
+    world["history"].append("Flottenkommando: Admiralsposten %s." % admiral)
+    return true
+
+static func set_fleet_order(world: Dictionary, order: String) -> bool:
+    prepare(world)
+    if not ["hold", "patrol", "assault"].has(order):
+        return false
+    if str(world["fleet_command"]["order"]) == order:
+        return false
+    world["fleet_command"]["order"] = order
+    world["fleet_command_history"].append({"year": int(world["tick"]), "type": "order", "value": order})
+    world["history"].append("Flottenbefehl erteilt: %s." % order)
+    return true
+
+static func fleet_command_bonuses(world: Dictionary) -> Dictionary:
+    prepare(world)
+    var command: Dictionary = world["fleet_command"]
+    var admiral := str(command.get("admiral", "none"))
+    var order := str(command.get("order", "hold"))
+    return {
+        "attack": (3 if admiral == "tactician" else 0) + (3 if order == "assault" else 0),
+        "defense": (3 if admiral == "quartermaster" else 0) + (3 if order == "hold" else 0),
+        "range": 25 if admiral == "navigator" else 0,
+        "travel_reduction": 1 if admiral == "navigator" else 0
+    }
+
 static func fleet_attack_power(world: Dictionary) -> int:
     prepare(world)
     var base := int(world["fleets"][0]["strength"])
     var experience := mini(8, int(world["fleet_experience"]) / 3)
     var doctrine := str(world["fleet_doctrine"])
-    return base + experience + (6 if doctrine == "assault" else 0)
+    return base + experience + (6 if doctrine == "assault" else 0) + int(fleet_command_bonuses(world)["attack"])
 
 static func attack(world: Dictionary, star_id: int) -> String:
     prepare(world)
