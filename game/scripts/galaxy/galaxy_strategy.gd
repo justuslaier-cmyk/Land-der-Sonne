@@ -312,7 +312,7 @@ static func tick(world: Dictionary) -> void:
         var id := int(rival["id"])
         var key := str(id)
         var trust := int(world["diplomatic_trust"].get(key, 0))
-        var active_treaty := world["trade_pacts"].has(id) or world.get("non_aggression", []).has(id)
+        var active_treaty: bool = world["trade_pacts"].has(id) or world.get("non_aggression", []).has(id)
         var change := -4 if world["wars"].has(id) else 2 if active_treaty else -1
         world["diplomatic_trust"][key] = clampi(trust + change, 0, 50)
     # Autonomous rival behavior advances with the same simulation clock.
