@@ -354,6 +354,17 @@ func _draw_map() -> void:
             map_area.draw_arc(pos, 13, 0, TAU, 24, GOLD, 2.0)
         elif known and owner > 0:
             map_area.draw_arc(pos, 11, 0, TAU, 24, Color("#d4748b"), 1.5)
+        # Discovered archaeological sites remain visible on the strategic map.
+        if known:
+            var lore: Dictionary = world.get("ancient_history", {})
+            if lore.get("discovered", []).has(id):
+                map_area.draw_arc(pos, 24.0, 0.0, TAU, 24, Color("#e4c18a", 0.9), 2.0)
+                map_area.draw_line(pos + Vector2(-5, -21), pos + Vector2(0, -28), Color("#e4c18a"), 1.5)
+                map_area.draw_line(pos + Vector2(0, -28), pos + Vector2(5, -21), Color("#e4c18a"), 1.5)
+            for site in world.get("ancient_sites", []):
+                if int(site["star_id"]) == id and bool(site["discovered"]):
+                    map_area.draw_arc(pos, 20.0, 0.0, TAU, 20, Color("#7bd2c9", 0.9), 1.5)
+                    break
         if id == selected:
             map_area.draw_arc(pos, 19, 0, TAU, 32, Color.WHITE, 1.4)
             map_area.draw_string(ThemeDB.fallback_font, pos + Vector2(12, -15), str(star["name"]) if known else "Unkartiert", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, WHITE)
@@ -456,6 +467,14 @@ func _show_selection() -> void:
     if not activity.is_empty():
         _side_label(str(activity.back()["text"]))
     _side_label("CHRONIK", true)
+    _label("GALAKTISCHES PROTOKOLL / LETZTE 35 EINTRÄGE")
+    var incidents: Array = world.get("ambient_event_log", [])
+    if not incidents.is_empty():
+        _label("KLEINE PHÄNOMENE / %d protokolliert" % incidents.size())
+        for i in range(maxi(0, incidents.size() - 5), incidents.size()):
+            var incident: Dictionary = incidents[i]
+            var amount := int(incident["effect"])
+            _label("Jahr %d  •  %s  (%s%d %s)" % [int(incident["year"]) + 2200, str(incident["text"]), "+" if amount >= 0 else "", amount, str(incident["resource"])])
     var history: Array = world["history"]
     _side_label(str(history.back()) if not history.is_empty() else "Keine Einträge")
 
