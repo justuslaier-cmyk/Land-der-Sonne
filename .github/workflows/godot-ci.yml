@@ -57,6 +57,8 @@ jobs:
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_identity_test.gd
       - name: Test non-linear galactic objectives and persistence
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_progress_test.gd
+      - name: Verify world contracts and deterministic twelve-tick replay
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_contracts_test.gd
       - name: Test autonomous rival empires
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_ai_test.gd
       - name: Load main scene
