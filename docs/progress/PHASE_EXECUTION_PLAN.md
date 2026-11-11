@@ -88,3 +88,12 @@ Jeder Durchlauf: (a) aktuellen Branch und relevante Pflicht-IDs prüfen; (b) kon
 - **Einschränkungen:** Keine garantierten Ressourcen-/Technologie-/Nachbar-Gleichheiten, keine Sternrouten-/Erreichbarkeitsgarantie, keine Kollisionsfreiheit aller Sternkoordinaten. Diese Anforderungen bleiben offen und sind Gegenstand weiterer Phase-03-Durchläufe.
 - **Betroffene Pflichten:** P11–P12, P14–P15, P87–P91. **Keine Pflicht als vollständig abgenommen markiert.**
 - **CI:** Ergebnisse zum neuen Code-SHA abwarten und gegebenenfalls Fehler korrigieren.
+
+### Phase 03 — Durchlauf 02 (2026-11-11)
+- **Ziel:** Erkundungs- und Flottennavigation als nachvollziehbare, getestete Spielbefehle weiterentwickeln.
+- **Bestand:** Zoom, Pan, Sternselektion, Sichtbarkeitszustand `known`, Erkundung und Direktflug existierten bereits. Kein interstellares Routennetz.
+- **Implementiert:** `GalaxySystems.route_preview(world, target)` liefert für bekannte Ziele ohne Zustandsänderung Zulässigkeit, Ablehnungsgrund, Distanz, Reisezeit und Reichweite; `survey_preview` liefert Reichweitenprüfung für unbekannte Ziele. Die tatsächlichen Befehle `move_fleet` und `explore` nutzen dieselben Kriterien.
+- **UI:** Sternendetails zeigen Erkundungsberechtigung bzw. Sperrgrund, für bekannte Ziele Flugdistanz und Reisezeit oder konkreten Ablehnungsgrund; ungültige Aktionsknöpfe werden nicht angeboten. Rückmeldungen nennen den tatsächlichen Grund.
+- **Test:** `galaxy_navigation_test.gd` prüft Vorschau ohne Mutation, unbekannte/ungültige Ziele, Erkundung, bekannten Zielanflug und blockierte Doppelaufträge; CI-Workflow ergänzt.
+- **Einschränkungen:** Flüge bleiben direkte euklidische Strecken ohne Hyperraumgraphen, Mehrstopp-Routing, Wegfindung, Treibstoffverbrauch, taktische Risiken oder differenzierte Sensoren. Die UI ist noch nicht visuell/manuell abgenommen. Neuer CI-Lauf muss noch bestätigt werden.
+- **Pflichtstatus:** P05, P11–P15, P90–P91 bleiben offen.
