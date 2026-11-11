@@ -28,13 +28,15 @@ static func prepare(world: Dictionary) -> void:
 static func tick(world: Dictionary) -> void:
     prepare(world)
     var year := int(world["tick"])
+    # One ownership scan per year rather than one full-galaxy scan per rival.
+    var ownership: Dictionary = GalaxyAISpatialIndex.build(world)
     for rival in world["ai"]:
         var id := int(rival["id"])
         var key := str(id)
         var treasury := int(world["ai_treasury"].get(key, 0))
         var temperament := int(rival["temperament"])
         var capital := int(rival["capital"])
-        _society_tick(world, rival, treasury, year)
+        _society_tick(world, rival, treasury, year, ownership)
         var fleet: Dictionary = {}
         for candidate in world["ai_fleets"]:
             if int(candidate["owner"]) == id:
@@ -99,7 +101,7 @@ static func tick(world: Dictionary) -> void:
 
 # Persistent social dynamics: prosperity, legitimacy, inequality, migration and
 # competing civic factions evolve from each empire's actual material conditions.
-static func _society_tick(world: Dictionary, rival: Dictionary, treasury: int, year: int) -> void:
+static func _society_tick(world: Dictionary, rival: Dictionary, treasury: int, year: int, ownership: Dictionary) -> void:
     var id := int(rival["id"])
     var key := str(id)
     var society: Dictionary = world["ai_societies"][key]
@@ -107,12 +109,9 @@ static func _society_tick(world: Dictionary, rival: Dictionary, treasury: int, y
     var culture_effects: Dictionary = GalaxyIdentity.culture_modifiers(world["ai_cultures"][key])
     identity["capital"] = int(identity["capital"]) + int(culture_effects["capital"])
     identity["legitimacy"] = int(identity["legitimacy"]) + int(culture_effects["legitimacy"])
-    var owned := 0
-    var resources := 0
-    for star in world["stars"]:
-        if int(star["owner"]) == id:
-            owned += 1
-            resources += int(star["resource"])
+    var owner_summary: Dictionary = ownership.get(key, {"count": 0, "resources": 0})
+    var owned: int = int(owner_summary["count"])
+    var resources: int = int(owner_summary["resources"])
     var population := int(society["population"])
     var prosperity := int(society["prosperity"])
     var inequality := int(society["inequality"])
