@@ -290,7 +290,7 @@ func _show_galaxy() -> void:
     _refresh_time_status()
     var bar := HBoxContainer.new()
     root.add_child(bar)
-    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
+    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
         var button := Button.new()
         button.text = spec[0]
         button.pressed.connect(spec[1])
@@ -544,6 +544,27 @@ func _research() -> void:
 func _fleet() -> void:
     notice = "Flotte verstärkt (+5)." if GalaxySystems.build_fleet(world) else "65 Credits für den Flottenausbau benötigt."
     _show_galaxy()
+
+func _economy_report() -> void:
+    screen = "economy"
+    _clear()
+    _title("WIRTSCHAFT / REICHSBILANZ")
+    var forecast: Dictionary = GalaxyStrategy.income_forecast(world)
+    _label("ERWARTETE REGULÄRE JAHRESPRODUKTION")
+    _label("Credits: %+d   Forschung: %+d   Legierungen: %+d" % [int(forecast["credits"]), int(forecast["science"]), int(forecast["alloys"])])
+    _label("Prognose ohne Zufallsereignisse, Kriege und einmalige Entscheidungen.")
+    var entries: Array = world.get("economy_history", [])
+    if entries.is_empty():
+        _label("Noch keine abgeschlossenen Simulationsjahre vorhanden.")
+    else:
+        _label("JAHRESABSCHLÜSSE / %d gespeichert (maximal 60)" % entries.size())
+        for i in range(entries.size() - 1, maxi(-1, entries.size() - 16), -1):
+            var entry: Dictionary = entries[i]
+            var delta: Dictionary = entry["delta"]
+            var balance: Dictionary = entry["balance"]
+            _label("%d  •  Credits %+d  •  Forschung %+d  •  Legierungen %+d  •  Stabilität %+d" % [int(entry["year"]), int(delta["credits"]), int(delta["science"]), int(delta["alloys"]), int(delta["stability"])])
+            _label("    Bestand: %d Credits  /  %d Forschung  /  %d Legierungen  /  %d%% Stabilität" % [int(balance["credits"]), int(balance["science"]), int(balance["alloys"]), int(balance["stability"])])
+    _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
 
 func _chronicle() -> void:
     screen = "chronicle"
