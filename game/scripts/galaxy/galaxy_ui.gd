@@ -285,7 +285,7 @@ func _show_galaxy() -> void:
     _refresh_time_status()
     var bar := HBoxContainer.new()
     root.add_child(bar)
-    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
+    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
         var button := Button.new()
         button.text = spec[0]
         button.pressed.connect(spec[1])
@@ -501,6 +501,11 @@ func _save() -> void:
     world["selected"] = selected
     var ok := GalaxyModel.save_game(world)
     _label("Spielstand gespeichert." if ok else "Speichern fehlgeschlagen.")
+
+func _toggle_auto_survey() -> void:
+    world["auto_survey"] = not bool(world.get("auto_survey", false))
+    notice = "Automatische Erkundung AKTIV: Alle zwei Jahre wird ein erreichbares System kartografiert." if bool(world["auto_survey"]) else "Automatische Erkundung DEAKTIVIERT."
+    _show_galaxy()
 
 func _research() -> void:
     notice = "Forschungsdurchbruch erzielt." if GalaxySystems.start_research(world) else "Nicht genügend Forschungspunkte."
