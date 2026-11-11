@@ -899,6 +899,12 @@ func _diplomacy(rival_id: int = -1) -> void:
         _button("HANDELSVERTRAG VERHANDELN (-15 Credits)", func(): _negotiate(id, "trade"))
         _button("ULTIMATUM", func(): _diplomatic_choice(id, "threat"))
         _button("NICHTANGRIFFSPAKT VERHANDELN (-20 Credits)", func(): _negotiate(id, "non_aggression"))
+        _button("VERTEIDIGUNGSBÜNDNIS VERHANDELN (-40 Credits)", func(): _negotiate(id, "alliance"))
+        _button("WIRTSCHAFTLICHE ABHÄNGIGKEIT VERHANDELN (-30 Credits)", func(): _negotiate(id, "dependency"))
+        if world.get("alliances", []).has(id):
+            _label("Status: Verteidigungsbündnis aktiv")
+        if world.get("diplomatic_dependencies", {}).has(str(id)):
+            _label("Wirtschaftliches Abkommen: +%d Credits pro Jahr" % int(world["diplomatic_dependencies"][str(id)]["tribute"]))
         if world["wars"].has(id):
             _button("FRIEDEN ANBIETEN (gegebenenfalls 70 Credits)", func():
                 notice = "Friedensvertrag geschlossen." if GalaxyStrategy.offer_peace(world, id) else "Friedensangebot abgelehnt oder nicht finanzierbar."
