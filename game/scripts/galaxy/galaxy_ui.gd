@@ -707,6 +707,9 @@ func _research() -> void:
     _clear()
     _title("FORSCHUNG / SPEZIALISIERUNGEN")
     _label("Verfügbare Forschungspunkte: %d  •  Gesamtfortschritt: %d" % [int(world["science"]), int(world["research_level"])])
+    var technology: Dictionary = GalaxySystems.technology_bonuses(world)
+    _label("Forschungslabore in eigenen Systemen: %d" % GalaxySystems.research_labs(world))
+    _label("Technologieeffekte: Flottenreichweite +%d  •  Legierungen/Jahr +%d  •  Stabilität/Jahr +%d" % [int(technology["fleet_range"]), int(technology["industry_alloys"]), int(technology["society_stability"])])
     for field in ["propulsion", "industry", "society"]:
         var field_id := field
         var preview: Dictionary = GalaxySystems.research_preview(world, field)
