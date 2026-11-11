@@ -10,8 +10,13 @@ static func prepare(world: Dictionary) -> void:
         world["ai_conflicts"] = []
     if not world.has("ai_activity"):
         world["ai_activity"] = []
+    if not world.has("ai_societies"):
+        world["ai_societies"] = {}
     for rival in world["ai"]:
         var key := str(rival["id"])
+        if not world["ai_societies"].has(key):
+            var temperament := int(rival["temperament"])
+            world["ai_societies"][key] = {"population": 18 + int(rival["id"]) * 3, "prosperity": 50, "legitimacy": 62 - temperament * 4, "inequality": 25 + temperament * 7, "factions": {"reform": 20, "security": 20, "commerce": 20}, "last_crisis": -20, "migration": 0}
         if not world["ai_intentions"].has(key):
             world["ai_intentions"][key] = {"stance": "expansion", "last_action": 0}
 
@@ -24,6 +29,7 @@ static func tick(world: Dictionary) -> void:
         var treasury := int(world["ai_treasury"].get(key, 0))
         var temperament := int(rival["temperament"])
         var capital := int(rival["capital"])
+        _society_tick(world, rival, treasury, year)
         var fleet: Dictionary = {}
         for candidate in world["ai_fleets"]:
             if int(candidate["owner"]) == id:
@@ -88,6 +94,53 @@ static func tick(world: Dictionary) -> void:
         else:
             fleet["strength"] = maxi(1, power - 4)
             _record(world, "%s greift %s an; die Verteidigung hält." % [rival["name"], world["stars"][target]["name"]])
+
+
+# Persistent social dynamics: prosperity, legitimacy, inequality, migration and
+# competing civic factions evolve from each empire's actual material conditions.
+static func _society_tick(world: Dictionary, rival: Dictionary, treasury: int, year: int) -> void:
+    var id := int(rival["id"])
+    var key := str(id)
+    var society: Dictionary = world["ai_societies"][key]
+    var owned := 0
+    var resources := 0
+    for star in world["stars"]:
+        if int(star["owner"]) == id:
+            owned += 1
+            resources += int(star["resource"])
+    var population := int(society["population"])
+    var prosperity := int(society["prosperity"])
+    var inequality := int(society["inequality"])
+    var legitimacy := int(society["legitimacy"])
+    var capacity := maxi(12, owned * 28)
+    var employment := mini(100, int(float(capacity) / float(maxi(1, population)) * 100.0))
+    var material_change := (2 if treasury > 80 else -2 if treasury < 15 else 0) + (1 if resources >= owned * 3 else -1)
+    prosperity = clampi(prosperity + material_change - (2 if employment < 75 else 0), 0, 100)
+    inequality = clampi(inequality + (1 if prosperity < 35 else -1 if prosperity > 70 else 0), 0, 100)
+    var faction_reform := clampi(20 + inequality / 2 + (35 - prosperity) / 2, 0, 100)
+    var faction_security := clampi(15 + int(rival["temperament"]) * 12 + (50 - legitimacy) / 3, 0, 100)
+    var faction_commerce := clampi(20 + prosperity / 3 - inequality / 5, 0, 100)
+    legitimacy = clampi(legitimacy + (1 if prosperity >= 55 else -2 if prosperity < 30 else 0) - (1 if inequality >= 60 else 0), 0, 100)
+    var growth := 1 if prosperity >= 40 and population < capacity else 0
+    var emigration := 1 if prosperity < 25 and population > 10 else 0
+    population = maxi(5, population + growth - emigration)
+    society["population"] = population
+    society["prosperity"] = prosperity
+    society["inequality"] = inequality
+    society["legitimacy"] = legitimacy
+    society["migration"] = int(society["migration"]) - emigration
+    society["factions"] = {"reform": faction_reform, "security": faction_security, "commerce": faction_commerce}
+    # Civil unrest has material consequences; the government can recover.
+    if legitimacy < 25 and year - int(society["last_crisis"]) >= 6:
+        society["last_crisis"] = year
+        world["ai_treasury"][key] = maxi(0, int(world["ai_treasury"].get(key, 0)) - 18)
+        society["legitimacy"] = mini(100, legitimacy + 9)
+        _record(world, "Regierungskrise in %s: Reformbewegungen erzwingen Zugeständnisse; der Staatshaushalt leidet." % rival["name"])
+    elif emigration > 0 and year % 4 == id % 4:
+        _record(world, "Auswanderungswelle aus %s: Familien verlassen wirtschaftlich geschwächte Kolonien." % rival["name"])
+    elif year % 10 == id % 10:
+        var leading := "Reformbewegung" if faction_reform >= faction_security and faction_reform >= faction_commerce else "Sicherheitsfraktion" if faction_security >= faction_commerce else "Handelsbund"
+        _record(world, "Gesellschaft in %s: %s gewinnt Einfluss (Wohlstand %d, Legitimität %d, Bevölkerung %d)." % [rival["name"], leading, prosperity, int(society["legitimacy"]), population])
 
 
 static func _expand(world: Dictionary, rival: Dictionary, fleet: Dictionary) -> void:
