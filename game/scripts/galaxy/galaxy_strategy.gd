@@ -274,7 +274,7 @@ static func build_ships(world: Dictionary) -> bool:
 
 static func declare_war(world: Dictionary, rival_id: int) -> bool:
     prepare(world)
-    if not world["contacts"].has(rival_id) or world["wars"].has(rival_id) or world.get("non_aggression", []).has(rival_id) or int(world.get("truce_until", {}).get(str(rival_id), 0)) > int(world["tick"]):
+    if not world["contacts"].has(rival_id) or world["wars"].has(rival_id) or world["alliances"].has(rival_id) or world.get("non_aggression", []).has(rival_id) or int(world.get("truce_until", {}).get(str(rival_id), 0)) > int(world["tick"]):
         return false
     world["wars"].append(rival_id)
     world["relations"][str(rival_id)] = -100
