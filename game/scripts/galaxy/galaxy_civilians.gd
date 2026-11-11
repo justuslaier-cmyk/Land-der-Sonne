@@ -17,6 +17,8 @@ static func prepare(world: Dictionary) -> void:
     world["civilian_trade"] = []
     world["civilian_taxes"] = 0
     world["civilian_migration"] = 0
+    world["civilian_approval"] = 65
+    world["civilian_petitions"] = []
 
 static func tick(world: Dictionary) -> void:
     prepare(world)
@@ -30,6 +32,9 @@ static func tick(world: Dictionary) -> void:
     var tax_rate: int = [8, 17, 28][clampi(int(world["policies"]["tax"]), 0, 2)]
     var identity: Dictionary = GalaxyIdentity.modifiers(world["empire"])
     var total_taxes := 0
+    var satisfaction_total := 0
+    var population_total := 0
+    var petitions: Array = []
     var migration := 0
     var trade: Array = []
     var active: Array = []
@@ -59,6 +64,10 @@ static func tick(world: Dictionary) -> void:
         market["output"] = output
         market["taxes"] = taxes
         total_taxes += taxes
+        satisfaction_total += satisfaction * int(market["population"])
+        population_total += int(market["population"])
+        if satisfaction < 35:
+            petitions.append({"system": sid, "demand": "Versorgung und Steuerentlastung", "urgency": 100 - satisfaction})
     # Civilian freight routes move real goods between surplus and shortage.
     # The state cannot order a shipment: merchants respond to market scarcity.
     for source_key in active:
@@ -100,6 +109,8 @@ static func tick(world: Dictionary) -> void:
                     source["population"] = int(source["population"]) - 1
                     settlements[destination_key]["population"] = int(settlements[destination_key]["population"]) + 1
                     migration += 1
+    world["civilian_approval"] = satisfaction_total / maxi(1, population_total)
+    world["civilian_petitions"] = petitions
     world["civilian_trade"] = trade
     world["civilian_taxes"] = total_taxes
     world["civilian_migration"] = migration
