@@ -102,7 +102,7 @@ static func move_fleet(world: Dictionary, target: int) -> bool:
     var origin: Dictionary = world["stars"][int(fleet["location"])]
     var destination: Dictionary = world["stars"][target]
     var travel := distance(origin, destination)
-    if travel > 220.0:
+    if travel > (255.0 if str(world.get("fleet_doctrine", "balanced")) == "exploration" else 220.0):
         return false
     fleet["destination"] = target
     fleet["eta"] = maxi(1, ceili(travel / 70.0))
