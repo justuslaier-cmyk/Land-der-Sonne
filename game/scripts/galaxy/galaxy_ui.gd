@@ -606,7 +606,7 @@ func _diplomacy(rival_id: int = -1) -> void:
             continue
         if not world["contacts"].has(id):
             continue
-        _label("%s  •  Beziehung: %d  •  Strategie: %s" % [rival["name"], int(world["relations"].get(str(id), 0)), str(world.get("ai_intentions", {}).get(str(id), {}).get("stance", "unbekannt"))])
+        _label("%s  •  Beziehung: %d  •  Vertrauen: %d/50  •  Strategie: %s" % [rival["name"], int(world["relations"].get(str(id), 0)), int(world.get("diplomatic_trust", {}).get(str(id), 0)), str(world.get("ai_intentions", {}).get(str(id), {}).get("stance", "unbekannt"))])
         _button("GESCHENK SENDEN (-30 Credits)", func(): _diplomatic_choice(id, "gift"))
         _button("HANDELSABKOMMEN", func(): _diplomatic_choice(id, "trade"))
         _button("ULTIMATUM", func(): _diplomatic_choice(id, "threat"))
