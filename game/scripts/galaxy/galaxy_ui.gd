@@ -776,6 +776,7 @@ func _society_report() -> void:
         var cohorts: Dictionary = market.get("demographics", GalaxyCivilians.demographic_defaults(int(market["population"])))
         _label("    Altersgruppen: Kinder %d  •  Erwerbsalter %d  •  Ältere %d" % [int(cohorts["children"]), int(cohorts["working_age"]), int(cohorts["elders"])])
         _label("    Beschäftigte %d  •  Erwerbslose %d  •  Geburten %d  •  Todesfälle %d" % [int(cohorts["employed"]), int(cohorts["unemployed"]), int(cohorts["births"]), int(cohorts["deaths"])])
+        _label("    Gesundheitsindex: %d/100  •  Geburten und Sterbefälle beeinflussen die Einwohnerzahl" % int(cohorts.get("health", 50)))
     _label("BEVÖLKERUNG GESAMT: %d  •  ZIVILE STEUERN: %d  •  WANDERUNGEN: %d" % [population, int(world.get("civilian_taxes", 0)), int(world.get("civilian_migration", 0))])
     _label("HANDELSROUTEN DER PRIVATWIRTSCHAFT")
     var trade: Array = world.get("civilian_trade", [])
