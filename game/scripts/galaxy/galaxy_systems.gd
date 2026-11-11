@@ -26,6 +26,8 @@ static func prepare(world: Dictionary) -> void:
         world["industry"] = 0
     if not world.has("ambient_event_log"):
         world["ambient_event_log"] = []
+    if not world.has("auto_survey"):
+        world["auto_survey"] = false
     GalaxyLore.prepare(world)
 
 static func distance(a: Dictionary, b: Dictionary) -> float:
@@ -130,6 +132,7 @@ static func tick(world: Dictionary) -> void:
     prepare(world)
     GalaxyModel.advance(world)
     GalaxyLore.tick(world)
+    _automated_survey(world)
     _ambient_event(world)
     for fleet in world["fleets"]:
         if int(fleet["destination"]) >= 0:
@@ -165,6 +168,30 @@ static func tick(world: Dictionary) -> void:
             world["pending_event"] = "market"
         else:
             world["pending_event"] = "signal"
+
+# Optional automation uses the existing exploration range and player fleet.
+# It does not reveal distant systems or ignore the exploration rules.
+static func _automated_survey(world: Dictionary) -> void:
+    if not bool(world.get("auto_survey", false)) or int(world["tick"]) % 2 != 0:
+        return
+    if str(world.get("pending_event", "")) != "":
+        return
+    var best_id := -1
+    var best_distance := INF
+    for fleet in world["fleets"]:
+        if int(fleet["owner"]) != 0 or int(fleet["destination"]) >= 0:
+            continue
+        var origin: Dictionary = world["stars"][int(fleet["location"])]
+        for star in world["stars"]:
+            var target := int(star["id"])
+            if world["known"].has(target):
+                continue
+            var separation := distance(origin, star)
+            if separation <= 170.0 and separation < best_distance:
+                best_distance = separation
+                best_id = target
+    if best_id >= 0:
+        explore(world, best_id)
 
 # Small incidents are automatic; only consequential stories interrupt the player.
 static func _ambient_event(world: Dictionary) -> void:
