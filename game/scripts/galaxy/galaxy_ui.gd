@@ -290,7 +290,7 @@ func _show_galaxy() -> void:
     _refresh_time_status()
     var bar := HBoxContainer.new()
     root.add_child(bar)
-    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
+    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
         var button := Button.new()
         button.text = spec[0]
         button.pressed.connect(spec[1])
@@ -540,6 +540,21 @@ func _toggle_auto_survey() -> void:
 func _research() -> void:
     notice = "Forschungsdurchbruch erzielt." if GalaxySystems.start_research(world) else "Nicht genügend Forschungspunkte."
     _show_galaxy()
+
+func _fleet_doctrine() -> void:
+    screen = "fleet_doctrine"
+    _clear()
+    _title("FLOTTENKOMMANDO / DOKTRIN")
+    _label("Aktuelle Doktrin: %s   •   Erfahrung: %d/60" % [str(world.get("fleet_doctrine", "balanced")), int(world.get("fleet_experience", 0))])
+    _label("Angriffskraft: %d  •  Grundstärke: %d" % [GalaxyStrategy.fleet_attack_power(world), int(world["fleets"][0]["strength"])])
+    for entry in [["balanced", "AUSGEWOGEN / keine Modifikatoren"], ["assault", "ANGRIFF / +6 Angriffskraft"], ["defense", "VERTEIDIGUNG / +6 bei Verteidigung eigener Systeme"], ["exploration", "ERKUNDUNG / +35 Reichweite"]]:
+        var key: String = entry[0]
+        var label: String = entry[1]
+        _button(label, func():
+            notice = "Flottendoktrin aktiviert." if GalaxyStrategy.set_fleet_doctrine(world, key) else "Diese Doktrin ist bereits aktiv."
+            _fleet_doctrine()
+        )
+    _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
 
 func _fleet() -> void:
     notice = "Flotte verstärkt (+5)." if GalaxySystems.build_fleet(world) else "65 Credits für den Flottenausbau benötigt."
