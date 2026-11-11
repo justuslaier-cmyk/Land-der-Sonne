@@ -15,6 +15,10 @@ static func prepare(world: Dictionary) -> void:
         world["ai_societies"] = {}
     for rival in world["ai"]:
         var key := str(rival["id"])
+        if not world.has("ai_cultures"):
+            world["ai_cultures"] = {}
+        if not world["ai_cultures"].has(key):
+            world["ai_cultures"][key] = GalaxyIdentity.culture_defaults(rival)
         if not world["ai_societies"].has(key):
             var temperament := int(rival["temperament"])
             world["ai_societies"][key] = {"population": 18 + int(rival["id"]) * 3, "prosperity": 50, "legitimacy": 62 - temperament * 4, "inequality": 25 + temperament * 7, "factions": {"reform": 20, "security": 20, "commerce": 20}, "last_crisis": -20, "migration": 0}
@@ -130,6 +134,7 @@ static func _society_tick(world: Dictionary, rival: Dictionary, treasury: int, y
     var growth := maxi(0, 1 + int(identity["growth"])) if prosperity >= 40 and population < capacity else 0
     var emigration := 1 if prosperity < 25 and population > 10 else 0
     population = maxi(5, population + growth - emigration)
+    GalaxyIdentity.culture_tick(world["ai_cultures"][key], rival, prosperity, clampi(100 - inequality, 0, 100), year)
     society["population"] = population
     society["prosperity"] = prosperity
     society["inequality"] = inequality
