@@ -53,7 +53,7 @@ static func generate(settings: Dictionary, empire: Dictionary) -> Dictionary:
         elif int(settings["shape"]) == 2:
             distance = rng.randf_range(150.0, 330.0)
             p = Vector2(cos(angle), sin(angle)) * distance
-        var kind := rng.randi_range(0, 3)
+        var kind := rng.randi_range(0, 6)
         var star_name := "%s%s-%02d" % [prefixes[rng.randi_range(0, prefixes.size() - 1)], suffixes[rng.randi_range(0, suffixes.size() - 1)], i + 1]
         var resource_roll := rng.randi_range(0, 99) + int(settings["resources"]) / 5
         var resource_level := clampi(1 + resource_roll / 24, 1, 5)
@@ -84,6 +84,7 @@ static func generate(settings: Dictionary, empire: Dictionary) -> Dictionary:
             break
         capitals.append(index)
         stars[index]["owner"] = j + 1
+        stars[index]["habitable"] = true
         ai.append({"id": j + 1, "name": names[j % names.size()] if j < names.size() else "Imperium %d" % (j + 1), "capital": index, "temperament": rng.randi_range(0, 3)})
     return {"version": VERSION, "settings": actual_settings, "empire": empire.duplicate(true), "stars": stars, "lanes": GalaxyRoutes.build(stars), "ai": ai, "tick": 0, "credits": 100, "science": 0, "selected": 0, "event_done": false, "history": ["Gründung des Reiches " + str(empire["name"])]}
 
