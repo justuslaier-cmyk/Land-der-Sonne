@@ -53,7 +53,7 @@ static func route_preview(world: Dictionary, target: int) -> Dictionary:
     if origin_id < 0 or origin_id >= world["stars"].size():
         return {"allowed": false, "reason": "Ungültiger Flottenstandort", "distance": 0.0, "eta": 0}
     var separation := distance(world["stars"][origin_id], world["stars"][target])
-    var limit := (255.0 if str(world.get("fleet_doctrine", "balanced")) == "exploration" else 220.0) + float(technology_bonuses(world)["fleet_range"])
+    var limit := (255.0 if str(world.get("fleet_doctrine", "balanced")) == "exploration" else 220.0) + float(technology_bonuses(world)["fleet_range"]) + float(GalaxyStrategy.fleet_command_bonuses(world)["range"])
     var reason := ""
     if int(fleet.get("owner", -1)) != 0:
         reason = "Keine eigene Flotte"
@@ -63,7 +63,7 @@ static func route_preview(world: Dictionary, target: int) -> Dictionary:
         reason = "Bereits vor Ort"
     elif separation > limit:
         reason = "Außerhalb der Reichweite"
-    return {"allowed": reason == "", "reason": reason, "distance": separation, "eta": maxi(1, ceili(separation / 70.0)), "range": limit}
+    return {"allowed": reason == "", "reason": reason, "distance": separation, "eta": maxi(1, ceili(separation / 70.0) - int(GalaxyStrategy.fleet_command_bonuses(world)["travel_reduction"])), "range": limit}
 
 static func survey_preview(world: Dictionary, target: int) -> Dictionary:
     if target < 0 or target >= world.get("stars", []).size():
@@ -139,7 +139,7 @@ static func move_fleet(world: Dictionary, target: int) -> bool:
     var destination: Dictionary = world["stars"][target]
     var travel := float(preview["distance"])
     fleet["destination"] = target
-    fleet["eta"] = maxi(1, ceili(travel / 70.0))
+    fleet["eta"] = int(preview["eta"])
     world["history"].append("Expedition nach %s gestartet (%d Jahre)." % [destination["name"], fleet["eta"]])
     return true
 
