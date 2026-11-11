@@ -882,13 +882,25 @@ func _diplomacy(rival_id: int = -1) -> void:
     _clear()
     _title("DIPLOMATIE")
     _label("Erkunde fremde Hauptwelten, um diplomatische Kontakte herzustellen.")
+    _label("Gegenspionage: Stufe %d/3" % int(world.get("counterintelligence", 0)))
+    _button("GEGENSPIONAGE AUSBAUEN (-25 Credits)", _counterintelligence)
     for rival in world["ai"]:
         var id := int(rival["id"])
         if rival_id != -1 and rival_id != id:
             continue
         if not world["contacts"].has(id):
             continue
-        _label("%s  •  Beziehung: %d  •  Vertrauen: %d/50  •  Strategie: %s" % [rival["name"], int(world["relations"].get(str(id), 0)), int(world.get("diplomatic_trust", {}).get(str(id), 0)), str(world.get("ai_intentions", {}).get(str(id), {}).get("stance", "unbekannt"))])
+        var intel := GalaxyStrategy.intelligence_level(world, id)
+        var stance := str(world.get("ai_intentions", {}).get(str(id), {}).get("stance", "unbekannt")) if intel >= 2 else "unbekannt"
+        _label("%s  •  Beziehung: %d  •  Vertrauen: %d/50  •  Strategie: %s" % [rival["name"], int(world["relations"].get(str(id), 0)), int(world.get("diplomatic_trust", {}).get(str(id), 0)), stance])
+        _label("Geheimdienstinformationen: Stufe %d/3" % intel)
+        if intel >= 3:
+            _label("Wirtschaftsspionage: gegnerische Staatskasse %d Credits" % int(world.get("ai_treasury", {}).get(str(id), 0)))
+        for mission in world.get("spy_missions", []):
+            if int(mission["rival"]) == id:
+                _label("Aktive Geheimdienstoperation: %s  •  Bericht Jahr %d" % [str(mission["kind"]), int(mission["due"])])
+        _button("AUFKLÄRUNG (-20 Credits)", func(): _spy(id, "recon"))
+        _button("INFILTRATION (-35 Credits)", func(): _spy(id, "infiltrate"))
         for negotiation in world.get("diplomatic_negotiations", []):
             if int(negotiation["rival"]) == id:
                 _label("Verhandlung: %s  •  Abschlussprüfung Jahr %d" % [str(negotiation["kind"]), int(negotiation["due"])])
@@ -913,6 +925,14 @@ func _diplomacy(rival_id: int = -1) -> void:
         else:
             _button("KRIEG ERKLÄREN", func(): _war(id))
     _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
+
+func _spy(id: int, kind: String) -> void:
+    notice = "Geheimdienstoperation gestartet." if GalaxyStrategy.launch_spy_mission(world, id, kind) else "Operation nicht möglich."
+    _diplomacy()
+
+func _counterintelligence() -> void:
+    notice = "Gegenspionage ausgebaut." if GalaxyStrategy.reinforce_counterintelligence(world) else "Gegenspionage nicht finanzierbar oder bereits maximal."
+    _diplomacy()
 
 func _negotiate(id: int, kind: String) -> void:
     notice = "Verhandlungen eröffnet." if GalaxyStrategy.negotiate_treaty(world, id, kind) else "Verhandlung nicht möglich: Beziehung, Credits oder bestehender Vertrag."
