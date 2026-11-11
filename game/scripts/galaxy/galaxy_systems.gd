@@ -74,7 +74,7 @@ static func survey_preview(world: Dictionary, target: int) -> Dictionary:
         if int(fleet.get("owner", -1)) != 0 or int(fleet.get("destination", -1)) >= 0:
             continue
         var origin_id := int(fleet.get("location", -1))
-        if origin_id >= 0 and origin_id < world["stars"].size() and distance(world["stars"][origin_id], world["stars"][target]) <= 170.0:
+        if origin_id >= 0 and origin_id < world["stars"].size() and distance(world["stars"][origin_id], world["stars"][target]) <= (190.0 if str(world.get("fleet_command", {}).get("order", "hold")) == "patrol" else 170.0):
             return {"allowed": true, "reason": ""}
     return {"allowed": false, "reason": "Keine freie Flotte in 170 Karteneinheiten"}
 
@@ -137,7 +137,6 @@ static func move_fleet(world: Dictionary, target: int) -> bool:
         return false
     var fleet: Dictionary = world["fleets"][0]
     var destination: Dictionary = world["stars"][target]
-    var travel := float(preview["distance"])
     fleet["destination"] = target
     fleet["eta"] = int(preview["eta"])
     world["history"].append("Expedition nach %s gestartet (%d Jahre)." % [destination["name"], fleet["eta"]])
