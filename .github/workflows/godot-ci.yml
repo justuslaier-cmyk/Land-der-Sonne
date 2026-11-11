@@ -35,6 +35,8 @@ jobs:
         run: godot --headless --path game --script res://tests/interaction_test.gd
       - name: Test galactic new game and persistence
         run: timeout 100s godot --headless --path game --script res://tests/galaxy_test.gd
+      - name: Verify civilian freight paths, capacities and transport costs
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_freight_routes_test.gd
       - name: Verify manufactured goods market and inventory conservation
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_manufactures_market_test.gd
       - name: Verify multi-stage production chains and material conservation
