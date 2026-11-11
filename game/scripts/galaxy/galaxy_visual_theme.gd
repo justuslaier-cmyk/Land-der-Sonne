@@ -2,15 +2,15 @@ extends RefCounted
 class_name GalaxyVisualTheme
 
 # Phase 15/1: consistent Godot UI token system, accessible focus states.
-const BACKGROUND := Color("#090f20")
-const PANEL := Color("#142239")
-const GOLD := Color("#e8c77b")
-const TEXT := Color("#e4eaf4")
-const MUTED := Color("#a8bad4")
-const FOCUS := Color("#ffe3a3")
-const BUTTON_BG := Color("#20334f")
-const BUTTON_HOVER := Color("#304968")
-const BUTTON_PRESSED := Color("#0e1b31")
+const BACKGROUND := Color("#071123")
+const PANEL := Color("#10263a")
+const GOLD := Color("#f3b879")
+const TEXT := Color("#e4f3f2")
+const MUTED := Color("#9cbfc7")
+const FOCUS := Color("#9ff8ef")
+const BUTTON_BG := Color("#12334a")
+const BUTTON_HOVER := Color("#1c5368")
+const BUTTON_PRESSED := Color("#0a2535")
 
 static func panel_style(background: Color, border: Color, width: int = 1) -> StyleBoxFlat:
     var style := StyleBoxFlat.new()
@@ -31,11 +31,11 @@ static func apply_button(button: Button) -> void:
     button.add_theme_color_override("font_focus_color", FOCUS)
     button.add_theme_color_override("font_pressed_color", GOLD)
     button.add_theme_color_override("font_disabled_color", MUTED)
-    button.add_theme_stylebox_override("normal", panel_style(BUTTON_BG, Color("#4b6282")))
+    button.add_theme_stylebox_override("normal", panel_style(BUTTON_BG, Color("#3ca4ad")))
     button.add_theme_stylebox_override("hover", panel_style(BUTTON_HOVER, GOLD, 2))
     button.add_theme_stylebox_override("pressed", panel_style(BUTTON_PRESSED, GOLD, 2))
     button.add_theme_stylebox_override("focus", panel_style(Color.TRANSPARENT, FOCUS, 3))
-    button.add_theme_stylebox_override("disabled", panel_style(PANEL, Color("#34445b")))
+    button.add_theme_stylebox_override("disabled", panel_style(PANEL, Color("#28435a")))
 
 # Scales margins down for smaller windows without sacrificing large-screen rhythm.
 static func gutters(viewport_size: Vector2) -> Vector2i:
