@@ -74,7 +74,7 @@ static func tick(world: Dictionary) -> void:
         if target < 0:
             continue
         fleet["location"] = target
-        var defending := 8 + int(world["stars"][target]["resource"]) * 2
+        var defending := 8 + int(world["stars"][target]["resource"]) * 2 + (6 if str(world.get("fleet_doctrine", "balanced")) == "defense" else 0)
         for colony_key in world["planet_colonies"].keys():
             if str(colony_key).begins_with(str(target) + ":"):
                 var colony: Dictionary = world["planet_colonies"][colony_key]
