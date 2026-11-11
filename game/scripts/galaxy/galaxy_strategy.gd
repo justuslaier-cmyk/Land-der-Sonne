@@ -8,6 +8,8 @@ static func prepare(world: Dictionary) -> void:
         world["planet_colonies"] = {}
     if not world.has("buildings"):
         world["buildings"] = {}
+    if not world.has("diplomatic_trust"):
+        world["diplomatic_trust"] = {}
     if not world.has("wars"):
         world["wars"] = []
     if not world.has("trade_pacts"):
@@ -149,7 +151,7 @@ static func sign_trade(world: Dictionary, rival_id: int) -> bool:
     prepare(world)
     if not world["contacts"].has(rival_id) or world["wars"].has(rival_id) or world["trade_pacts"].has(rival_id):
         return false
-    if int(world["relations"].get(str(rival_id), 0)) < 15:
+    if int(world["relations"].get(str(rival_id), 0)) + int(world["diplomatic_trust"].get(str(rival_id), 0)) < 15:
         return false
     world["trade_pacts"].append(rival_id)
     world["history"].append("Dauerhafter Handelsvertrag mit %s geschlossen." % GalaxySystems.empire_name(world, rival_id))
@@ -177,7 +179,7 @@ static func propose_non_aggression(world: Dictionary, rival_id: int) -> bool:
     prepare(world)
     if not world["contacts"].has(rival_id) or world["wars"].has(rival_id):
         return false
-    if int(world["relations"].get(str(rival_id), 0)) < 35:
+    if int(world["relations"].get(str(rival_id), 0)) + int(world["diplomatic_trust"].get(str(rival_id), 0)) < 35:
         return false
     if not world.has("non_aggression"):
         world["non_aggression"] = []
@@ -305,6 +307,14 @@ static func tick(world: Dictionary) -> void:
         if int(world["tick"]) % 5 == 0 and str(world["pending_event"]) == "":
             world["pending_event"] = "political_crisis"
             world["history"].append("Politische Krise: Proteste und Unruhen erschüttern die Kolonien.")
+    # Treaty trust grows gradually; hostile relationships erode it.
+    for rival in world["ai"]:
+        var id := int(rival["id"])
+        var key := str(id)
+        var trust := int(world["diplomatic_trust"].get(key, 0))
+        var active_treaty := world["trade_pacts"].has(id) or world.get("non_aggression", []).has(id)
+        var change := -4 if world["wars"].has(id) else 2 if active_treaty else -1
+        world["diplomatic_trust"][key] = clampi(trust + change, 0, 50)
     # Autonomous rival behavior advances with the same simulation clock.
     GalaxyAI.tick(world)
     # Bounded economic history, persisted in ordinary saves.
