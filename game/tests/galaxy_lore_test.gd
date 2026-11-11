@@ -80,6 +80,21 @@ func _initialize() -> void:
     if int(alternate["alloys"]) != previous_alloys + 35 or str(alternate["pending_event"]) != "":
         _fail("Alternate story reward or event cleanup failed")
         return
+    # A discovery made during a different pending event must resume afterward.
+    var interrupted := GalaxyModel.generate(settings, GalaxyModel.empire_defaults())
+    GalaxyStrategy.prepare(interrupted)
+    interrupted["pending_event"] = "market"
+    if not GalaxyLore.inspect(interrupted, ruin):
+        _fail("Interrupted archaeological discovery failed")
+        return
+    if int(interrupted["ancient_history"]["stage"]) != 0 or str(interrupted["pending_event"]) != "market":
+        _fail("Discovery overwrote the existing event")
+        return
+    GalaxySystems.resolve_event(interrupted, 0)
+    GalaxyLore.tick(interrupted)
+    if str(interrupted["pending_event"]) != "ancient_signal" or int(interrupted["ancient_history"]["stage"]) != 1:
+        _fail("Interrupted archaeological story was lost")
+        return
     print("GALAXY_LORE_PASS")
     quit(0)
 
