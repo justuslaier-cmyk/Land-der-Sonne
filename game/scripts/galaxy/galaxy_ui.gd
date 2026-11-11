@@ -773,6 +773,8 @@ func _society_report() -> void:
         population += int(market["population"])
         _label("◉ %s  •  Bevölkerung %d  •  Zufriedenheit %d%%" % [world["stars"][sid]["name"], int(market["population"]), int(market["satisfaction"])])
         _label("    ⚒ Arbeitsplätze %d  •  ◈ Waren %d  •  ◆ Privatkapital %d" % [int(market["jobs"]), int(market["goods"]), int(market["private_capital"])])
+        var stock: Dictionary = market.get("production_stock", GalaxyCivilians.production_defaults())
+        _label("    Produktionslager: Erz %d  •  Bauteile %d  •  Fertigwaren %d" % [int(stock["ore"]), int(stock["components"]), int(stock["manufactures"])])
         var cohorts: Dictionary = market.get("demographics", GalaxyCivilians.demographic_defaults(int(market["population"])))
         _label("    Altersgruppen: Kinder %d  •  Erwerbsalter %d  •  Ältere %d" % [int(cohorts["children"]), int(cohorts["working_age"]), int(cohorts["elders"])])
         _label("    Beschäftigte %d  •  Erwerbslose %d  •  Geburten %d  •  Todesfälle %d" % [int(cohorts["employed"]), int(cohorts["unemployed"]), int(cohorts["births"]), int(cohorts["deaths"])])
