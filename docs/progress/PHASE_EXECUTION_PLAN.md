@@ -141,3 +141,10 @@ Jeder Durchlauf: (a) aktuellen Branch und relevante Pflicht-IDs prüfen; (b) kon
 - **Kompatibilität:** Vorhandene Saves erhalten fehlende Kulturzustände beim nächsten `prepare` automatisch. Bestehende biologische Traits und Civics werden nicht geändert.
 - **Grenzen:** Kulturachsen sind bisher **beschreibende Simulationszustände** ohne eigene politische, religiöse, diplomatische oder wirtschaftliche Wirkungen. Keine Kulturverbreitung, Assimilation, Minderheiten, Herkunfts-/Flaggen-Editoren oder strukturellen Regierungssysteme. Generationschronik erfasst nur numerische Zustände, keine historischen Personen oder Ereignisinterpretationen.
 - **Pflichtstatus:** P18–P24 und P87–P91 bleiben offen. CI-Bestätigung und visuelle Abnahme ausstehend.
+
+### Phase 05 — Durchlauf 02 (2026-11-11)
+- **Ziel:** Kulturelle Werte in die laufende Simulation integrieren und erste gesellschaftliche Interessengruppen abbilden.
+- **Implementiert:** `GalaxyIdentity.culture_modifiers` liefert begrenzte kulturelle Einflüsse auf Zufriedenheit, privates Kapital, Forschung und Legitimität. `social_groups` bildet aus Tradition, Offenheit und Handelsorientierung drei relative Strömungen (Traditionalisten, Reformorientierte, Handelsinteressierte; zusammen 100 %). `GalaxyCivilians.tick` berücksichtigt Zusammenhalt und Handelsorientierung, `GalaxyStrategy` die Forschung, `GalaxyAI._society_tick` Kapital- und Legitimitätseffekte. Das Politikmenü zeigt Gruppen und Modifikatoren.
+- **Regression:** `galaxy_culture_effects_test.gd` vergleicht kontrastierende Kulturprofile auf Gruppensummen, zivile Zufriedenheit, Privatkapital und Forschungsprognose; im CI-Workflow registriert.
+- **Architekturgrenze:** Die Gruppen sind abgeleitete Anteile, **keine** separat gespeicherten Bevölkerungsgruppen mit eigenen Interessen, Migration, Religion, Abstimmungen oder Assimilation. Kulturverbreitung zwischen Reichen und echte kulturelle Konflikte fehlen. Die Forschungseffekte sind additive Modellwerte; kein vollständiger Wissenschaftssektor.
+- **Pflichtstatus:** P18–P24 bleiben offen; Testbestätigung durch CI und manuelle Abnahme stehen aus.
