@@ -736,6 +736,13 @@ func _fleet_command() -> void:
     _label("Aktuelle Flotte: Stärke %d  •  Standort %s" % [int(world["fleets"][0]["strength"]), str(world["stars"][int(world["fleets"][0]["location"])]["name"])])
     _label("Befehl: %s  •  Admiral: %s" % [str(command["order"]), str(command["admiral"])])
     _label("Effekte: Angriff +%d  •  Schiffbau -%d Credits  •  Reichweite +%d  •  Reisezeit -%d" % [int(bonuses["attack"]), int(bonuses["shipyard_discount"]), int(bonuses["range"]), int(bonuses["travel_reduction"])])
+    _label("Versorgung: %d/100  •  Unterhalt: %d Credits/Jahr" % [int(world["fleet_logistics"]["supply"]), GalaxyStrategy.fleet_upkeep(world)])
+    _label("Unter 50 Versorgung sinkt die Kampfkraft; bei 0 drohen Verluste.")
+    _button("FLOTTE VERSORGEN / REPARIEREN (-10 Credits, -4 Legierungen)", _service_fleet)
+    _label("Gefechtsberichte: %d" % world["battle_reports"].size())
+    for i in range(maxi(0, world["battle_reports"].size() - 3), world["battle_reports"].size()):
+        var report: Dictionary = world["battle_reports"][i]
+        _label("Jahr %d • %s • Angriff %d / Verteidigung %d • Verluste %d" % [int(report["year"]), "Sieg" if bool(report["victory"]) else "Niederlage", int(report["attack"]), int(report["defense"]), int(report["losses"])])
     _label("Die bestehende Simulation verwaltet weiterhin eine gemeinsame Spielerflotte.")
     for order in ["hold", "patrol", "assault"]:
         var selected_order := order
@@ -745,6 +752,10 @@ func _fleet_command() -> void:
         _button("ADMIRAL: " + admiral.to_upper(), func(): _set_admiral(selected_admiral))
     _label("Bisherige Kommandowechsel: %d" % world["fleet_command_history"].size())
     _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
+
+func _service_fleet() -> void:
+    notice = "Flotte versorgt und repariert." if GalaxyStrategy.service_fleet(world) else "Service nur in eigenen Systemen mit ausreichenden Ressourcen und Bedarf möglich."
+    _fleet_command()
 
 func _set_fleet_order(order: String) -> void:
     notice = "Flottenbefehl übernommen." if GalaxyStrategy.set_fleet_order(world, order) else "Befehl unverändert oder ungültig."
