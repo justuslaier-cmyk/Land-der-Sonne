@@ -56,6 +56,10 @@ static func prepare(world: Dictionary) -> void:
         world["alloys"] = 30
     if not world.has("ship_design"):
         world["ship_design"] = {"hull": 0, "weapon": 0, "engine": 0}
+    if not world.has("ship_role"):
+        world["ship_role"] = "escort"
+    if not world.has("ship_registry"):
+        world["ship_registry"] = []
     if not world.has("ai_fleets"):
         var fleets: Array = []
         for rival in world["ai"]:
@@ -261,21 +265,55 @@ static func configure_ship(world: Dictionary, hull: int, weapon: int, engine: in
     world["history"].append("Neue Schiffsklasse entworfen.")
     return true
 
-static func ship_strength(world: Dictionary) -> int:
+# Roles change tactical contribution and material costs. Existing designs
+# default to escorts; engine technology gates advanced propulsion.
+static func ship_blueprint(world: Dictionary) -> Dictionary:
     prepare(world)
     var design: Dictionary = world["ship_design"]
-    return 3 + int(design["hull"]) * 2 + int(design["weapon"]) * 3 + int(world["research_level"]) / 2
+    var role := str(world["ship_role"])
+    var strength := 3 + int(design["hull"]) * 2 + int(design["weapon"]) * 3 + int(world["research_level"]) / 2
+    var alloy_cost := 12 + int(design["hull"]) * 5
+    var credit_cost := 30 + int(design["weapon"]) * 10
+    if role == "interceptor":
+        strength += 1
+        alloy_cost += 3
+    elif role == "artillery":
+        strength += 4
+        alloy_cost += 8
+        credit_cost += 10
+    var required_propulsion := int(design["engine"])
+    var available_propulsion := int(world.get("research_fields", {}).get("propulsion", 0))
+    return {"role": role, "strength": strength, "alloys": alloy_cost,
+        "credits": credit_cost, "required_propulsion": required_propulsion,
+        "allowed": available_propulsion >= required_propulsion}
+
+static func set_ship_role(world: Dictionary, role: String) -> bool:
+    prepare(world)
+    if not ["escort", "interceptor", "artillery"].has(role):
+        return false
+    world["ship_role"] = role
+    world["history"].append("Schiffsklasse neu ausgerichtet: %s." % role)
+    return true
+
+static func ship_strength(world: Dictionary) -> int:
+    return int(ship_blueprint(world)["strength"])
 
 static func build_ships(world: Dictionary) -> bool:
     prepare(world)
-    var alloy_cost := 12 + int(world["ship_design"]["hull"]) * 5
-    var credit_cost := 30 + int(world["ship_design"]["weapon"]) * 10
-    if int(world["credits"]) < credit_cost or int(world["alloys"]) < alloy_cost:
+    var blueprint: Dictionary = ship_blueprint(world)
+    if not bool(blueprint["allowed"]):
         return false
-    world["credits"] = int(world["credits"]) - credit_cost
-    world["alloys"] = int(world["alloys"]) - alloy_cost
-    world["fleets"][0]["strength"] = int(world["fleets"][0]["strength"]) + ship_strength(world)
-    world["history"].append("Kriegsschiffe fertiggestellt: +%d Flottenstärke." % ship_strength(world))
+    if int(world["credits"]) < int(blueprint["credits"]) or int(world["alloys"]) < int(blueprint["alloys"]):
+        return false
+    world["credits"] = int(world["credits"]) - int(blueprint["credits"])
+    world["alloys"] = int(world["alloys"]) - int(blueprint["alloys"])
+    world["fleets"][0]["strength"] = int(world["fleets"][0]["strength"]) + int(blueprint["strength"])
+    var design: Dictionary = world["ship_design"]
+    world["ship_registry"].append({"year": int(world["tick"]), "role": str(blueprint["role"]),
+        "hull": int(design["hull"]), "weapon": int(design["weapon"]),
+        "engine": int(design["engine"]), "strength": int(blueprint["strength"]),
+        "alloys": int(blueprint["alloys"]), "credits": int(blueprint["credits"])})
+    world["history"].append("Kriegsschiffe (%s) fertiggestellt: +%d Flottenstärke." % [str(blueprint["role"]), int(blueprint["strength"])])
     return true
 
 static func declare_war(world: Dictionary, rival_id: int) -> bool:
