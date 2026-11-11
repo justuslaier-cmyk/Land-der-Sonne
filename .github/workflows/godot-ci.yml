@@ -35,6 +35,8 @@ jobs:
         run: godot --headless --path game --script res://tests/interaction_test.gd
       - name: Test galactic new game and persistence
         run: timeout 100s godot --headless --path game --script res://tests/galaxy_test.gd
+      - name: Verify governance reform approval, delay and save persistence
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_governance_reforms_test.gd
       - name: Verify freight reserves, in-transit commitments and stock balance
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_freight_reserves_test.gd
       - name: Verify delayed freight delivery, blockades and persistence
