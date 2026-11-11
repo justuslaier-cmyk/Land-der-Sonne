@@ -603,14 +603,21 @@ func _show_selection() -> void:
     _side_label(GalaxySystems.empire_name(world, owner) if known and owner >= 0 else "Unbeansprucht / Unbekannt")
     if not known:
         _side_label("Noch keine Kartografiedaten vorhanden.")
-        _side_button("SYSTEM ERKUNDEN", _explore)
+        var survey: Dictionary = GalaxySystems.survey_preview(world, selected)
+        _side_label("Erkundung: " + ("in Reichweite" if bool(survey["allowed"]) else str(survey["reason"])))
+        if bool(survey["allowed"]):
+            _side_button("SYSTEM ERKUNDEN", _explore)
     else:
         var system := GalaxyCelestials.generate(int(world["settings"]["seed"]), star)
         _side_label("%s  •  %d Planeten" % [system["star_class"], system["planets"].size()])
         _side_label("Rohstoffe %d  •  %s" % [int(star["resource"]), "Bewohnbar" if bool(star["habitable"]) else "Unbewohnbar"])
         _side_button("SYSTEMANSICHT", _show_star_system)
-        if int(world["fleets"][0]["location"]) != selected:
+        var route: Dictionary = GalaxySystems.route_preview(world, selected)
+        if bool(route["allowed"]):
+            _side_label("Flugstrecke: %.1f  •  Reisezeit: %d Jahre" % [float(route["distance"]), int(route["eta"])])
             _side_button("FLOTTE ENTSENDEN", _move_fleet)
+        else:
+            _side_label("Flottenroute: " + str(route["reason"]))
         if owner == 0:
             _side_button("PLANETENVERWALTUNG", _construction)
         if owner > 0 and world["wars"].has(owner):
@@ -654,11 +661,13 @@ func _side_button(value: String, callback: Callable) -> void:
     galaxy_details.add_child(button)
 
 func _move_fleet() -> void:
-    notice = "Flottenroute festgelegt." if GalaxySystems.move_fleet(world, selected) else "Route nicht möglich: Ziel zu weit entfernt oder Flotte unterwegs."
+    var preview: Dictionary = GalaxySystems.route_preview(world, selected)
+    notice = "Flottenroute festgelegt (%d Jahre)." % int(preview["eta"]) if GalaxySystems.move_fleet(world, selected) else "Route nicht möglich: " + str(preview["reason"])
     _show_galaxy()
 
 func _explore() -> void:
-    notice = "System kartografiert (+4 Forschung)." if GalaxySystems.explore(world, selected) else "Keine freie Flotte innerhalb von 170 Karteneinheiten."
+    var preview: Dictionary = GalaxySystems.survey_preview(world, selected)
+    notice = "System kartografiert (+4 Forschung)." if GalaxySystems.explore(world, selected) else "Erkundung nicht möglich: " + str(preview["reason"])
     _show_galaxy()
 
 func _colonize() -> void:
