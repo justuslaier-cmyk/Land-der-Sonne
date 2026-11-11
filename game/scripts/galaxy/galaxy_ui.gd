@@ -108,6 +108,39 @@ func _label(value: String) -> Label:
     root.add_child(label)
     return label
 
+# One original 32x32 pixel icon per major gameplay domain.
+func _apply_action_icon(button: Button) -> void:
+    var title: String = button.text.to_upper()
+    var domain := -1
+    if title.contains("FORSCH") or title.contains("TECHNO"):
+        domain = 0
+    elif title.contains("FLOTTE") or title.contains("SCHIFF") or title.contains("FLUG"):
+        domain = 1
+    elif title.contains("KOLON") or title.contains("BAU") or title.contains("GEBÄUDE"):
+        domain = 2
+    elif title.contains("DIPLOM") or title.contains("VERHAND"):
+        domain = 3
+    elif title.contains("POLIT") or title.contains("GESELL"):
+        domain = 4
+    elif title.contains("WIRTSCHAFT") or title.contains("MARKT") or title.contains("CREDIT"):
+        domain = 5
+    elif title.contains("CHRONIK") or title.contains("EREIGNIS"):
+        domain = 6
+    elif title.contains("ERKUND") or title.contains("SYSTEM"):
+        domain = 7
+    if domain < 0:
+        return
+    var texture: Texture2D = load("res://assets/art/function_icon_atlas.svg")
+    if texture == null:
+        return
+    var icon_texture := AtlasTexture.new()
+    icon_texture.atlas = texture
+    icon_texture.region = Rect2(domain * 32, 0, 32, 32)
+    button.icon = icon_texture
+    button.expand_icon = true
+    button.add_theme_constant_override("icon_max_width", 24)
+    button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+
 func _button(value: String, callback: Callable) -> void:
     var button := Button.new()
     button.text = value
@@ -116,6 +149,7 @@ func _button(value: String, callback: Callable) -> void:
     button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
     button.clip_text = true
     GalaxyVisualTheme.apply_button(button)
+    _apply_action_icon(button)
     button.pressed.connect(callback)
     root.add_child(button)
 
@@ -455,6 +489,7 @@ func _show_galaxy() -> void:
         button.text = spec[0]
         button.custom_minimum_size.y = 42
         GalaxyVisualTheme.apply_button(button)
+        _apply_action_icon(button)
         button.pressed.connect(spec[1])
         bar.add_child(button)
     if notice != "":
