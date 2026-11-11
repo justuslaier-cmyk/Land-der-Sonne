@@ -11,7 +11,8 @@ permissions:
 
 concurrency:
   group: godot-foundation-${{ github.ref }}
-  cancel-in-progress: true
+  # Keep a complete validation run instead of repeatedly cancelling it on rapid commits.
+  cancel-in-progress: false
 
 jobs:
   godot-smoke:
