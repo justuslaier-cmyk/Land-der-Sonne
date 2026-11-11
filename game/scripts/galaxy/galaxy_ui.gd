@@ -640,6 +640,9 @@ func _society_report() -> void:
     for trait_id in identity.get("traits", ["curious"]):
         var trait: Dictionary = GalaxyIdentity.trait_info(str(trait_id))
         _label(str(trait["icon"]) + "  " + str(trait["name"]) + "  •  " + str(trait["description"]))
+    _label("ÖFFENTLICHE ZUSTIMMUNG  •  %d%%" % int(world.get("civilian_approval", 65)))
+    for petition in world.get("civilian_petitions", []):
+        _label("⚑ Anliegen aus %s: %s" % [world["stars"][int(petition["system"])]["name"], petition["demand"]])
     _label("ZIVILE LEBENSWELTEN")
     var population := 0
     var markets: Dictionary = world.get("civilian_worlds", {})
