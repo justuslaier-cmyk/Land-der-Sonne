@@ -710,6 +710,7 @@ func _research() -> void:
     screen = "research"
     _clear()
     _title("FORSCHUNG / SPEZIALISIERUNGEN")
+    _illustration("research")
     _label("Verfügbare Forschungspunkte: %d  •  Gesamtfortschritt: %d" % [int(world["science"]), int(world["research_level"])])
     var technology: Dictionary = GalaxySystems.technology_bonuses(world)
     _label("Forschungslabore in eigenen Systemen: %d" % GalaxySystems.research_labs(world))
@@ -735,6 +736,7 @@ func _fleet_command() -> void:
     _clear()
     GalaxyStrategy.prepare(world)
     _title("FLOTTENKOMMANDO / ADMIRÄLE UND BEFEHLE")
+    _illustration("fleet")
     var command: Dictionary = world["fleet_command"]
     var bonuses: Dictionary = GalaxyStrategy.fleet_command_bonuses(world)
     _label("Aktuelle Flotte: Stärke %d  •  Standort %s" % [int(world["fleets"][0]["strength"]), str(world["stars"][int(world["fleets"][0]["location"])]["name"])])
@@ -773,6 +775,7 @@ func _fleet_doctrine() -> void:
     screen = "fleet_doctrine"
     _clear()
     _title("FLOTTENKOMMANDO / DOKTRIN")
+    _illustration("fleet")
     _label("Aktuelle Doktrin: %s   •   Erfahrung: %d/60" % [str(world.get("fleet_doctrine", "balanced")), int(world.get("fleet_experience", 0))])
     _label("Angriffskraft: %d  •  Grundstärke: %d" % [GalaxyStrategy.fleet_attack_power(world), int(world["fleets"][0]["strength"])])
     for entry in [["balanced", "AUSGEWOGEN / keine Modifikatoren"], ["assault", "ANGRIFF / +6 Angriffskraft"], ["defense", "VERTEIDIGUNG / +6 bei Verteidigung eigener Systeme"], ["exploration", "ERKUNDUNG / +35 Reichweite"]]:
@@ -874,6 +877,7 @@ func _economy_report() -> void:
     screen = "economy"
     _clear()
     _title("WIRTSCHAFT / REICHSBILANZ")
+    _illustration("economy")
     var forecast: Dictionary = GalaxyStrategy.income_forecast(world)
     _label("ERWARTETE REGULÄRE JAHRESPRODUKTION")
     _label("Credits: %+d   Forschung: %+d   Legierungen: %+d" % [int(forecast["credits"]), int(forecast["science"]), int(forecast["alloys"])])
@@ -895,6 +899,7 @@ func _chronicle() -> void:
     screen = "chronicle"
     _clear()
     _title("GALAKTISCHE CHRONIK")
+    _illustration("chronicle")
     GalaxyLore.prepare(world)
     var lore: Dictionary = world["ancient_history"]
     if not lore["discovered"].is_empty():
@@ -924,6 +929,7 @@ func _diplomacy(rival_id: int = -1) -> void:
     screen = "diplomacy"
     _clear()
     _title("DIPLOMATIE")
+    _illustration("diplomacy")
     _label("Erkunde fremde Hauptwelten, um diplomatische Kontakte herzustellen.")
     _label("Gegenspionage: Stufe %d/3" % int(world.get("counterintelligence", 0)))
     _button("GEGENSPIONAGE AUSBAUEN (-25 Credits)", _counterintelligence)
@@ -1069,10 +1075,25 @@ func _resolve_system_event(option: int) -> void:
 
 func _illustration(kind: String) -> void:
     var asset := "res://assets/art/event_ruins.svg"
-    if kind == "menu":
-        asset = "res://assets/art/menu_city.svg"
-    elif kind in ["ancient_signal", "ancient_echo", "ancient_awakening"]:
-        asset = "res://assets/art/event_reactor.svg"
+    match kind:
+        "menu":
+            asset = "res://assets/art/menu_city.svg"
+        "ancient_signal", "ancient_echo", "ancient_awakening":
+            asset = "res://assets/art/event_reactor.svg"
+        "political_crisis", "politics":
+            asset = "res://assets/art/event_political.svg"
+        "colonies", "construction":
+            asset = "res://assets/art/event_colonies.svg"
+        "market", "economy":
+            asset = "res://assets/art/event_market.svg"
+        "research":
+            asset = "res://assets/art/scene_research.svg"
+        "fleet", "shipyard":
+            asset = "res://assets/art/scene_fleet.svg"
+        "diplomacy":
+            asset = "res://assets/art/scene_diplomacy.svg"
+        "chronicle":
+            asset = "res://assets/art/galaxy_nebula.svg"
     var texture: Texture2D = load(asset)
     if texture != null:
         var image := TextureRect.new()
@@ -1150,6 +1171,7 @@ func _construction() -> void:
     selected_planet = clampi(selected_planet, 0, system["planets"].size() - 1)
     var planet: Dictionary = system["planets"][selected_planet]
     _title("PLANETENVERWALTUNG / " + str(planet["name"]))
+    _illustration("construction")
     _label("%s  •  Ressourcen %d  •  Credits %d  •  Legierungen %d" % [planet["type"], int(planet["resources"]), int(world["credits"]), int(world["alloys"])])
     _label("Klima: %s  •  Ökosystem: %s  •  Umweltbelastung: %d/100" % [planet["climate"], planet["ecology"], int(planet["environmental_pressure"])])
     _planet_preview()
@@ -1197,6 +1219,7 @@ func _politics() -> void:
     _clear()
     GalaxyStrategy.prepare(world)
     _title("REICHSPOLITIK")
+    _illustration("politics")
     var culture: Dictionary = world["culture"]
     _label("Kulturentwicklung • Generation %d" % int(culture.get("generation", 0)))
     _label("Tradition %d  •  Offenheit %d  •  Zusammenhalt %d  •  Handelsorientierung %d" % [int(culture["tradition"]), int(culture["openness"]), int(culture["solidarity"]), int(culture["commercialism"])])
@@ -1244,6 +1267,7 @@ func _shipyard() -> void:
     _clear()
     GalaxyStrategy.prepare(world)
     _title("SCHIFFSKONSTRUKTION")
+    _illustration("shipyard")
     _label("Legierungen: %d  •  Credits: %d" % [int(world["alloys"]), int(world["credits"])])
     if notice != "":
         _label(notice)
