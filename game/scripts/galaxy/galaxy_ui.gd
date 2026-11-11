@@ -491,6 +491,10 @@ func _draw_map() -> void:
     var width := map_area.size.x
     var height := map_area.size.y
     map_area.draw_rect(Rect2(Vector2.ZERO, Vector2(width, height)), Color("#080e20"))
+    # Illustrated nebula backdrop, behind all interactive map objects.
+    var nebula: Texture2D = load("res://assets/art/galaxy_nebula.svg")
+    if nebula != null:
+        map_area.draw_texture_rect(nebula, Rect2(0, 0, width, height), false, Color(1, 1, 1, 0.28))
     var seed := int(world["settings"]["seed"])
     for i in range(140):
         var x := float(posmod(i * 7919 + seed, 1009)) / 1009.0 * width
@@ -1398,7 +1402,7 @@ func _draw_star_system(canvas: Control, system: Dictionary) -> void:
             canvas.draw_arc(p, radius + 9.0, -0.5, PI + 0.5, 28, Color("#c9bb9a"), 3.0)
         if int(planet["type_id"]) in [2, 3, 6]:
             canvas.draw_arc(p, radius + 4.0, PI * 0.1, PI * 1.85, 38, Color("#5bc9e9", 0.35), 3.0)
-        _draw_pixel_planet(canvas, p, radius, colors[int(planet["type_id"])], int(planet["orbit"]) + selected * 11)
+        _draw_planet_sprite(canvas, p, radius * 2.0, int(planet["type_id"]), colors[int(planet["type_id"])], int(planet["orbit"]) + selected * 11)
         if i == selected_planet:
             canvas.draw_arc(p, radius + 14.0, 0.0, TAU, 40, GOLD, 2.0)
         canvas.draw_arc(p, radius, -PI * 0.4, PI * 0.65, 24, Color("#e2e5f2", 0.3), 2.0)
@@ -1531,12 +1535,20 @@ func _draw_planet_preview(canvas: Control) -> void:
     var colors := [Color("#ae9981"), Color("#cba676"), Color("#9bc7df"), Color("#3c91b5"), Color("#c9a36d"), Color("#d87e5e"), Color("#69a980"), Color("#afc4d4")]
     var center := Vector2(w * 0.28, 90)
     canvas.draw_circle(center + Vector2(9, 0), 72, Color("#213853"))
-    _draw_pixel_planet(canvas, center, 65.0, colors[int(target["type_id"])], selected + int(target["orbit"]) * 17)
+    _draw_planet_sprite(canvas, center, 130.0, int(target["type_id"]), colors[int(target["type_id"])], selected + int(target["orbit"]) * 17)
     canvas.draw_circle(center + Vector2(-22, -20), 17, Color("#dce8e7", 0.15))
     canvas.draw_circle(center + Vector2(17, 24), 25, Color("#182d4a", 0.16))
     canvas.draw_string(ThemeDB.fallback_font, Vector2(w * 0.48, 60), str(target["type"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 23, GOLD)
     canvas.draw_string(ThemeDB.fallback_font, Vector2(w * 0.48, 95), "%d Planeten  /  %d Asteroidengürtel" % [planets.size(), int(system["asteroids"])], HORIZONTAL_ALIGNMENT_LEFT, -1, 16, WHITE)
     canvas.draw_string(ThemeDB.fallback_font, Vector2(w * 0.48, 125), "Sternklasse: " + str(system["star_class"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, WHITE)
+
+func _draw_planet_sprite(canvas: Control, center: Vector2, diameter: float, type_id: int, tint: Color, variation_seed: int) -> void:
+    var strip: Texture2D = load("res://assets/art/planet_sprite_strip.svg")
+    if strip == null:
+        _draw_pixel_planet(canvas, center, diameter * 0.5, tint, variation_seed)
+        return
+    var source := Rect2(float(posmod(type_id, 8)) * 64.0, 0.0, 64.0, 64.0)
+    canvas.draw_texture_rect_region(strip, Rect2(center - Vector2.ONE * diameter * 0.5, Vector2.ONE * diameter), source)
 
 func _draw_pixel_planet(canvas: Control, center: Vector2, radius: float, tint: Color, variation_seed: int) -> void:
     var cell := maxf(2.0, radius / 13.0)
