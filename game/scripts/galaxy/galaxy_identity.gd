@@ -160,6 +160,25 @@ static func culture_tick(culture: Dictionary, empire: Dictionary, prosperity: in
             memory.pop_front()
         culture["history"] = memory
 
+# Small, bounded societal effects. Biological traits remain separate.
+static func culture_modifiers(culture: Dictionary) -> Dictionary:
+    return {
+        "satisfaction": (int(culture.get("solidarity", 45)) - 50) / 20,
+        "capital": (int(culture.get("commercialism", 40)) - 50) / 20,
+        "science": (int(culture.get("openness", 45)) - 50) / 20,
+        "legitimacy": (int(culture.get("tradition", 35)) - 50) / 20
+    }
+
+static func social_groups(culture: Dictionary) -> Dictionary:
+    var tradition := int(culture.get("tradition", 35))
+    var openness := int(culture.get("openness", 45))
+    var commercialism := int(culture.get("commercialism", 40))
+    var weights := {"traditionalists": maxi(5, tradition), "reformers": maxi(5, openness), "merchants": maxi(5, commercialism)}
+    var total := int(weights["traditionalists"]) + int(weights["reformers"]) + int(weights["merchants"])
+    var traditionalists := int(weights["traditionalists"]) * 100 / total
+    var reformers := int(weights["reformers"]) * 100 / total
+    return {"traditionalists": traditionalists, "reformers": reformers, "merchants": 100 - traditionalists - reformers}
+
 static func assign_rival_identities(world: Dictionary) -> void:
     for rival in world["ai"]:
         if rival.has("civics") and rival.has("traits") and rival.has("ethic") and rival.has("government"):
