@@ -1057,9 +1057,12 @@ func _politics() -> void:
     _label("Stabilität: %d%%  •  Politische Ausrichtung beeinflusst die Jahresproduktion." % int(world["stability"]))
     var governance: Dictionary = world["governance"]
     _label("Regierungsform: %s  •  Bürgerrechte: %s" % [GalaxyIdentity.GOVERNMENTS[int(world["empire"].get("government", 0))], ["Eingeschränkt", "Standard", "Erweitert"][int(governance["rights"])]])
+    var reform_votes: Dictionary = GalaxyStrategy.reform_support(world, 2 if int(governance["rights"]) < 2 else 0)
+    _label("Politische Blöcke • Reformunterstützung %d%%  •  Widerstand %d%%" % [int(reform_votes["support"]), int(reform_votes["opposition"])])
     var pending: Dictionary = governance.get("pending", {})
     if not pending.is_empty():
         _label("Reform in Beratung: Stufe %d  •  Inkrafttreten Jahr %d" % [int(pending["rights"]), int(pending["enact_tick"])])
+        _label("Beschlusslage: Zustimmung %d%%  •  Opposition %d%%" % [int(pending.get("support", 100)), int(pending.get("opposition", 0))])
     else:
         for level in range(3):
             var reform_level := level
