@@ -16,6 +16,18 @@ static func validate(settings: Dictionary, empire: Dictionary) -> String:
         return "Sternenzahl muss zwischen 20 und 250 liegen."
     if int(settings.get("ai_count", -1)) < 0 or int(settings.get("ai_count", -1)) > mini(20, int(settings["size"]) / 5):
         return "Zu viele KI-Reiche für diese Galaxie."
+    if int(settings.get("seed", -1)) < 0 or int(settings.get("seed", -1)) > 2147483647:
+        return "Seed muss zwischen 0 und 2147483647 liegen."
+    if int(settings.get("shape", -1)) < 0 or int(settings.get("shape", -1)) > 2:
+        return "Unbekannte Galaxieform."
+    if int(settings.get("difficulty", -1)) < 0 or int(settings.get("difficulty", -1)) > 2:
+        return "Unbekannter Schwierigkeitsgrad."
+    for field in ["habitable", "resources", "events"]:
+        var amount := int(settings.get(field, -1))
+        if amount < 1 or amount > (90 if field == "habitable" else 100):
+            return "Galaxieparameter außerhalb des gültigen Bereichs: " + field
+    if str(empire.get("homeworld", "")).strip_edges().is_empty():
+        return "Die Heimatwelt benötigt einen Namen."
     if str(empire.get("name", "")).strip_edges().is_empty() or str(empire.get("species", "")).strip_edges().is_empty():
         return "Reich und Spezies benötigen Namen."
     return GalaxyIdentity.validate(empire)
