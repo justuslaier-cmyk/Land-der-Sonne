@@ -12,6 +12,7 @@ func _initialize() -> void:
     if not GalaxyStrategy.propose_rights_reform(world, 2):
         _fail("Valid rights reform was rejected")
         return
+    delay = int(world["governance"]["pending"]["enact_tick"]) - 10
     if GalaxyStrategy.propose_rights_reform(world, 0):
         _fail("Parallel reform was accepted")
         return
