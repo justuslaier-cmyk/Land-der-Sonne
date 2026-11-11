@@ -983,6 +983,7 @@ func _construction() -> void:
     var planet: Dictionary = system["planets"][selected_planet]
     _title("PLANETENVERWALTUNG / " + str(planet["name"]))
     _label("%s  •  Ressourcen %d  •  Credits %d  •  Legierungen %d" % [planet["type"], int(planet["resources"]), int(world["credits"]), int(world["alloys"])])
+    _label("Klima: %s  •  Ökosystem: %s  •  Umweltbelastung: %d/100" % [planet["climate"], planet["ecology"], int(planet["environmental_pressure"])])
     _planet_preview()
     var navigation := HBoxContainer.new()
     root.add_child(navigation)
@@ -1008,8 +1009,10 @@ func _construction() -> void:
             )
         else:
             _label("Unbewohnbare Welt • Eine Kolonie ist derzeit nicht möglich.")
+            _label("Terraforming-Potenzial vorhanden (noch keine Terraforming-Technologie)." if bool(planet["terraformable"]) else "Derzeit nicht terraformierbar.")
     else:
         _label("Kolonie • Bevölkerung %d" % int(colony.get("population", 1)))
+        _label("Tragfähigkeit: %d  •  Umweltbelastung: %d/100" % [int(colony.get("capacity", int(planet["size"]))), int(colony.get("environmental_pressure", planet["environmental_pressure"]))])
         var built: Dictionary = colony.get("buildings", {})
         for spec in [["mine", "MINE"], ["lab", "FORSCHUNGSLABOR"], ["factory", "WERFT"], ["fort", "VERTEIDIGUNG"]]:
             var kind: String = spec[0]
