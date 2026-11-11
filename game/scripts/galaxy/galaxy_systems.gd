@@ -18,6 +18,10 @@ static func prepare(world: Dictionary) -> void:
         world["known"] = [0]
     if not world.has("research_level"):
         world["research_level"] = 0
+    if not world.has("research_fields"):
+        world["research_fields"] = {"propulsion": 0, "industry": 0, "society": 0}
+    if not world.has("research_history"):
+        world["research_history"] = []
     if not world.has("pending_event"):
         world["pending_event"] = ""
     if not world.has("event_counter"):
@@ -144,14 +148,36 @@ static func build_fleet(world: Dictionary) -> bool:
     world["history"].append("Fünf Flottenstärkepunkte gebaut.")
     return true
 
-static func start_research(world: Dictionary) -> bool:
+# Specialised research consumes finite science and follows explicit
+# prerequisites; the aggregate level remains for legacy milestones.
+static func research_preview(world: Dictionary, field: String) -> Dictionary:
     prepare(world)
-    var cost := 25 + int(world["research_level"]) * 15
-    if int(world["science"]) < cost:
+    if not ["propulsion", "industry", "society"].has(field):
+        return {"allowed": false, "reason": "Unbekanntes Forschungsgebiet", "cost": 0}
+    var levels: Dictionary = world["research_fields"]
+    var level := int(levels.get(field, 0))
+    var cost := 25 + level * 20
+    var prerequisite := ""
+    if field == "propulsion" and level >= 1 and int(levels.get("industry", 0)) < 1:
+        prerequisite = "Industrie Stufe 1"
+    elif field == "industry" and level >= 1 and int(levels.get("society", 0)) < 1:
+        prerequisite = "Gesellschaft Stufe 1"
+    elif field == "society" and level >= 1 and int(levels.get("propulsion", 0)) < 1:
+        prerequisite = "Antrieb Stufe 1"
+    var allowed := prerequisite == "" and int(world["science"]) >= cost
+    var reason := ("Voraussetzung: " + prerequisite) if prerequisite != "" else ("Nicht genug Forschungspunkte" if int(world["science"]) < cost else "")
+    return {"allowed": allowed, "reason": reason, "cost": cost, "level": level}
+
+static func start_research(world: Dictionary, field: String = "propulsion") -> bool:
+    var preview: Dictionary = research_preview(world, field)
+    if not bool(preview["allowed"]):
         return false
-    world["science"] = int(world["science"]) - cost
+    world["science"] = int(world["science"]) - int(preview["cost"])
+    world["research_fields"][field] = int(world["research_fields"][field]) + 1
     world["research_level"] = int(world["research_level"]) + 1
-    world["history"].append("Forschung abgeschlossen: Stufe %d." % int(world["research_level"]))
+    world["research_history"].append({"year": int(world["tick"]), "field": field,
+        "level": int(world["research_fields"][field]), "cost": int(preview["cost"])})
+    world["history"].append("Forschungsdurchbruch: %s Stufe %d." % [field, int(world["research_fields"][field])])
     return true
 
 static func tick(world: Dictionary) -> void:
