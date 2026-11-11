@@ -10,7 +10,7 @@
 - Für jedes Häkchen sind im Abschnitt „Abnahmenachweise“ Commit-SHA, Test/Prüfmethode, tatsächliches Ergebnis, ggf. Screenshot/Build und offene Einschränkungen zu dokumentieren. Bei Regression wird das Häkchen wieder entfernt.
 - `[ ]` bedeutet **Pflicht offen oder noch nicht vollständig abgenommen**, nicht zwangsläufig „kein Code vorhanden“.
 - Neue Spielideen dürfen als weitere Pflichten ergänzt werden; bestehende Punkte dürfen nicht stillschweigend gestrichen, abgeschwächt oder in „optional“ umbenannt werden. Änderungen der verbindlichen Ziele bedürfen ausdrücklicher Nutzerentscheidung.
-- Die Liste bleibt unabhängig von Entwicklungsphasen und den vorläufigen **36 geplanten Arbeitsdurchläufen**. 36 ist **keine verifizierte Fertigstellungsprognose**.
+- Die Liste bleibt unabhängig von Entwicklungsphasen und den aktuellen **48 geplanten Arbeitsdurchläufen**. 48 ist **keine verifizierte Fertigstellungsprognose**.
 - Alle Systeme müssen über gemeinsame, versionierte Weltzustands- und Regelverträge miteinander interagieren; isolierte Scheinsysteme gelten nicht als erfüllt.
 - Nicht das bloße Vorhandensein, sondern tatsächliche Spielbarkeit, Kausalität, Qualität, Performance und langfristige Motivation sind Abnahmebedingungen.
 - Referenzspiele dienen nur der Analyse von Designprinzipien. Keine geschützten Assets, Texte, Musik, Markenwelten oder Codes übernehmen.
@@ -161,7 +161,7 @@
 
 12 parallele Entwicklungsfelder: (1) Architektur/Qualität, (2) Galaxis/Erkundung, (3) Planeten/Kolonien, (4) Bevölkerung/Kultur, (5) Wirtschaft/Logistik, (6) Politik, (7) Forschung, (8) Diplomatie/KI, (9) Militär, (10) Geschichte/Endspiel, (11) Art/Audio/UX, (12) Balancing/Performance/Release.
 
-**36 Durchläufe** (12 × 3) sind eine vorläufige Organisationsannahme, **keine** objektiv ermittelte Zahl, die alle 98 Pflichten garantiert erfüllt. Dauer und tatsächliche Durchlaufzahl sind erst nach gemessenen integrierten Entwicklungszyklen seriös schätzbar. Bereiche müssen parallel und inkrementell umgesetzt werden; kein isoliertes „erst sämtliche Simulation, dann Grafik“.
+**48 Durchläufe** (16 × 3) sind die aktuelle Organisationsannahme, **keine** objektiv ermittelte Zahl, die alle 98 Pflichten garantiert erfüllt. Dauer und tatsächliche Durchlaufzahl sind erst nach gemessenen integrierten Entwicklungszyklen seriös schätzbar. Bereiche müssen parallel und inkrementell umgesetzt werden; kein isoliertes „erst sämtliche Simulation, dann Grafik“.
 
 ## Abnahmenachweise
 
