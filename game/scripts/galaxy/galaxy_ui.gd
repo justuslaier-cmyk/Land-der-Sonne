@@ -982,10 +982,48 @@ func _diplomatic_choice(id: int, action: String) -> void:
     notice = "Handelsvertrag geschlossen." if action == "trade" and GalaxyStrategy.sign_trade(world, id) else GalaxySystems.diplomatic_action(world, id, action) if action != "trade" else "Handelsvertrag benötigt +15 Beziehung, Erstkontakt und Frieden."
     _show_galaxy()
 
+func _event_card_header(kind: String) -> void:
+    # Event visual hierarchy; all illustration artwork remains procedural.
+    var banner := PanelContainer.new()
+    banner.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(PANEL, GOLD, 2))
+    banner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    root.add_child(banner)
+    var content := VBoxContainer.new()
+    content.add_theme_constant_override("separation", 5)
+    banner.add_child(content)
+    var kicker := Label.new()
+    kicker.text = "GALAKTISCHE CHRONIK  /  JAHR %d" % int(world.get("tick", 0))
+    kicker.add_theme_font_size_override("font_size", 13)
+    kicker.add_theme_color_override("font_color", GOLD)
+    content.add_child(kicker)
+    var heading := Label.new()
+    heading.text = _event_category(kind)
+    heading.add_theme_font_size_override("font_size", 22)
+    heading.add_theme_color_override("font_color", WHITE)
+    content.add_child(heading)
+    var hint := Label.new()
+    hint.text = "Wähle eine Antwort. Die Entscheidung beeinflusst den Verlauf deines Reiches."
+    hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    hint.add_theme_font_size_override("font_size", 14)
+    hint.add_theme_color_override("font_color", GalaxyVisualTheme.MUTED)
+    content.add_child(hint)
+
+func _event_category(kind: String) -> String:
+    if kind in ["ancient_signal", "ancient_echo", "ancient_awakening"]:
+        return "ARCHÄOLOGIE  •  ANOMALIE"
+    if kind == "political_crisis":
+        return "INNENPOLITIK  •  KRISE"
+    if kind == "colonies":
+        return "KOLONIEN  •  VERWALTUNG"
+    if kind == "market":
+        return "WIRTSCHAFT  •  MARKT"
+    return "ERKUNDUNG  •  UNBEKANNTES"
+
 func _show_event() -> void:
     screen = "event"
     _clear()
     var kind := str(world["pending_event"])
+    _event_card_header(kind)
     _illustration(kind)
     if kind in ["ancient_signal", "ancient_echo", "ancient_awakening"]:
         _title("EREIGNIS / " + GalaxyLore.event_title(kind))
