@@ -12,7 +12,7 @@ func _initialize() -> void:
         world["tick"] = year
         GalaxyCivilians.tick(world)
         var ledger: Dictionary = world["civilian_goods_ledger"]
-        if int(ledger["opening_stock"]) + int(ledger["produced"]) - int(ledger["consumed"]) != int(ledger["ending_stock"]):
+        if int(ledger["opening_stock"]) + int(ledger["produced"]) - int(ledger["consumed"]) - int(ledger.get("dispatched", 0)) != int(ledger["ending_stock"]):
             _fail("Goods balance violated in year %d" % year)
             return
         var actual := 0
