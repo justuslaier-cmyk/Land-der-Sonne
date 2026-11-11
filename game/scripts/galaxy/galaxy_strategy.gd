@@ -255,12 +255,14 @@ static func income_forecast(world: Dictionary) -> Dictionary:
     credits += (tax - 1) * 5 + world["trade_pacts"].size() * 6 + (4 if focus == 0 else 0) + GalaxyLore.artifact_bonus(world, "credits")
     science += (4 if focus == 1 else 0) + GalaxyLore.artifact_bonus(world, "science")
     alloys += (3 if focus == 2 else 0) + GalaxyLore.artifact_bonus(world, "alloys")
-    if int(world["stability"]) < 25:
+    var next_stability := clampi(int(world["stability"]) + (1 if tax == 0 else -1 if tax == 2 else 0), 0, 100)
+    if next_stability < 25:
         credits -= 5
     return {"credits": credits, "science": science, "alloys": alloys}
 
 static func tick(world: Dictionary) -> void:
     prepare(world)
+    var opening := {"credits": int(world["credits"]), "science": int(world["science"]), "alloys": int(world["alloys"]), "stability": int(world["stability"])}
     GalaxySystems.tick(world)
     var science_bonus := 0
     var alloy_bonus := 0
@@ -305,3 +307,12 @@ static func tick(world: Dictionary) -> void:
             world["history"].append("Politische Krise: Proteste und Unruhen erschüttern die Kolonien.")
     # Autonomous rival behavior advances with the same simulation clock.
     GalaxyAI.tick(world)
+    # Bounded economic history, persisted in ordinary saves.
+    if not world.has("economy_history"):
+        world["economy_history"] = []
+    var changes := {}
+    for field in ["credits", "science", "alloys", "stability"]:
+        changes[field] = int(world[field]) - int(opening[field])
+    world["economy_history"].append({"year": int(world["tick"]) + 2200, "delta": changes, "balance": {"credits": int(world["credits"]), "science": int(world["science"]), "alloys": int(world["alloys"]), "stability": int(world["stability"])}})
+    if world["economy_history"].size() > 60:
+        world["economy_history"].pop_front()
