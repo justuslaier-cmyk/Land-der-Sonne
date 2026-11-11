@@ -1489,6 +1489,14 @@ func _draw_ship(canvas: Control, style: int, hull: int) -> void:
     var w := canvas.size.x
     var h := canvas.size.y
     canvas.draw_rect(Rect2(0, 0, w, h), Color("#102039"))
+    var ship_strip: Texture2D = load("res://assets/art/ship_sprite_strip.svg")
+    if ship_strip != null:
+        var diameter: float = minf(w * 0.76, h * 0.9)
+        var dest := Rect2(Vector2((w - diameter) * 0.5, (h - diameter) * 0.5), Vector2.ONE * diameter)
+        canvas.draw_texture_rect_region(ship_strip, dest, Rect2(float(posmod(style, 4)) * 64.0, 0, 64, 64))
+        if style == int(empire["ship_style"]):
+            canvas.draw_rect(Rect2(2, 2, w - 4, h - 4), GOLD, false, 2)
+        return
     var center := Vector2(w * 0.5, h * 0.5)
     var scale_factor := 0.8 + float(hull) * 0.2
     var hull_colors := [Color("#e1bf7e"), Color("#7ed2b2"), Color("#a9c5e8"), Color("#c1a4d8")]
