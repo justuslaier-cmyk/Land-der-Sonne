@@ -6,6 +6,8 @@ func _initialize() -> void:
     settings["events"] = 0
     var world := GalaxyModel.generate(settings, GalaxyModel.empire_defaults())
     GalaxyStrategy.prepare(world)
+    world["buildings"]["0"] = {"mine": 1, "lab": 1, "factory": 1}
+    world["policies"]["focus"] = 1
     var expected := GalaxyStrategy.income_forecast(world)
     var before_credits := int(world["credits"])
     var before_science := int(world["science"])
