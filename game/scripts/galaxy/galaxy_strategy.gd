@@ -289,13 +289,54 @@ static func income_forecast(world: Dictionary) -> Dictionary:
     var next_stability := clampi(int(world["stability"]) + (1 if tax == 0 else -1 if tax == 2 else 0), 0, 100)
     if next_stability < 25:
         credits -= 5
+    credits -= colony_upkeep(world)
     return {"credits": credits, "science": science, "alloys": alloys}
+
+# Colonies are bounded by their carrying capacity. Industrial pressure reduces
+# the effective cap; population grows at most one unit per five simulation years.
+static func colony_capacity(colony: Dictionary) -> int:
+    var baseline := maxi(1, int(colony.get("capacity", 2)))
+    var pressure := clampi(int(colony.get("environmental_pressure", 0)), 0, 100)
+    return maxi(1, baseline - pressure / 20)
+
+static func colony_upkeep(world: Dictionary) -> int:
+    var upkeep := 0
+    for key in world.get("planet_colonies", {}).keys():
+        var parts := str(key).split(":")
+        if parts.size() != 2:
+            continue
+        var sid := int(parts[0])
+        if sid < 0 or sid >= world["stars"].size() or int(world["stars"][sid]["owner"]) != 0:
+            continue
+        var colony: Dictionary = world["planet_colonies"][key]
+        var pressure := clampi(int(colony.get("environmental_pressure", 0)), 0, 100)
+        upkeep += pressure / 25
+    return upkeep
+
+static func advance_colonies(world: Dictionary) -> void:
+    for key in world.get("planet_colonies", {}).keys():
+        var parts := str(key).split(":")
+        if parts.size() != 2:
+            continue
+        var sid := int(parts[0])
+        if sid < 0 or sid >= world["stars"].size() or int(world["stars"][sid]["owner"]) != 0:
+            continue
+        var colony: Dictionary = world["planet_colonies"][key]
+        var population := maxi(1, int(colony.get("population", 1)))
+        var cap := colony_capacity(colony)
+        if population > cap:
+            population -= 1
+        elif population < cap and int(world["tick"]) % 5 == 0:
+            population += 1
+        colony["population"] = population
+        world["planet_colonies"][key] = colony
 
 static func tick(world: Dictionary) -> void:
     prepare(world)
     var opening := {"credits": int(world["credits"]), "science": int(world["science"]), "alloys": int(world["alloys"]), "stability": int(world["stability"])}
     GalaxySystems.tick(world)
     GalaxyCivilians.tick(world)
+    advance_colonies(world)
     var science_bonus := 0
     var alloy_bonus := 0
     var credits_bonus := 0
@@ -327,6 +368,7 @@ static func tick(world: Dictionary) -> void:
     var focus := int(world["policies"]["focus"])
     var tax := int(world["policies"]["tax"])
     world["credits"] = int(world["credits"]) + credits_bonus + (tax - 1) * 5 + world["trade_pacts"].size() * 6 + GalaxyLore.artifact_bonus(world, "credits")
+    world["credits"] = int(world["credits"]) - colony_upkeep(world)
     world["science"] = int(world["science"]) + science_bonus + (4 if focus == 1 else 0) + GalaxyLore.artifact_bonus(world, "science")
     world["alloys"] = int(world["alloys"]) + 2 + alloy_bonus + (3 if focus == 2 else 0) + GalaxyLore.artifact_bonus(world, "alloys")
     world["stability"] = clampi(int(world["stability"]) + (1 if tax == 0 else -1 if tax == 2 else 0), 0, 100)
