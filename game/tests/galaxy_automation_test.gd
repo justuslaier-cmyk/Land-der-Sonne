@@ -8,7 +8,7 @@ func _initialize() -> void:
     if bool(world.get("auto_survey", true)):
         _fail("Exploration automation must default to manual")
         return
-    var original := world["known"].size()
+    var original: int = world["known"].size()
     GalaxySystems.tick(world)
     GalaxySystems.tick(world)
     if world["known"].size() != original:
