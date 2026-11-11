@@ -496,6 +496,13 @@ func _draw_map() -> void:
         var center := Vector2(float(posmod(seed + cloud * 373, 997)) / 997.0 * width, float(posmod(seed / 3 + cloud * 659, 991)) / 991.0 * height)
         var tint := Color("#34447c") if cloud % 2 == 0 else Color("#31596d")
         map_area.draw_circle(center, 38.0 + float(cloud % 4) * 16.0, Color(tint, 0.055))
+    # Draw only surveyed lane endpoints to preserve fog of war.
+    for lane in world.get("lanes", []):
+        var a := int(lane[0])
+        var b := int(lane[1])
+        if not world["known"].has(a) or not world["known"].has(b):
+            continue
+        map_area.draw_line(_star_pos(world["stars"][a]), _star_pos(world["stars"][b]), Color("#4c829d", 0.48), 1.4)
     for star in world["stars"]:
         var pos := _star_pos(star)
         if pos.x < -35.0 or pos.y < -35.0 or pos.x > width + 35.0 or pos.y > height + 35.0:
