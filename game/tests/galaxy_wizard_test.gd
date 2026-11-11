@@ -45,6 +45,31 @@ func _run() -> void:
         _fail("Cancel did not discard wizard draft")
         return
     ui._begin_new_game()
+    for template_id in range(3):
+        ui._apply_empire_template(template_id)
+        if GalaxyModel.validate(ui.settings, ui.empire) != "":
+            _fail("Preset " + str(template_id) + " is invalid")
+            return
+    ui._apply_empire_template(1)
+    if str(ui.empire["name"]) != "Sternenkonklave" or int(ui.empire["government"]) != 2:
+        _fail("Technocracy preset did not apply")
+        return
+    ui.settings["shape"] = 99
+    if GalaxyModel.validate(ui.settings, ui.empire) == "":
+        _fail("Invalid galaxy shape accepted")
+        return
+    ui.settings["shape"] = 0
+    ui.settings["habitable"] = 101
+    if GalaxyModel.validate(ui.settings, ui.empire) == "":
+        _fail("Invalid habitability accepted")
+        return
+    ui.settings["habitable"] = 30
+    ui.empire["homeworld"] = ""
+    if GalaxyModel.validate(ui.settings, ui.empire) == "":
+        _fail("Missing homeworld accepted")
+        return
+    ui._apply_empire_template(0)
+    ui._begin_new_game()
     ui.settings["seed"] = 314159
     ui.empire["name"] = ""
     ui._show_review()
