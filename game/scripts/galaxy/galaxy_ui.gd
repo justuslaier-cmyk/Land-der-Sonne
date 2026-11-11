@@ -1,9 +1,9 @@
 extends Control
 
-const BG := Color("#090f20")
-const PANEL := Color("#142239")
-const GOLD := Color("#e8c77b")
-const WHITE := Color("#e4eaf4")
+const BG := GalaxyVisualTheme.BACKGROUND
+const PANEL := GalaxyVisualTheme.PANEL
+const GOLD := GalaxyVisualTheme.GOLD
+const WHITE := GalaxyVisualTheme.TEXT
 var screen := "menu"
 var settings: Dictionary = GalaxyModel.defaults()
 var empire: Dictionary = GalaxyModel.empire_defaults()
@@ -112,6 +112,7 @@ func _button(value: String, callback: Callable) -> void:
     button.custom_minimum_size = Vector2(320, 43)
     button.add_theme_font_size_override("font_size", 16)
     button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+    GalaxyVisualTheme.apply_button(button)
     button.pressed.connect(callback)
     root.add_child(button)
 
