@@ -1151,7 +1151,13 @@ func _shipyard() -> void:
         _label(notice)
     var design: Dictionary = world["ship_design"]
     _label("Rumpf: %s  •  Bewaffnung: %s  •  Antrieb: %s" % [["Leicht", "Mittel", "Schwer"][int(design["hull"])], ["Laser", "Plasma", "Kinetisch"][int(design["weapon"])], ["Impuls", "Ionen", "Warp"][int(design["engine"])]])
-    _label("Schiffsstärke: +%d" % GalaxyStrategy.ship_strength(world))
+    var blueprint: Dictionary = GalaxyStrategy.ship_blueprint(world)
+    _label("Schiffsrolle: %s  •  Schiffsstärke: +%d" % [str(blueprint["role"]), int(blueprint["strength"])])
+    _label("Baukosten: %d Credits / %d Legierungen  •  Antriebsforschung %d erforderlich" % [int(blueprint["credits"]), int(blueprint["alloys"]), int(blueprint["required_propulsion"])])
+    _label("Baufreigabe: %s  •  Registrierte Schiffe: %d" % ["Ja" if bool(blueprint["allowed"]) else "Antrieb noch nicht erforscht", world["ship_registry"].size()])
+    for role in ["escort", "interceptor", "artillery"]:
+        var chosen_role := role
+        _button("ROLLE: " + role.to_upper(), func(): _set_ship_role(chosen_role))
     _ship_preview()
     for i in range(3):
         var index := i
@@ -1165,12 +1171,16 @@ func _shipyard() -> void:
     _button("SCHIFFE PRODUZIEREN", _produce_ships)
     _button("ZURÜCK", _show_galaxy)
 
+func _set_ship_role(role: String) -> void:
+    GalaxyStrategy.set_ship_role(world, role)
+    _shipyard()
+
 func _design(hull: int, weapon: int, engine: int) -> void:
     GalaxyStrategy.configure_ship(world, hull, weapon, engine)
     _shipyard()
 
 func _produce_ships() -> void:
-    notice = "Neue Schiffe gebaut." if GalaxyStrategy.build_ships(world) else "Nicht genügend Credits oder Legierungen."
+    notice = "Neue Schiffe gebaut." if GalaxyStrategy.build_ships(world) else "Bau nicht möglich: Forschung, Credits oder Legierungen fehlen."
     _shipyard()
 
 func _war(id: int) -> void:
