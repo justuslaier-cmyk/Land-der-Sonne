@@ -9,7 +9,7 @@ static func defaults() -> Dictionary:
     return {"seed": 0, "size": 60, "ai_count": 5, "shape": 0, "habitable": 30, "resources": 50, "events": 50, "difficulty": 1}
 
 static func empire_defaults() -> Dictionary:
-    return {"name": "Solare Union", "species": "Solari", "portrait": 0, "government": 0, "trait": 0, "ship_style": 0, "homeworld": "Aurora"}
+    return {"name": "Solare Union", "species": "Solari", "portrait": 0, "government": 0, "trait": 0, "ship_style": 0, "homeworld": "Aurora", "civics": ["archives", "commons"], "traits": ["curious"], "ethic": "pluralist"}
 
 static func validate(settings: Dictionary, empire: Dictionary) -> String:
     if int(settings.get("size", 0)) < 20 or int(settings.get("size", 0)) > 250:
@@ -18,7 +18,7 @@ static func validate(settings: Dictionary, empire: Dictionary) -> String:
         return "Zu viele KI-Reiche für diese Galaxie."
     if str(empire.get("name", "")).strip_edges().is_empty() or str(empire.get("species", "")).strip_edges().is_empty():
         return "Reich und Spezies benötigen Namen."
-    return ""
+    return GalaxyIdentity.validate(empire)
 
 static func generate(settings: Dictionary, empire: Dictionary) -> Dictionary:
     var rng := RandomNumberGenerator.new()
