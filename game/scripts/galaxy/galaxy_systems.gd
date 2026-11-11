@@ -33,22 +33,50 @@ static func prepare(world: Dictionary) -> void:
 static func distance(a: Dictionary, b: Dictionary) -> float:
     return Vector2(float(a["x"]), float(a["y"])).distance_to(Vector2(float(b["x"]), float(b["y"])))
 
+static func route_preview(world: Dictionary, target: int) -> Dictionary:
+    if target < 0 or target >= world.get("stars", []).size() or not world.get("known", []).has(target):
+        return {"allowed": false, "reason": "System unkartiert oder ungültig", "distance": 0.0, "eta": 0}
+    if world.get("fleets", []).is_empty():
+        return {"allowed": false, "reason": "Keine Flotte", "distance": 0.0, "eta": 0}
+    var fleet: Dictionary = world["fleets"][0]
+    var origin_id := int(fleet.get("location", -1))
+    if origin_id < 0 or origin_id >= world["stars"].size():
+        return {"allowed": false, "reason": "Ungültiger Flottenstandort", "distance": 0.0, "eta": 0}
+    var separation := distance(world["stars"][origin_id], world["stars"][target])
+    var limit := 255.0 if str(world.get("fleet_doctrine", "balanced")) == "exploration" else 220.0
+    var reason := ""
+    if int(fleet.get("owner", -1)) != 0:
+        reason = "Keine eigene Flotte"
+    elif int(fleet.get("destination", -1)) >= 0:
+        reason = "Flotte unterwegs"
+    elif origin_id == target:
+        reason = "Bereits vor Ort"
+    elif separation > limit:
+        reason = "Außerhalb der Reichweite"
+    return {"allowed": reason == "", "reason": reason, "distance": separation, "eta": maxi(1, ceili(separation / 70.0)), "range": limit}
+
+static func survey_preview(world: Dictionary, target: int) -> Dictionary:
+    if target < 0 or target >= world.get("stars", []).size():
+        return {"allowed": false, "reason": "Ungültiges Ziel"}
+    if world.get("known", []).has(target):
+        return {"allowed": false, "reason": "Bereits kartografiert"}
+    for fleet in world.get("fleets", []):
+        if int(fleet.get("owner", -1)) != 0 or int(fleet.get("destination", -1)) >= 0:
+            continue
+        var origin_id := int(fleet.get("location", -1))
+        if origin_id >= 0 and origin_id < world["stars"].size() and distance(world["stars"][origin_id], world["stars"][target]) <= 170.0:
+            return {"allowed": true, "reason": ""}
+    return {"allowed": false, "reason": "Keine freie Flotte in 170 Karteneinheiten"}
+
 static func explore(world: Dictionary, target: int) -> bool:
     prepare(world)
     if target < 0 or target >= world["stars"].size():
         return false
     if world["known"].has(target):
         return false
-    var star: Dictionary = world["stars"][target]
-    var reachable := false
-    for fleet in world["fleets"]:
-        if int(fleet["owner"]) != 0 or int(fleet["destination"]) >= 0:
-            continue
-        var origin: Dictionary = world["stars"][int(fleet["location"])]
-        if distance(origin, star) <= 170.0:
-            reachable = true
-    if not reachable:
+    if not bool(survey_preview(world, target)["allowed"]):
         return false
+    var star: Dictionary = world["stars"][target]
     world["known"].append(target)
     GalaxyLore.inspect(world, target)
     world["science"] = int(world["science"]) + 4
@@ -94,16 +122,12 @@ static func diplomatic_action(world: Dictionary, rival_id: int, action: String) 
 
 static func move_fleet(world: Dictionary, target: int) -> bool:
     prepare(world)
-    if target < 0 or target >= world["stars"].size() or not world["known"].has(target):
+    var preview: Dictionary = route_preview(world, target)
+    if not bool(preview["allowed"]):
         return false
     var fleet: Dictionary = world["fleets"][0]
-    if int(fleet["destination"]) >= 0 or int(fleet["location"]) == target:
-        return false
-    var origin: Dictionary = world["stars"][int(fleet["location"])]
     var destination: Dictionary = world["stars"][target]
-    var travel := distance(origin, destination)
-    if travel > (255.0 if str(world.get("fleet_doctrine", "balanced")) == "exploration" else 220.0):
-        return false
+    var travel := float(preview["distance"])
     fleet["destination"] = target
     fleet["eta"] = maxi(1, ceili(travel / 70.0))
     world["history"].append("Expedition nach %s gestartet (%d Jahre)." % [destination["name"], fleet["eta"]])
