@@ -30,15 +30,19 @@ static func inspect(world: Dictionary, star_id: int) -> bool:
     lore["discovered"].append(star_id)
     _discover_site(world, star_id)
     world["history"].append("Archäologische Anomalie in %s: Spuren von %s." % [world["stars"][star_id]["name"], lore["civilization"]])
-    if int(lore["stage"]) == 0 and str(world.get("pending_event", "")) == "":
-        world["pending_event"] = "ancient_signal"
-        lore["stage"] = 1
+    if int(lore["stage"]) == 0:
+        _start_waiting_discovery(world)
     return true
 
 static func tick(world: Dictionary) -> void:
     prepare(world)
     var lore: Dictionary = world["ancient_history"]
-    if not [2, 5].has(int(lore["stage"])) or str(world.get("pending_event", "")) != "":
+    if str(world.get("pending_event", "")) != "":
+        return
+    if int(lore["stage"]) == 0:
+        _start_waiting_discovery(world)
+        return
+    if not [2, 5].has(int(lore["stage"])):
         return
     lore["timer"] = int(lore["timer"]) - 1
     if int(lore["timer"]) <= 0:
@@ -48,6 +52,14 @@ static func tick(world: Dictionary) -> void:
         else:
             lore["stage"] = 6
             world["pending_event"] = "ancient_awakening"
+
+# Archaeological findings are never lost when another event occupies the UI.
+static func _start_waiting_discovery(world: Dictionary) -> void:
+    var lore: Dictionary = world["ancient_history"]
+    if int(lore["stage"]) != 0 or lore["discovered"].is_empty() or str(world.get("pending_event", "")) != "":
+        return
+    lore["stage"] = 1
+    world["pending_event"] = "ancient_signal"
 
 static func resolve(world: Dictionary, kind: String, option: int) -> void:
     prepare(world)
