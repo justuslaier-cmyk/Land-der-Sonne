@@ -35,6 +35,8 @@ jobs:
         run: godot --headless --path game --script res://tests/interaction_test.gd
       - name: Test galactic new game and persistence
         run: timeout 100s godot --headless --path game --script res://tests/galaxy_test.gd
+      - name: Verify connected galaxy geography at minimum, default and maximum scale
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_geography_test.gd
       - name: Verify map navigation, survey and fleet route previews
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_navigation_test.gd
       - name: Verify seeded galaxy starts and rival capital spacing
