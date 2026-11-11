@@ -178,7 +178,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: godot-render-evidence
-          path: ~/.local/share/godot/app_userdata/Land der Sonne/render-check.png
+          path: ~/.local/share/godot/app_userdata/Land der Sonne/render-*.png
           if-no-files-found: error
           retention-days: 7
 
