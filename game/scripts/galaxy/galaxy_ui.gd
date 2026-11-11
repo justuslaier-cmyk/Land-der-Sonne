@@ -790,6 +790,8 @@ func _society_report() -> void:
     if not ledger.is_empty():
         _label("Transportkosten gesamt: %d Privatkapital" % int(ledger.get("freight_cost", 0)))
     _label("Unterwegs: %d Güter in %d Lieferungen" % [GalaxyCivilians.transit_goods(world), world.get("civilian_freight_transit", []).size()])
+    if not ledger.is_empty():
+        _label("Lokale Reserveziele gesamt: %d Güter" % int(ledger.get("reserve_target", 0)))
     var trade: Array = world.get("civilian_trade", [])
     if trade.is_empty():
         _label("Keine aktuellen Warenlieferungen zwischen den Kolonien.")
