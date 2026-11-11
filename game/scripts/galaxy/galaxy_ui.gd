@@ -25,6 +25,7 @@ var simulation_speed: int = 1
 var simulation_paused: bool = true
 var simulation_elapsed: float = 0.0
 var time_status: Label
+var forecast_status: Label
 
 func _ready() -> void:
     get_window().title = "Land der Sonne | Galaktische Chroniken"
@@ -45,6 +46,7 @@ func _process(delta: float) -> void:
             return
     if steps > 0:
         _refresh_status()
+        _refresh_forecast()
         if is_instance_valid(map_area):
             map_area.queue_redraw()
         _show_selection()
@@ -281,9 +283,9 @@ func _show_galaxy() -> void:
     _title("GALAXIE / %s" % world["empire"]["name"], 29)
     status = _label("")
     _refresh_status()
-    var forecast: Dictionary = GalaxyStrategy.income_forecast(world)
-    var projection := _label("JÄHRLICHE PLANUNG  •  Credits %+d  •  Forschung %+d  •  Legierungen %+d" % [int(forecast["credits"]), int(forecast["science"]), int(forecast["alloys"])])
-    projection.add_theme_font_size_override("font_size", 14)
+    forecast_status = _label("")
+    forecast_status.add_theme_font_size_override("font_size", 14)
+    _refresh_forecast()
     time_status = _label("")
     _refresh_time_status()
     var bar := HBoxContainer.new()
@@ -321,6 +323,12 @@ func _show_galaxy() -> void:
 
 func _refresh_status() -> void:
     status.text = "Jahr %d  •  Credits %d  •  Forschung %d  •  Legierungen %d  •  Stabilität %d%%  •  %d Systeme  •  %d KI-Reiche" % [int(world["tick"]) + 2200, int(world["credits"]), int(world["science"]), int(world["alloys"]), int(world["stability"]), world["stars"].size(), world["ai"].size()]
+
+func _refresh_forecast() -> void:
+    if not is_instance_valid(forecast_status):
+        return
+    var forecast: Dictionary = GalaxyStrategy.income_forecast(world)
+    forecast_status.text = "JÄHRLICHE PLANUNG  •  Credits %+d  •  Forschung %+d  •  Legierungen %+d" % [int(forecast["credits"]), int(forecast["science"]), int(forecast["alloys"])]
 
 func _star_pos(star: Dictionary) -> Vector2:
     return map_area.size * 0.5 + map_offset + Vector2(float(star["x"]), float(star["y"])) * zoom
