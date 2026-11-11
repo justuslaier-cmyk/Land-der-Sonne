@@ -439,7 +439,7 @@ func _show_galaxy() -> void:
     _refresh_time_status()
     var bar := HBoxContainer.new()
     root.add_child(bar)
-    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["ZIELE", _goals_report], ["GESELLSCHAFT", _society_report], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
+    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["FLOTTENKOMMANDO", _fleet_command], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["ZIELE", _goals_report], ["GESELLSCHAFT", _society_report], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
         var button := Button.new()
         button.text = spec[0]
         button.pressed.connect(spec[1])
@@ -725,6 +725,34 @@ func _research_field(field: String) -> void:
     var preview: Dictionary = GalaxySystems.research_preview(world, field)
     notice = "Forschungsdurchbruch erzielt." if GalaxySystems.start_research(world, field) else str(preview["reason"])
     _research()
+
+func _fleet_command() -> void:
+    screen = "fleet_command"
+    _clear()
+    GalaxyStrategy.prepare(world)
+    _title("FLOTTENKOMMANDO / ADMIRÄLE UND BEFEHLE")
+    var command: Dictionary = world["fleet_command"]
+    var bonuses: Dictionary = GalaxyStrategy.fleet_command_bonuses(world)
+    _label("Aktuelle Flotte: Stärke %d  •  Standort %s" % [int(world["fleets"][0]["strength"]), str(world["stars"][int(world["fleets"][0]["location"])]["name"])])
+    _label("Befehl: %s  •  Admiral: %s" % [str(command["order"]), str(command["admiral"])])
+    _label("Effekte: Angriff +%d  •  Defensive Reserve +%d  •  Reichweite +%d  •  Reisezeit -%d" % [int(bonuses["attack"]), int(bonuses["defense"]), int(bonuses["range"]), int(bonuses["travel_reduction"])])
+    _label("Die bestehende Simulation verwaltet weiterhin eine gemeinsame Spielerflotte.")
+    for order in ["hold", "patrol", "assault"]:
+        var selected_order := order
+        _button("BEFEHL: " + order.to_upper(), func(): _set_fleet_order(selected_order))
+    for admiral in ["none", "tactician", "navigator", "quartermaster"]:
+        var selected_admiral := admiral
+        _button("ADMIRAL: " + admiral.to_upper(), func(): _set_admiral(selected_admiral))
+    _label("Bisherige Kommandowechsel: %d" % world["fleet_command_history"].size())
+    _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
+
+func _set_fleet_order(order: String) -> void:
+    notice = "Flottenbefehl übernommen." if GalaxyStrategy.set_fleet_order(world, order) else "Befehl unverändert oder ungültig."
+    _fleet_command()
+
+func _set_admiral(admiral: String) -> void:
+    notice = "Admiralsposten neu besetzt." if GalaxyStrategy.assign_admiral(world, admiral) else "Admiral unverändert oder ungültig."
+    _fleet_command()
 
 func _fleet_doctrine() -> void:
     screen = "fleet_doctrine"
