@@ -200,26 +200,77 @@ func _entry(label_text: String, key: String) -> void:
     field.text_changed.connect(func(value: String): empire[key] = value)
     row.add_child(field)
 
+func _seed_input() -> void:
+    var row := HBoxContainer.new()
+    root.add_child(row)
+    var label := Label.new()
+    label.text = "Galaxie-Seed (0 = zufällig)"
+    label.custom_minimum_size.x = 280
+    row.add_child(label)
+    var spin := SpinBox.new()
+    spin.min_value = 0
+    spin.max_value = 2147483647
+    spin.step = 1
+    spin.rounded = true
+    spin.value = int(settings["seed"])
+    spin.custom_minimum_size.x = 200
+    spin.value_changed.connect(func(value: float): settings["seed"] = int(value))
+    row.add_child(spin)
+
 func _show_settings() -> void:
     screen = "settings"
     _clear()
     _title("01 / GALAXIE KONFIGURIEREN")
     _label("Jedes neue Spiel erschafft automatisch eine einzigartige Zufallsgalaxie.")
     _spin("Sternensysteme", "size", 20, 250, 10)
-    _spin("KI-Reiche", "ai_count", 0, 20)
+    _seed_input()
+    _spin("KI-Reiche", "ai_count", 0, mini(20, int(settings["size"]) / 5))
     _choice("Galaxieform", ["Spiralgalaxie", "Elliptisch", "Ring"], settings, "shape")
     _spin("Bewohnbare Welten (%)", "habitable", 1, 90)
     _spin("Rohstoffhäufigkeit (%)", "resources", 1, 100)
     _spin("Ereignishäufigkeit (%)", "events", 1, 100)
     _choice("Schwierigkeit", ["Entspannt", "Normal", "Herausfordernd"], settings, "difficulty")
-    _button("WEITER: REICH ERSTELLEN", _show_empire)
+    _button("WEITER: REICH ERSTELLEN", func():
+        var error := GalaxyModel.validate(settings, empire)
+        if error != "":
+            notice = error
+            _show_settings()
+        else:
+            notice = ""
+            _show_empire()
+    )
+    if notice != "":
+        _label("Eingabe prüfen: " + notice)
     _button("STANDARDWERTE WIEDERHERSTELLEN", _reset_new_game)
     _button("ABBRECHEN", _cancel_new_game)
+
+func _apply_empire_template(index: int) -> void:
+    empire = GalaxyModel.empire_defaults()
+    if index == 1:
+        empire["name"] = "Sternenkonklave"
+        empire["species"] = "Asteri"
+        empire["homeworld"] = "Observatorium"
+        empire["government"] = 2
+        empire["civics"] = ["archives", "guilds"]
+        empire["ethic"] = "mercantile"
+    elif index == 2:
+        empire["name"] = "Grenzbund"
+        empire["species"] = "Pioniere"
+        empire["homeworld"] = "Neuland"
+        empire["government"] = 3
+        empire["civics"] = ["frontier", "commons"]
+        empire["ethic"] = "collectivist"
+    notice = ""
+    _show_empire()
 
 func _show_empire() -> void:
     screen = "empire"
     _clear()
     _title("02 / ZIVILISATION ERSCHAFFEN")
+    _label("VORLAGEN  •  Ausgangspunkt auswählen und anschließend anpassen")
+    _button("SOLARE UNION / REPUBLIK", func(): _apply_empire_template(0))
+    _button("STERNENKONKLAVE / TECHNOKRATIE", func(): _apply_empire_template(1))
+    _button("GRENZBUND / KOLLEKTIV", func(): _apply_empire_template(2))
     _entry("Reichsname", "name")
     _entry("Speziesname", "species")
     _entry("Heimatwelt", "homeworld")
@@ -302,7 +353,7 @@ func _show_review() -> void:
     _label("Heimat: %s  |  Systeme: %s  |  KI-Reiche: %s" % [empire["homeworld"], settings["size"], settings["ai_count"]])
     _label("Staatsprinzipien: " + ", ".join(empire.get("civics", [])))
     _label("Speziesmerkmale: " + ", ".join(empire.get("traits", [])))
-    _label("Die Galaxie wird beim Spielstart zufällig erzeugt.")
+    _label("Galaxie-Seed: " + ("zufällig" if int(settings["seed"]) == 0 else str(settings["seed"])))
     _species_gallery(true)
     _ship_gallery(true)
     var error := GalaxyModel.validate(settings, empire)
