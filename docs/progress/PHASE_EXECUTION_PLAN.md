@@ -97,3 +97,12 @@ Jeder Durchlauf: (a) aktuellen Branch und relevante Pflicht-IDs prüfen; (b) kon
 - **Test:** `galaxy_navigation_test.gd` prüft Vorschau ohne Mutation, unbekannte/ungültige Ziele, Erkundung, bekannten Zielanflug und blockierte Doppelaufträge; CI-Workflow ergänzt.
 - **Einschränkungen:** Flüge bleiben direkte euklidische Strecken ohne Hyperraumgraphen, Mehrstopp-Routing, Wegfindung, Treibstoffverbrauch, taktische Risiken oder differenzierte Sensoren. Die UI ist noch nicht visuell/manuell abgenommen. Neuer CI-Lauf muss noch bestätigt werden.
 - **Pflichtstatus:** P05, P11–P15, P90–P91 bleiben offen.
+
+### Phase 03 — Durchlauf 03 (2026-11-11)
+- **Ziel:** Galaxieskalierung, Erreichbarkeit der geografischen Sternverbindungen und deterministische Kartennavigation absichern.
+- **Implementiert:** `GalaxyRoutes.build(stars)` erzeugt mit einem deterministischen Prim-MST einen zusammenhängenden ungerichteten Sternverbindungsgraphen (N−1 Kanten). `GalaxyModel.generate` speichert ihn in `world.lanes`; `GalaxySystems.prepare` rekonstruiert ihn für alte Version-1-Spielstände. `GalaxyRoutes.valid` prüft Kantenanzahl, Indexgrenzen und graphische Zusammenhangseigenschaft. Die Karte zeichnet Verbindungen ausschließlich zwischen bereits kartografierten Sternen.
+- **Regression:** `galaxy_geography_test.gd` prüft 3 Größen (20, 60, 250) × 3 Formen × 2 Seeds = 18 Fälle auf Zusammenhang, reproduzierbare Kanten, gültige Koordinaten und Legacy-Rekonstruktion; in CI registriert.
+- **Architekturgrenze:** MST-Kanten sind **geografische Referenzverbindungen**, keine derzeit von Flotten befahrenen Hyperraumrouten. `move_fleet` nutzt weiterhin direkte Distanz und maximale Reichweite; damit ist die Erreichbarkeit über beliebig viele Etappen **nicht** nachgewiesen. MST kann lange Kanten enthalten, die außerhalb der Flottenreichweite liegen.
+- **Weitere Grenzen:** Kein vollständiger graphbasierter Pfadfinder, keine Kosten-/Gefahrmodellierung, kein Vermeiden von Sternüberlagerungen, keine visuelle oder native Windows-Abnahme. Keine Pflichtanforderung P05/P11–P15 vollständig erfüllt.
+- **CI:** Die neuen Tests gelten erst nach einem abgeschlossenen grünen Lauf als bestanden; keine vorgezogene Abnahme.
+- **Nächste Phase:** Phase 04 / Durchlauf 01 beginnt mit detaillierten Stern- und Planetensystemen. Offene Navigations- und Graphanforderungen bleiben im Pflichtenregister bestehen.
