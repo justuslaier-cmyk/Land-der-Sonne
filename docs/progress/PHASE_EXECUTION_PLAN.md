@@ -114,3 +114,12 @@ Jeder Durchlauf: (a) aktuellen Branch und relevante Pflicht-IDs prüfen; (b) kon
 - **Regression:** `galaxy_planet_systems_test.gd` prüft drei feste Seeds × 100 Sterne = 300 Sternsysteme, sieben Sternklassen, Determinismus, Planeten-/Mond-Grenzen, Umlaufbahnen und alle Reichshauptwelten; im CI-Workflow registriert.
 - **Grenzen:** Planetensysteme sind weiter on-demand generiert und nicht als vollständige eigenständige Weltobjekte persistent gespeichert. Es fehlen Orbitalsimulation, Sternphysik, individuelle Planetenzustände und tiefere Besiedlungsregeln. Bestehende Planetenkolonien sind Prototypen.
 - **Pflichten:** P13, P16–P17, P87–P91 bleiben offen. Keine vollständige Abnahme vor CI und Integrationstests.
+
+### Phase 04 — Durchlauf 02 (2026-11-11)
+- **Ziel:** Planetare Eigenschaften, Kolonisierung und erste ökologische Folgen in die bestehende planetenspezifische Verwaltung integrieren.
+- **Bestand:** `GalaxyStrategy.settle_planet` verlangt eigene Systemhoheit, einen bewohnbaren Planeten und 50 Credits; planetenspezifische Gebäude existieren bereits. Die Himmelskörper werden stabil on-demand generiert.
+- **Implementiert:** `GalaxyCelestials.generate` ergänzt Klima, Ökosystem, Umweltbelastung (0–100) und Kennzeichnung des Terraforming-Potenzials als rein abgeleitete Felder, ohne zusätzliche RNG-Aufrufe. Neue Kolonien speichern einen anfänglichen Belastungswert und eine einfache Tragfähigkeit. Minen erhöhen die persistierte Belastung um 6, Fabriken um 4 bis höchstens 100. Die Planetenverwaltung zeigt alle Werte und die Terraforming-Eignung an.
+- **Regression:** `galaxy_planet_colonization_test.gd` prüft Determinismus, Grenzen, Koloniegründung, 50-Credit-Kosten, Doppelgründungs-/Indexschutz und steigende Umweltbelastung. In CI registriert.
+- **Kompatibilität:** Alte Kolonien ohne neue Felder bleiben lesbar und nutzen UI-Fallbacks. Es gibt keine automatische Migration ihrer Umweltbasis.
+- **Einschränkungen:** Tragfähigkeit und Umweltbelastung sind aktuell gespeicherte Parameter, **noch ohne** Bevölkerungswachstums-, Produktivitäts-, Klima- oder Ökosystemfolgen im Jahres-Tick. Terraforming ist nicht ausführbar. Die koloniale Bewohnbarkeit ist weiterhin ein binäres Merkmal.
+- **Pflichtstatus:** P16–P17 sowie P87–P91 bleiben offen. CI und native UI-Abnahme ausstehend.
