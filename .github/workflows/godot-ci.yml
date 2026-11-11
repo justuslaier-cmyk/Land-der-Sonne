@@ -184,6 +184,7 @@ jobs:
           retention-days: 7
 
   windows-export:
+    needs: [godot-smoke, regression-matrix, render-check]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -203,10 +204,19 @@ jobs:
           mkdir -p dist
           godot --headless --path game --export-release "Windows Desktop" ../dist/LandDerSonne.exe
           test -s dist/LandDerSonne.exe
+          test -s dist/LandDerSonne.pck
+          printf 'Land der Sonne - Windows x64 experimental build\n' > dist/BUILD_INFO.txt
+          printf 'Commit: %s\n' "$GITHUB_SHA" >> dist/BUILD_INFO.txt
+          printf 'Workflow: %s\n' "$GITHUB_RUN_ID" >> dist/BUILD_INFO.txt
+          printf 'Godot: 4.3 stable\n' >> dist/BUILD_INFO.txt
+          printf 'Validation: godot-smoke, regression-matrix, render-check required\n' >> dist/BUILD_INFO.txt
+          (cd dist && sha256sum LandDerSonne.exe LandDerSonne.pck > SHA256SUMS.txt)
+          (cd dist && zip -9 LandDerSonne-Windows-x64.zip LandDerSonne.exe LandDerSonne.pck BUILD_INFO.txt SHA256SUMS.txt)
+          test -s dist/LandDerSonne-Windows-x64.zip
       - name: Publish experimental Windows build
         uses: actions/upload-artifact@v4
         with:
           name: LandDerSonne-Windows-experimental
-          path: dist/*
+          path: dist/LandDerSonne-Windows-x64.zip
           if-no-files-found: error
           retention-days: 7
