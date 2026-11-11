@@ -63,9 +63,9 @@ func _run() -> void:
         _fail("diplomacy not integrated")
         return
     ui._show_galaxy()
-    ui._fleet()
-    if ui.screen != "fleet":
-        _fail("fleet screen not integrated")
+    ui._fleet_command()
+    if ui.screen != "fleet_command":
+        _fail("fleet command screen not integrated")
         return
     ui._show_galaxy()
     ui.world["pending_event"] = "market"
