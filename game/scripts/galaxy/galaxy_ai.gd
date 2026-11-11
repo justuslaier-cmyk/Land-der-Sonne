@@ -63,6 +63,12 @@ static func tick(world: Dictionary) -> void:
         if year % 9 == id % 9:
             var plan: Dictionary = GalaxyAIPlanner.evaluate(world, rival, fleet)
             world["ai_intentions"][key] = {"stance": str(plan["stance"]), "last_action": year, "scores": plan["scores"], "reasons": plan["reasons"]}
+            # A compact, bounded decision trace for replay/debugging and future UI.
+            var decisions: Array = world.get("ai_decision_log", [])
+            decisions.append({"year": year, "empire_id": id, "stance": str(plan["stance"]), "scores": plan["scores"].duplicate(true), "reasons": plan["reasons"].duplicate(true)})
+            if decisions.size() > 240:
+                decisions.pop_front()
+            world["ai_decision_log"] = decisions
         if year % 6 == id % 6 and treasury >= 45 and str(world["ai_intentions"][key]["stance"]) != "reformen":
             _expand(world, rival, fleet)
         if year % 12 == id % 12 and temperament >= 2 and str(world["ai_intentions"][key]["stance"]) == "militarisierung":
