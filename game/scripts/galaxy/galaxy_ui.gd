@@ -352,7 +352,7 @@ func _show_galaxy() -> void:
     _refresh_time_status()
     var bar := HBoxContainer.new()
     root.add_child(bar)
-    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
+    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["GESELLSCHAFT", _society_report], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
         var button := Button.new()
         button.text = spec[0]
         button.pressed.connect(spec[1])
@@ -384,7 +384,7 @@ func _show_galaxy() -> void:
         _show_event()
 
 func _refresh_status() -> void:
-    status.text = "Jahr %d  •  Credits %d  •  Forschung %d  •  Legierungen %d  •  Stabilität %d%%  •  %d Systeme  •  %d KI-Reiche" % [int(world["tick"]) + 2200, int(world["credits"]), int(world["science"]), int(world["alloys"]), int(world["stability"]), world["stars"].size(), world["ai"].size()]
+    status.text = "◷ Jahr %d  •  ◆ Credits %d  •  ✧ Forschung %d  •  ⬡ Legierungen %d  •  ❖ Stabilität %d%%  •  %d Systeme  •  %d KI-Reiche" % [int(world["tick"]) + 2200, int(world["credits"]), int(world["science"]), int(world["alloys"]), int(world["stability"]), world["stars"].size(), world["ai"].size()]
 
 func _refresh_forecast() -> void:
     if not is_instance_valid(forecast_status):
@@ -621,6 +621,52 @@ func _fleet_doctrine() -> void:
 func _fleet() -> void:
     notice = "Flotte verstärkt (+5)." if GalaxySystems.build_fleet(world) else "65 Credits für den Flottenausbau benötigt."
     _show_galaxy()
+
+func _society_report() -> void:
+    screen = "society"
+    _clear()
+    GalaxyStrategy.prepare(world)
+    _title("GESELLSCHAFT / LEBEN IN DER GALAXIE")
+    var identity: Dictionary = world["empire"]
+    _label("REGIERUNG / " + str(GalaxyIdentity.GOVERNMENTS[int(identity.get("government", 0))]))
+    for item in GalaxyIdentity.ETHICS:
+        if str(item["id"]) == str(identity.get("ethic", "pluralist")):
+            _label(str(item["icon"]) + "  " + str(item["name"]))
+    _label("STAATSPRINZIPIEN")
+    for civic_id in identity.get("civics", ["archives", "commons"]):
+        var civic: Dictionary = GalaxyIdentity.civic(str(civic_id))
+        _label(str(civic["icon"]) + "  " + str(civic["name"]) + "  •  " + str(civic["description"]))
+    _label("SPEZIES / " + str(identity["species"]))
+    for trait_id in identity.get("traits", ["curious"]):
+        var trait: Dictionary = GalaxyIdentity.trait(str(trait_id))
+        _label(str(trait["icon"]) + "  " + str(trait["name"]) + "  •  " + str(trait["description"]))
+    _label("ZIVILE LEBENSWELTEN")
+    var population := 0
+    var markets: Dictionary = world.get("civilian_worlds", {})
+    for key in markets.keys():
+        var sid := int(key)
+        if sid < 0 or sid >= world["stars"].size() or int(world["stars"][sid]["owner"]) != 0:
+            continue
+        var market: Dictionary = markets[key]
+        population += int(market["population"])
+        _label("◉ %s  •  Bevölkerung %d  •  Zufriedenheit %d%%" % [world["stars"][sid]["name"], int(market["population"]), int(market["satisfaction"])])
+        _label("    ⚒ Arbeitsplätze %d  •  ◈ Waren %d  •  ◆ Privatkapital %d" % [int(market["jobs"]), int(market["goods"]), int(market["private_capital"])])
+    _label("BEVÖLKERUNG GESAMT: %d  •  ZIVILE STEUERN: %d  •  WANDERUNGEN: %d" % [population, int(world.get("civilian_taxes", 0)), int(world.get("civilian_migration", 0))])
+    _label("HANDELSROUTEN DER PRIVATWIRTSCHAFT")
+    var trade: Array = world.get("civilian_trade", [])
+    if trade.is_empty():
+        _label("Keine aktuellen Warenlieferungen zwischen den Kolonien.")
+    for shipment in trade:
+        _label("◇ %s → %s  •  %d Gütereinheiten" % [world["stars"][int(shipment["from"])]["name"], world["stars"][int(shipment["to"])]["name"], int(shipment["goods"])])
+    _label("FREMDE GESELLSCHAFTEN / BEKANNTE REICHE")
+    for rival in world["ai"]:
+        var id := int(rival["id"])
+        if not world["contacts"].has(id):
+            continue
+        var society: Dictionary = world.get("ai_societies", {}).get(str(id), {})
+        _label("⬡ %s  •  %s" % [rival["name"], GalaxyIdentity.GOVERNMENTS[int(rival.get("government", 0))]])
+        _label("    Bevölkerung %d  •  Wohlstand %d  •  Legitimität %d" % [int(society.get("population", 0)), int(society.get("prosperity", 0)), int(society.get("legitimacy", 0))])
+    _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
 
 func _economy_report() -> void:
     screen = "economy"
