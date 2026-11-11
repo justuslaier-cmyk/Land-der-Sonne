@@ -23,6 +23,10 @@ static func prepare(world: Dictionary) -> void:
         world["wars"] = []
     if not world.has("trade_pacts"):
         world["trade_pacts"] = []
+    if not world.has("diplomatic_negotiations"):
+        world["diplomatic_negotiations"] = []
+    if not world.has("diplomatic_treaties"):
+        world["diplomatic_treaties"] = []
     if not world.has("policies"):
         world["policies"] = {"focus": 0, "tax": 1}
     if not world.has("stability"):
@@ -273,6 +277,56 @@ static func declare_war(world: Dictionary, rival_id: int) -> bool:
     world["history"].append("Krieg gegen %s erklärt." % GalaxySystems.empire_name(world, rival_id))
     return true
 
+# Formal negotiations lock a deposit, take two years, and resolve against
+# the diplomatic situation at the time of ratification.
+static func negotiate_treaty(world: Dictionary, rival_id: int, kind: String) -> bool:
+    prepare(world)
+    if not ["trade", "non_aggression"].has(kind):
+        return false
+    if not world["contacts"].has(rival_id) or world["wars"].has(rival_id):
+        return false
+    for item in world["diplomatic_negotiations"]:
+        if int(item["rival"]) == rival_id:
+            return false
+    for item in world["diplomatic_treaties"]:
+        if int(item["rival"]) == rival_id and str(item["kind"]) == kind:
+            return false
+    if kind == "trade" and world["trade_pacts"].has(rival_id):
+        return false
+    if kind == "non_aggression" and world.get("non_aggression", []).has(rival_id):
+        return false
+    var score := int(world["relations"].get(str(rival_id), 0)) + int(world["diplomatic_trust"].get(str(rival_id), 0))
+    var required := 15 if kind == "trade" else 35
+    var deposit := 15 if kind == "trade" else 20
+    if score < required or int(world["credits"]) < deposit:
+        return false
+    world["credits"] = int(world["credits"]) - deposit
+    world["diplomatic_negotiations"].append({"rival": rival_id, "kind": kind,
+        "due": int(world["tick"]) + 2, "deposit": deposit, "required": required})
+    world["history"].append("Verhandlungen mit %s begonnen: %s." % [GalaxySystems.empire_name(world, rival_id), kind])
+    return true
+
+static func advance_diplomacy(world: Dictionary) -> void:
+    prepare(world)
+    var waiting: Array = []
+    for negotiation in world["diplomatic_negotiations"]:
+        if int(negotiation["due"]) > int(world["tick"]):
+            waiting.append(negotiation)
+            continue
+        var rival := int(negotiation["rival"])
+        var kind := str(negotiation["kind"])
+        var score := int(world["relations"].get(str(rival), 0)) + int(world["diplomatic_trust"].get(str(rival), 0))
+        if world["wars"].has(rival) or score < int(negotiation["required"]):
+            world["history"].append("Verhandlungen mit %s gescheitert: %s." % [GalaxySystems.empire_name(world, rival), kind])
+            continue
+        var accepted := sign_trade(world, rival) if kind == "trade" else propose_non_aggression(world, rival)
+        if accepted:
+            world["diplomatic_treaties"].append({"rival": rival, "kind": kind,
+                "signed": int(world["tick"]), "deposit": int(negotiation["deposit"])})
+        else:
+            world["history"].append("Verhandlungen ohne Abschluss: %s." % kind)
+    world["diplomatic_negotiations"] = waiting
+
 static func sign_trade(world: Dictionary, rival_id: int) -> bool:
     prepare(world)
     if not world["contacts"].has(rival_id) or world["wars"].has(rival_id) or world["trade_pacts"].has(rival_id):
@@ -455,6 +509,7 @@ static func tick(world: Dictionary) -> void:
     var opening := {"credits": int(world["credits"]), "science": int(world["science"]), "alloys": int(world["alloys"]), "stability": int(world["stability"])}
     GalaxySystems.tick(world)
     GalaxyCivilians.tick(world)
+    advance_diplomacy(world)
     advance_governance(world)
     advance_institutions(world)
     GalaxyIdentity.culture_tick(world["culture"], world["empire"], clampi(int(world.get("credits", 0)) / 4, 0, 100), int(world.get("civilian_approval", 50)), int(world["tick"]))
