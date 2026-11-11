@@ -176,6 +176,7 @@ static func analyze_artifact(world: Dictionary, index: int) -> bool:
     var discipline := str(artifact["discipline"])
     if not world["ancient_technology"].has(discipline):
         world["ancient_technology"].append(discipline)
+    GalaxySystems.register_archaeological_insight(world, discipline)
     world["history"].append("Antikes Relikt entschlüsselt: %s. Neue Technologie: %s." % [artifact["culture"], discipline])
     return true
 
