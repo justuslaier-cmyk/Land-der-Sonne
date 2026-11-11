@@ -143,6 +143,7 @@ jobs:
           - galaxy_event_card_test.gd
           - galaxy_ui_accessibility_test.gd
           - galaxy_art_resources_test.gd
+          - galaxy_art_ui_smoke_test.gd
     steps:
       - uses: actions/checkout@v4
       - name: Install Godot 4.3 stable
