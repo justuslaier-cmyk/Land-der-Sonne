@@ -18,7 +18,8 @@ func _initialize() -> void:
         "res://assets/art/ship_sprite_strip.svg",
         "res://assets/art/species_portrait_strip.svg",
         "res://assets/art/star_sprite_strip.svg",
-        "res://assets/art/orbital_station.svg"
+        "res://assets/art/orbital_station.svg",
+        "res://assets/art/function_icon_atlas.svg"
     ]
     for path in paths:
         assert(ResourceLoader.exists(path), "Missing art resource: " + path)
@@ -34,5 +35,7 @@ func _initialize() -> void:
     assert(portraits.get_size() == Vector2(320, 96), "Portrait strip must contain five 64x96 portraits")
     assert(stars.get_size() == Vector2(128, 32), "Star strip must contain four 32x32 icons")
     assert(station.get_size() == Vector2(64, 64), "Orbital station must be 64x64")
+    var icons: Texture2D = load("res://assets/art/function_icon_atlas.svg")
+    assert(icons.get_size() == Vector2(256, 64), "Function icon atlas must contain eight 32x32 pairs")
     print("GALAXY_ART_RESOURCES_PASS")
     quit(0)
