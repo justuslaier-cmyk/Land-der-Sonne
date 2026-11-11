@@ -20,6 +20,50 @@ static func prepare(world: Dictionary) -> void:
     world["civilian_approval"] = 65
     world["civilian_petitions"] = []
 
+# Aggregate age cohorts; no individual citizens are simulated.
+static func demographic_defaults(population: int) -> Dictionary:
+    var count := maxi(1, population)
+    var children := count / 5
+    var elders := count / 8
+    return {"children": children, "working_age": count - children - elders, "elders": elders,
+        "births": 0, "deaths": 0, "employed": 0, "unemployed": 0}
+
+static func advance_demographics(market: Dictionary, population_before: int, population_after: int, year: int) -> void:
+    var demographic: Dictionary = market.get("demographics", demographic_defaults(population_before))
+    var children := maxi(0, int(demographic.get("children", 0)))
+    var workers := maxi(0, int(demographic.get("working_age", 0)))
+    var elders := maxi(0, int(demographic.get("elders", 0)))
+    var delta := population_before - children - workers - elders
+    workers = maxi(0, workers + delta)
+    var births := 0
+    var deaths := 0
+    if year > 0 and year % 5 == 0 and children > 0:
+        children -= 1
+        workers += 1
+    if year > 0 and year % 12 == 0 and workers > 1:
+        workers -= 1
+        elders += 1
+    if year > 0 and year % 15 == 0 and elders > 0:
+        elders -= 1
+        deaths = 1
+    var target := maxi(1, population_after)
+    var current := children + workers + elders
+    if current < target:
+        births = target - current
+        children += births
+    elif current > target:
+        var excess := current - target
+        var take := mini(excess, workers)
+        workers -= take
+        excess -= take
+        take = mini(excess, children)
+        children -= take
+        excess -= take
+        elders = maxi(0, elders - excess)
+    var employed := mini(workers, maxi(0, int(market.get("jobs", 0))))
+    market["demographics"] = {"children": children, "working_age": workers, "elders": elders,
+        "births": births, "deaths": deaths, "employed": employed, "unemployed": workers - employed}
+
 static func tick(world: Dictionary) -> void:
     prepare(world)
     var settlements: Dictionary = world["civilian_worlds"]
@@ -48,6 +92,7 @@ static func tick(world: Dictionary) -> void:
         active.append(key)
         var market: Dictionary = settlements[key]
         var population := int(market["population"])
+        var old_population := population
         var employment := mini(population, int(market["jobs"]))
         var output := employment * (2 + int(world["stars"][sid]["resource"]) + int(identity["production"])) / 4
         var needs := maxi(1, population / 2 + int(identity["needs"]))
@@ -61,6 +106,7 @@ static func tick(world: Dictionary) -> void:
             capital -= 15
         var growth: int = maxi(0, 1 + int(identity["growth"])) if satisfaction >= 55 and stock >= 0 and population < int(market["capacity"]) else 0
         market["population"] = maxi(1, mini(int(market["capacity"]), population + growth))
+        advance_demographics(market, old_population, int(market["population"]), int(world["tick"]))
         market["satisfaction"] = satisfaction
         market["goods"] = maxi(0, stock)
         market["private_capital"] = capital
@@ -112,6 +158,16 @@ static func tick(world: Dictionary) -> void:
                     source["population"] = int(source["population"]) - 1
                     settlements[destination_key]["population"] = int(settlements[destination_key]["population"]) + 1
                     migration += 1
+    # Reconcile cohorts after autonomous migration.
+    for key in active:
+        var market: Dictionary = settlements[key]
+        var cohort: Dictionary = market.get("demographics", demographic_defaults(int(market["population"])))
+        var sum_cohorts := int(cohort["children"]) + int(cohort["working_age"]) + int(cohort["elders"])
+        var difference := int(market["population"]) - sum_cohorts
+        cohort["working_age"] = maxi(0, int(cohort["working_age"]) + difference)
+        cohort["employed"] = mini(int(cohort["working_age"]), int(market["jobs"]))
+        cohort["unemployed"] = int(cohort["working_age"]) - int(cohort["employed"])
+        market["demographics"] = cohort
     world["civilian_approval"] = satisfaction_total / maxi(1, population_total)
     world["civilian_petitions"] = petitions
     world["civilian_trade"] = trade
