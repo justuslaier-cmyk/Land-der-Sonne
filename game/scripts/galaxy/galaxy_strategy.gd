@@ -8,6 +8,10 @@ static func prepare(world: Dictionary) -> void:
         world["planet_colonies"] = {}
     if not world.has("buildings"):
         world["buildings"] = {}
+    if not world.has("fleet_doctrine"):
+        world["fleet_doctrine"] = "balanced"
+    if not world.has("fleet_experience"):
+        world["fleet_experience"] = 0
     if not world.has("diplomatic_trust"):
         world["diplomatic_trust"] = {}
     if not world.has("wars"):
@@ -189,6 +193,24 @@ static func propose_non_aggression(world: Dictionary, rival_id: int) -> bool:
     world["history"].append("Nichtangriffspakt mit %s vereinbart." % GalaxySystems.empire_name(world, rival_id))
     return true
 
+# Doctrine has strategic trade-offs rather than unconditional combat bonuses.
+static func set_fleet_doctrine(world: Dictionary, doctrine: String) -> bool:
+    prepare(world)
+    if not ["balanced", "assault", "defense", "exploration"].has(doctrine):
+        return false
+    if str(world["fleet_doctrine"]) == doctrine:
+        return false
+    world["fleet_doctrine"] = doctrine
+    world["history"].append("Flottendoktrin geändert: %s." % doctrine)
+    return true
+
+static func fleet_attack_power(world: Dictionary) -> int:
+    prepare(world)
+    var base := int(world["fleets"][0]["strength"])
+    var experience := mini(8, int(world["fleet_experience"]) / 3)
+    var doctrine := str(world["fleet_doctrine"])
+    return base + experience + (6 if doctrine == "assault" else 0)
+
 static func attack(world: Dictionary, star_id: int) -> String:
     prepare(world)
     if star_id < 0 or star_id >= world["stars"].size():
@@ -204,14 +226,16 @@ static func attack(world: Dictionary, star_id: int) -> String:
     for rival_fleet in world["ai_fleets"]:
         if int(rival_fleet["owner"]) == defender and int(rival_fleet["location"]) == star_id:
             defense += int(rival_fleet["strength"])
-    var power := int(fleet["strength"])
+    var power := fleet_attack_power(world)
     if power > defense:
         star["owner"] = 0
         fleet["strength"] = maxi(1, power - maxi(3, defense / 2))
         world["stability"] = maxi(0, int(world["stability"]) - 3)
+        world["fleet_experience"] = mini(60, int(world["fleet_experience"]) + 3)
         world["history"].append("%s im Krieg erobert. Flottenstärke: %d." % [star["name"], int(fleet["strength"])])
         return "Sieg! System erobert."
-    fleet["strength"] = maxi(0, power - maxi(3, defense / 2))
+    fleet["strength"] = maxi(0, int(fleet["strength"]) - maxi(3, defense / 2))
+    world["fleet_experience"] = mini(60, int(world["fleet_experience"]) + 1)
     world["history"].append("Angriff auf %s gescheitert." % star["name"])
     return "Niederlage! Flotte beschädigt."
 
