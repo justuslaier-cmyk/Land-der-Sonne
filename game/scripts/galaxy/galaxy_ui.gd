@@ -1427,6 +1427,7 @@ func _species_gallery(readonly: bool = false) -> void:
         var button := Button.new()
         button.text = ["Humanoid", "Insektoid", "Aquatisch", "Kristallin", "Synthetisch"][i]
         button.disabled = readonly
+        GalaxyVisualTheme.apply_button(button)
         button.modulate = GOLD if int(empire["portrait"]) == i else WHITE
         button.pressed.connect(func():
             empire["portrait"] = index
@@ -1437,6 +1438,12 @@ func _species_gallery(readonly: bool = false) -> void:
 func _draw_species(canvas: Control, index: int) -> void:
     var w := canvas.size.x
     canvas.draw_rect(Rect2(0, 0, w, 170), Color("#13233a"))
+    var portraits: Texture2D = load("res://assets/art/species_portrait_strip.svg")
+    if portraits != null:
+        canvas.draw_texture_rect_region(portraits, Rect2((w - 112.0) * 0.5, 2, 112, 166), Rect2(float(index) * 64.0, 0, 64, 96))
+        if index == int(empire["portrait"]):
+            canvas.draw_rect(Rect2(2, 2, w - 4, 166), GOLD, false, 2)
+        return
     var colors := [Color("#c9a17b"), Color("#91b97b"), Color("#6dc6c8"), Color("#ad8ed8"), Color("#9fb6c8")]
     var c: Color = colors[index]
     var center := Vector2(w * 0.5, 76)
@@ -1478,6 +1485,7 @@ func _ship_gallery(readonly: bool = false) -> void:
         var button := Button.new()
         button.text = ["Solar", "Organisch", "Geometrisch", "Industriell"][i]
         button.disabled = readonly
+        GalaxyVisualTheme.apply_button(button)
         button.modulate = GOLD if int(empire["ship_style"]) == i else WHITE
         button.pressed.connect(func():
             empire["ship_style"] = index
