@@ -36,7 +36,7 @@ func _initialize() -> void:
     simulation["tick"] = 1
     GalaxyCivilians.tick(simulation)
     var ledger: Dictionary = simulation["civilian_goods_ledger"]
-    if int(ledger["opening_stock"]) + int(ledger["produced"]) - int(ledger["consumed"]) != int(ledger["ending_stock"]):
+    if int(ledger["opening_stock"]) + int(ledger["produced"]) - int(ledger["consumed"]) - int(ledger.get("dispatched", 0)) != int(ledger["ending_stock"]):
         _fail("Goods were created or destroyed by freight")
         return
     var costs := 0
