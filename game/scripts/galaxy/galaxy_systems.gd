@@ -193,7 +193,7 @@ static func _ambient_event(world: Dictionary) -> void:
 static func resolve_event(world: Dictionary, option: int) -> void:
     prepare(world)
     var kind := str(world["pending_event"])
-    if kind in ["ancient_signal", "ancient_echo"]:
+    if kind in ["ancient_signal", "ancient_echo", "ancient_awakening"]:
         GalaxyLore.resolve(world, kind, option)
         world["event_counter"] = int(world["event_counter"]) + 1
         return
