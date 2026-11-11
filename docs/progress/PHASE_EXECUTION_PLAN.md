@@ -123,3 +123,12 @@ Jeder Durchlauf: (a) aktuellen Branch und relevante Pflicht-IDs prüfen; (b) kon
 - **Kompatibilität:** Alte Kolonien ohne neue Felder bleiben lesbar und nutzen UI-Fallbacks. Es gibt keine automatische Migration ihrer Umweltbasis.
 - **Einschränkungen:** Tragfähigkeit und Umweltbelastung sind aktuell gespeicherte Parameter, **noch ohne** Bevölkerungswachstums-, Produktivitäts-, Klima- oder Ökosystemfolgen im Jahres-Tick. Terraforming ist nicht ausführbar. Die koloniale Bewohnbarkeit ist weiterhin ein binäres Merkmal.
 - **Pflichtstatus:** P16–P17 sowie P87–P91 bleiben offen. CI und native UI-Abnahme ausstehend.
+
+### Phase 04 — Durchlauf 03 (2026-11-11)
+- **Ziel:** Die in Durchlauf 02 gespeicherten Umwelt- und Tragfähigkeitswerte in den Simulations-Tick und die Wirtschaftsprognose integrieren.
+- **Implementiert:** `GalaxyStrategy.colony_capacity` reduziert die effektive Tragfähigkeit um je eine Einheit pro 20 Belastungspunkte (mindestens 1). `advance_colonies` erhöht Bevölkerung bei vorhandener Kapazität alle fünf Spieljahre um höchstens 1; oberhalb der Kapazität sinkt sie um 1 je Tick. `colony_upkeep` belastet die Staatskasse um je einen Credit pro 25 Belastungspunkte und eigener Kolonie. Prognose und Tick verwenden denselben Kostenrechner.
+- **Regression:** `galaxy_colony_simulation_test.gd` prüft Wachstum, Intervall, Umweltgrenzen, Rückgang, Unterhaltskosten, Forecast und deterministische Wiederholung; in CI registriert.
+- **Kompatibilität:** Für ältere Kolonien ohne neue Felder greifen konservative Fallbacks. Es gibt noch keine vollständige Save-Migration.
+- **Grenzen:** Es handelt sich um ein vereinfachtes Bevölkerungskapazitäts- und Umweltkostenmodell, noch ohne planetare Klimadynamik, Terraforming, artspezifische Lebensräume, Ressourcenerschöpfung, Ökosystemrückkopplungen oder separate Kolonialverwaltung mit differenzierten Bevölkerungsklassen. Die visuellen Spieltests und CI-Abnahme sind ausstehend.
+- **Pflichtstatus:** P13, P16–P17, P87–P91 bleiben offen. Phase 04 ist als drei Durchläufe bearbeitet, nicht vollständig abgenommen.
+- **Nächster Planabschnitt:** Phase 05 / Durchlauf 01: Spezies und Kulturen. Die nicht erfüllten Planetensystem-Pflichten bleiben verbindlich offen.
