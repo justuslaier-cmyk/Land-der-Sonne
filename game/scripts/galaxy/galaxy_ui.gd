@@ -1056,6 +1056,9 @@ func _politics() -> void:
     _label("Kulturelle Entwicklung ist gesellschaftlich bedingt und nicht direkt steuerbar.")
     _label("Stabilität: %d%%  •  Politische Ausrichtung beeinflusst die Jahresproduktion." % int(world["stability"]))
     var governance: Dictionary = world["governance"]
+    _label("Legitimität: %d%%  •  Mandat: %s  •  Nächster Machtwechsel Jahr %d" % [int(governance.get("legitimacy", 60)), ["Traditionalisten", "Reformisten", "Handelsblock"][clampi(int(governance.get("mandate", 0)), 0, 2)], int(governance.get("next_transition", 0))])
+    if int(governance.get("crisis_years", 0)) > 0:
+        _label("Politische Legitimitaetskrise seit %d Jahren" % int(governance["crisis_years"]))
     _label("Regierungsform: %s  •  Bürgerrechte: %s" % [GalaxyIdentity.GOVERNMENTS[int(world["empire"].get("government", 0))], ["Eingeschränkt", "Standard", "Erweitert"][int(governance["rights"])]])
     var reform_votes: Dictionary = GalaxyStrategy.reform_support(world, 2 if int(governance["rights"]) < 2 else 0)
     _label("Politische Blöcke • Reformunterstützung %d%%  •  Widerstand %d%%" % [int(reform_votes["support"]), int(reform_votes["opposition"])])
