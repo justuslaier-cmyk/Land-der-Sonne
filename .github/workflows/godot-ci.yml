@@ -45,6 +45,8 @@ jobs:
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_planet_economy_test.gd
       - name: Test ancient history and branching events
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_lore_test.gd
+      - name: Verify treaty trust and diplomatic decay
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_diplomacy_trust_test.gd
       - name: Verify annual economy forecast against simulation
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_forecast_test.gd
       - name: Test optional exploration automation
