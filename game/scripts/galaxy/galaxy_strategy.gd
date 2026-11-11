@@ -27,6 +27,8 @@ static func prepare(world: Dictionary) -> void:
         world["policies"] = {"focus": 0, "tax": 1}
     if not world.has("stability"):
         world["stability"] = 70
+    if not world.has("governance"):
+        world["governance"] = {"rights": 1, "pending": {}, "last_reform": -100}
     if not world.has("alloys"):
         world["alloys"] = 30
     if not world.has("ship_design"):
@@ -123,6 +125,40 @@ static func set_policy(world: Dictionary, focus: int, tax: int) -> bool:
     world["policies"] = {"focus": focus, "tax": tax}
     world["history"].append("Reichspolitik geändert: Schwerpunkt %d, Steuern %d." % [focus, tax])
     return true
+
+# Government models differ in approval thresholds and enactment time.
+static func propose_rights_reform(world: Dictionary, rights: int) -> bool:
+    prepare(world)
+    if rights < 0 or rights > 2:
+        return false
+    var governance: Dictionary = world["governance"]
+    if not governance.get("pending", {}).is_empty() or rights == int(governance["rights"]):
+        return false
+    if int(world["tick"]) - int(governance.get("last_reform", -100)) < 4:
+        return false
+    var government := clampi(int(world["empire"].get("government", 0)), 0, 3)
+    var approval := int(world.get("civilian_approval", 50))
+    var threshold: int = [50, 35, 65, 45][government]
+    if approval < threshold:
+        return false
+    var delay: int = [3, 2, 4, 3][government]
+    governance["pending"] = {"rights": rights, "enact_tick": int(world["tick"]) + delay}
+    world["history"].append("Gesellschaftsreform eingeleitet: Bürgerrechte Stufe %d." % rights)
+    return true
+
+static func advance_governance(world: Dictionary) -> void:
+    prepare(world)
+    var governance: Dictionary = world["governance"]
+    var pending: Dictionary = governance.get("pending", {})
+    if pending.is_empty() or int(world["tick"]) < int(pending["enact_tick"]):
+        return
+    var old_rights := int(governance["rights"])
+    var new_rights := int(pending["rights"])
+    governance["rights"] = new_rights
+    governance["last_reform"] = int(world["tick"])
+    governance["pending"] = {}
+    world["stability"] = clampi(int(world["stability"]) - abs(new_rights - old_rights) * 3, 0, 100)
+    world["history"].append("Bürgerrechtsreform in Kraft: Stufe %d." % new_rights)
 
 static func configure_ship(world: Dictionary, hull: int, weapon: int, engine: int) -> bool:
     prepare(world)
@@ -339,6 +375,7 @@ static func tick(world: Dictionary) -> void:
     var opening := {"credits": int(world["credits"]), "science": int(world["science"]), "alloys": int(world["alloys"]), "stability": int(world["stability"])}
     GalaxySystems.tick(world)
     GalaxyCivilians.tick(world)
+    advance_governance(world)
     GalaxyIdentity.culture_tick(world["culture"], world["empire"], clampi(int(world.get("credits", 0)) / 4, 0, 100), int(world.get("civilian_approval", 50)), int(world["tick"]))
     advance_colonies(world)
     var science_bonus := 0
@@ -376,7 +413,8 @@ static func tick(world: Dictionary) -> void:
     world["science"] = maxi(0, int(world["science"]) + int(GalaxyIdentity.culture_modifiers(world["culture"])["science"]))
     world["science"] = int(world["science"]) + science_bonus + (4 if focus == 1 else 0) + GalaxyLore.artifact_bonus(world, "science")
     world["alloys"] = int(world["alloys"]) + 2 + alloy_bonus + (3 if focus == 2 else 0) + GalaxyLore.artifact_bonus(world, "alloys")
-    world["stability"] = clampi(int(world["stability"]) + (1 if tax == 0 else -1 if tax == 2 else 0), 0, 100)
+    var rights_effect := int(world["governance"]["rights"]) - 1
+    world["stability"] = clampi(int(world["stability"]) + (1 if tax == 0 else -1 if tax == 2 else 0) + rights_effect, 0, 100)
     if focus == 0:
         world["credits"] = int(world["credits"]) + 4
     if int(world["stability"]) < 25:
