@@ -446,6 +446,7 @@ func _show_galaxy() -> void:
     for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["FLOTTENKOMMANDO", _fleet_command], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["ZIELE", _goals_report], ["GESELLSCHAFT", _society_report], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
         var button := Button.new()
         button.text = spec[0]
+        GalaxyVisualTheme.apply_button(button)
         button.pressed.connect(spec[1])
         bar.add_child(button)
     if notice != "":
@@ -464,6 +465,7 @@ func _show_galaxy() -> void:
     map_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     workspace.add_child(map_area)
     var side := PanelContainer.new()
+    side.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(PANEL, GalaxyVisualTheme.FOCUS, 2))
     side.custom_minimum_size = Vector2(335, 500)
     workspace.add_child(side)
     galaxy_details = VBoxContainer.new()
@@ -558,6 +560,13 @@ func _draw_map() -> void:
                 map_area.draw_colored_polygon(PackedVector2Array([p + Vector2(0, -15), p + Vector2(-7, -26), p + Vector2(7, -26)]), Color("#7ce3cc"))
 
 func _draw_pixel_star(pos: Vector2, radius: float, tint: Color, star_id: int) -> void:
+    var star_strip: Texture2D = load("res://assets/art/star_sprite_strip.svg")
+    if star_strip != null:
+        var diameter: float = maxf(15.0, radius * 3.5)
+        var kind: int = int(world["stars"][star_id]["kind"]) if world.has("stars") and star_id >= 0 and star_id < world["stars"].size() else 0
+        var source := Rect2(float(posmod(kind, 4)) * 32.0, 0.0, 32.0, 32.0)
+        map_area.draw_texture_rect_region(star_strip, Rect2(pos - Vector2.ONE * diameter * 0.5, Vector2.ONE * diameter), source, tint if world["known"].has(star_id) else Color("#63738c"))
+        return
     var pixel := maxf(1.5, radius / 3.5)
     var grid := 5
     for yy in range(-grid, grid + 1):
@@ -1582,6 +1591,10 @@ func _draw_pixel_planet(canvas: Control, center: Vector2, radius: float, tint: C
             canvas.draw_rect(Rect2(center + delta - Vector2.ONE * cell * 0.5, Vector2.ONE * cell), color)
 
 func _draw_orbital_station(canvas: Control, center: Vector2) -> void:
+    var station: Texture2D = load("res://assets/art/orbital_station.svg")
+    if station != null:
+        canvas.draw_texture_rect(station, Rect2(center - Vector2(20, 20), Vector2(40, 40)), false)
+        return
     var steel := Color("#9cb5ce")
     canvas.draw_rect(Rect2(center + Vector2(-3, -10), Vector2(6, 20)), steel)
     canvas.draw_rect(Rect2(center + Vector2(-17, -4), Vector2(34, 8)), steel.darkened(0.25))
