@@ -4,6 +4,7 @@ class_name GalaxyStrategy
 # Pure, deterministic strategic rules. Existing saves are upgraded lazily.
 static func prepare(world: Dictionary) -> void:
     GalaxySystems.prepare(world)
+    GalaxyCivilians.prepare(world)
     if not world.has("planet_colonies"):
         world["planet_colonies"] = {}
     if not world.has("buildings"):
@@ -290,6 +291,7 @@ static func tick(world: Dictionary) -> void:
     prepare(world)
     var opening := {"credits": int(world["credits"]), "science": int(world["science"]), "alloys": int(world["alloys"]), "stability": int(world["stability"])}
     GalaxySystems.tick(world)
+    GalaxyCivilians.tick(world)
     var science_bonus := 0
     var alloy_bonus := 0
     var credits_bonus := 0
