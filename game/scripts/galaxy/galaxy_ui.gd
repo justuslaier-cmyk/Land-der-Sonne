@@ -441,11 +441,19 @@ func _show_galaxy() -> void:
     _refresh_forecast()
     time_status = _label("")
     _refresh_time_status()
+    var toolbar_scroll := ScrollContainer.new()
+    toolbar_scroll.custom_minimum_size.y = 55
+    toolbar_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    toolbar_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+    toolbar_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    root.add_child(toolbar_scroll)
     var bar := HBoxContainer.new()
-    root.add_child(bar)
+    bar.add_theme_constant_override("separation", 6)
+    toolbar_scroll.add_child(bar)
     for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["FLOTTENKOMMANDO", _fleet_command], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["ZIELE", _goals_report], ["GESELLSCHAFT", _society_report], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
         var button := Button.new()
         button.text = spec[0]
+        button.custom_minimum_size.y = 42
         GalaxyVisualTheme.apply_button(button)
         button.pressed.connect(spec[1])
         bar.add_child(button)
@@ -454,19 +462,19 @@ func _show_galaxy() -> void:
     var info := _label("Linksklick: System wählen   •   Rechte Maustaste ziehen: Kamera   •   Mausrad: Zoom zum Cursor")
     info.add_theme_font_size_override("font_size", 13)
     map_area = Control.new()
-    map_area.custom_minimum_size = Vector2(760, 500)
+    map_area.custom_minimum_size = Vector2(380, 450)
     map_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     map_area.draw.connect(_draw_map)
     map_area.gui_input.connect(_map_input)
     var workspace := HBoxContainer.new()
-    workspace.add_theme_constant_override("separation", 20)
+    workspace.add_theme_constant_override("separation", 12)
     workspace.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     root.add_child(workspace)
     map_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     workspace.add_child(map_area)
     var side := PanelContainer.new()
     side.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(PANEL, GalaxyVisualTheme.FOCUS, 2))
-    side.custom_minimum_size = Vector2(335, 500)
+    side.custom_minimum_size = Vector2(275, 450)
     workspace.add_child(side)
     galaxy_details = VBoxContainer.new()
     galaxy_details.add_theme_constant_override("separation", 9)
