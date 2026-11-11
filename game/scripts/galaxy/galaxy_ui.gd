@@ -1029,6 +1029,10 @@ func _politics() -> void:
     _clear()
     GalaxyStrategy.prepare(world)
     _title("REICHSPOLITIK")
+    var culture: Dictionary = world["culture"]
+    _label("Kulturentwicklung • Generation %d" % int(culture.get("generation", 0)))
+    _label("Tradition %d  •  Offenheit %d  •  Zusammenhalt %d  •  Handelsorientierung %d" % [int(culture["tradition"]), int(culture["openness"]), int(culture["solidarity"]), int(culture["commercialism"])])
+    _label("Kulturelle Entwicklung ist gesellschaftlich bedingt und nicht direkt steuerbar.")
     _label("Stabilität: %d%%  •  Politische Ausrichtung beeinflusst die Jahresproduktion." % int(world["stability"]))
     _label("Schwerpunkt: %s" % ["Handel", "Wissenschaft", "Industrie"][int(world["policies"]["focus"])])
     for i in range(3):
