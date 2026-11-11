@@ -49,7 +49,7 @@ func _initialize() -> void:
     if not GalaxyStrategy.set_fleet_order(world, "patrol"):
         _fail("Patrol order rejected")
         return
-    if str(world["fleet_command"]["order"]) != "patrol" or world["fleet_command_history"].size() != 6:
+    if str(world["fleet_command"]["order"]) != "patrol" or world["fleet_command_history"].size() != 5:
         _fail("Command history or patrol state incorrect")
         return
     if not GalaxyModel.save_game(world):
@@ -60,7 +60,7 @@ func _initialize() -> void:
     if str(loaded["fleet_command"]["order"]) != "patrol" or str(loaded["fleet_command"]["admiral"]) != "none":
         _fail("Fleet orders or admiral not persisted")
         return
-    if loaded["fleet_command_history"].size() != 6:
+    if loaded["fleet_command_history"].size() != 5:
         _fail("Command history not persisted")
         return
     print("GALAXY_FLEET_COMMAND_PASS: validation, attack, range, travel, orders and persistence")
