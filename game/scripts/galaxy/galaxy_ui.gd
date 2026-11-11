@@ -248,7 +248,7 @@ func _show_empire() -> void:
     _label("BIOLOGISCHE SPEZIESMERKMALE  •  Budget: höchstens 3 Punkte, maximal 4 Merkmale")
     var trait_points := 0
     for trait_id in empire.get("traits", ["curious"]):
-        trait_points += int(GalaxyIdentity.trait(str(trait_id)).get("cost", 0))
+        trait_points += int(GalaxyIdentity.trait_info(str(trait_id)).get("cost", 0))
     _label("Verwendete Punkte: %d / 3  •  Nachteile geben Punkte zurück." % trait_points)
     for item in GalaxyIdentity.TRAITS:
         var trait_id := str(item["id"])
@@ -638,7 +638,7 @@ func _society_report() -> void:
         _label(str(civic["icon"]) + "  " + str(civic["name"]) + "  •  " + str(civic["description"]))
     _label("SPEZIES / " + str(identity["species"]))
     for trait_id in identity.get("traits", ["curious"]):
-        var trait: Dictionary = GalaxyIdentity.trait(str(trait_id))
+        var trait: Dictionary = GalaxyIdentity.trait_info(str(trait_id))
         _label(str(trait["icon"]) + "  " + str(trait["name"]) + "  •  " + str(trait["description"]))
     _label("ZIVILE LEBENSWELTEN")
     var population := 0
