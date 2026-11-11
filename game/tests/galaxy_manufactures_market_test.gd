@@ -33,7 +33,7 @@ func _initialize() -> void:
         _fail("Manufactured inventory conservation failed")
         return
     var ledger: Dictionary = world["civilian_goods_ledger"]
-    if int(ledger["opening_stock"]) + int(ledger["produced"]) - int(ledger["consumed"]) != int(ledger["ending_stock"]):
+    if int(ledger["opening_stock"]) + int(ledger["produced"]) - int(ledger["consumed"]) - int(ledger.get("dispatched", 0)) != int(ledger["ending_stock"]):
         _fail("Consumer goods ledger fails after manufacturing sales")
         return
     if not GalaxyModel.save_game(world):
