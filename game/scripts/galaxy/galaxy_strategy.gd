@@ -31,6 +31,12 @@ static func prepare(world: Dictionary) -> void:
         world["alliances"] = []
     if not world.has("diplomatic_dependencies"):
         world["diplomatic_dependencies"] = {}
+    if not world.has("intelligence"):
+        world["intelligence"] = {}
+    if not world.has("spy_missions"):
+        world["spy_missions"] = []
+    if not world.has("counterintelligence"):
+        world["counterintelligence"] = 0
     if not world.has("policies"):
         world["policies"] = {"focus": 0, "tax": 1}
     if not world.has("stability"):
@@ -283,6 +289,63 @@ static func declare_war(world: Dictionary, rival_id: int) -> bool:
 
 # Formal negotiations lock a deposit, take two years, and resolve against
 # the diplomatic situation at the time of ratification.
+# Contact reveals diplomatic basics, not the rival's hidden strategic stance.
+# Missions are deterministic and persist through save/load.
+static func intelligence_level(world: Dictionary, rival_id: int) -> int:
+    prepare(world)
+    if not world["contacts"].has(rival_id):
+        return 0
+    return clampi(int(world["intelligence"].get(str(rival_id), 1)), 1, 3)
+
+static func launch_spy_mission(world: Dictionary, rival_id: int, kind: String) -> bool:
+    prepare(world)
+    if not ["recon", "infiltrate"].has(kind) or not world["contacts"].has(rival_id):
+        return false
+    if world["wars"].has(rival_id) and kind == "infiltrate":
+        return false
+    for mission in world["spy_missions"]:
+        if int(mission["rival"]) == rival_id:
+            return false
+    var cost := 20 if kind == "recon" else 35
+    if int(world["credits"]) < cost:
+        return false
+    world["credits"] = int(world["credits"]) - cost
+    world["spy_missions"].append({"rival": rival_id, "kind": kind,
+        "due": int(world["tick"]) + (2 if kind == "recon" else 3)})
+    world["history"].append("Geheimdienstoperation gegen %s begonnen." % GalaxySystems.empire_name(world, rival_id))
+    return true
+
+static func reinforce_counterintelligence(world: Dictionary) -> bool:
+    prepare(world)
+    if int(world["credits"]) < 25 or int(world["counterintelligence"]) >= 3:
+        return false
+    world["credits"] = int(world["credits"]) - 25
+    world["counterintelligence"] = int(world["counterintelligence"]) + 1
+    world["history"].append("Gegenspionage auf Stufe %d ausgebaut." % int(world["counterintelligence"]))
+    return true
+
+static func advance_intelligence(world: Dictionary) -> void:
+    prepare(world)
+    var waiting: Array = []
+    for mission in world["spy_missions"]:
+        if int(mission["due"]) > int(world["tick"]):
+            waiting.append(mission)
+            continue
+        var rival := int(mission["rival"])
+        var kind := str(mission["kind"])
+        var society: Dictionary = world.get("ai_societies", {}).get(str(rival), {})
+        var security := clampi(int(society.get("factions", {}).get("security", 20)) / 20, 0, 4)
+        var difficulty := security + (2 if kind == "infiltrate" else 0)
+        var strength := 3 + int(world.get("research_fields", {}).get("society", 0))
+        if strength >= difficulty:
+            var level := mini(3, intelligence_level(world, rival) + 1)
+            world["intelligence"][str(rival)] = level
+            world["history"].append("Geheimdienstbericht zu %s: Informationsstufe %d." % [GalaxySystems.empire_name(world, rival), level])
+        else:
+            world["diplomatic_trust"][str(rival)] = maxi(-50, int(world["diplomatic_trust"].get(str(rival), 0)) - 5)
+            world["history"].append("Spionage gegen %s aufgedeckt: Vertrauen sinkt." % GalaxySystems.empire_name(world, rival))
+    world["spy_missions"] = waiting
+
 static func negotiate_treaty(world: Dictionary, rival_id: int, kind: String) -> bool:
     prepare(world)
     if not ["trade", "non_aggression", "alliance", "dependency"].has(kind):
@@ -559,6 +622,7 @@ static func tick(world: Dictionary) -> void:
     GalaxySystems.tick(world)
     GalaxyCivilians.tick(world)
     advance_diplomacy(world)
+    advance_intelligence(world)
     advance_governance(world)
     advance_institutions(world)
     GalaxyIdentity.culture_tick(world["culture"], world["empire"], clampi(int(world.get("credits", 0)) / 4, 0, 100), int(world.get("civilian_approval", 50)), int(world["tick"]))
