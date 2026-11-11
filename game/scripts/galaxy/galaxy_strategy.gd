@@ -345,6 +345,14 @@ static func advance_intelligence(world: Dictionary) -> void:
             world["diplomatic_trust"][str(rival)] = maxi(-50, int(world["diplomatic_trust"].get(str(rival), 0)) - 5)
             world["history"].append("Spionage gegen %s aufgedeckt: Vertrauen sinkt." % GalaxySystems.empire_name(world, rival))
     world["spy_missions"] = waiting
+    # Periodic hostile probes are blocked by an upgraded counterintelligence
+    # service; the baseline is deliberately small to avoid runaway penalties.
+    if int(world["tick"]) > 0 and int(world["tick"]) % 7 == 0 and not world["contacts"].is_empty():
+        if int(world["counterintelligence"]) >= 1:
+            world["history"].append("Gegenspionage vereitelt einen fremden Datenzugriff.")
+        else:
+            world["credits"] = maxi(0, int(world["credits"]) - 3)
+            world["history"].append("Fremder Datenzugriff: 3 Credits Sicherheitsverlust.")
 
 static func negotiate_treaty(world: Dictionary, rival_id: int, kind: String) -> bool:
     prepare(world)
