@@ -35,6 +35,8 @@ jobs:
         run: godot --headless --path game --script res://tests/interaction_test.gd
       - name: Test galactic new game and persistence
         run: timeout 100s godot --headless --path game --script res://tests/galaxy_test.gd
+      - name: Verify colony growth, environmental limits and forecast
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_colony_simulation_test.gd
       - name: Verify planetary ecology, colony capacity and pollution
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_planet_colonization_test.gd
       - name: Verify stellar classes and colonizable capital planets
