@@ -189,6 +189,20 @@ static func transit_goods(world: Dictionary) -> int:
         total += int(shipment["goods"])
     return total
 
+# Count shipments already committed to a destination, preventing merchants
+# from repeatedly filling the same shortage while cargo is still en route.
+static func incoming_freight(world: Dictionary, destination: int) -> int:
+    var total := 0
+    for shipment in world.get("civilian_freight_transit", []):
+        if int(shipment.get("to", -1)) == destination:
+            total += maxi(0, int(shipment.get("goods", 0)))
+    return total
+
+# Keep at least one local annual household demand cycle in reserve,
+# with a floor of fifteen units to preserve the existing merchant buffer.
+static func freight_reserve(market: Dictionary) -> int:
+    return maxi(15, maxi(1, int(market.get("population", 0)) / 2))
+
 static func tick(world: Dictionary) -> void:
     prepare(world)
     var settlements: Dictionary = world["civilian_worlds"]
@@ -212,6 +226,7 @@ static func tick(world: Dictionary) -> void:
     var population_total := 0
     var petitions: Array = []
     var migration := 0
+    var freight_reserve_total := 0
     var freight_cost_total := 0
     var trade: Array = []
     var production_chains: Dictionary = {}
@@ -268,7 +283,7 @@ static func tick(world: Dictionary) -> void:
     # The state cannot order a shipment: merchants respond to market scarcity.
     for source_key in active:
         var source: Dictionary = settlements[source_key]
-        if int(source["goods"]) < 25:
+        if int(source["goods"]) <= freight_reserve(source):
             continue
         var best_key := ""
         var shortage := 0
@@ -276,13 +291,13 @@ static func tick(world: Dictionary) -> void:
             if destination_key == source_key:
                 continue
             var destination: Dictionary = settlements[destination_key]
-            var demand := maxi(0, int(destination["population"]) / 2 - int(destination["goods"]))
+            var demand := maxi(0, int(destination["population"]) / 2 - int(destination["goods"]) - incoming_freight(world, int(destination_key)))
             if demand > shortage and freight_hops(world, int(source_key), int(destination_key)) > 0:
                 shortage = demand
                 best_key = str(destination_key)
         if best_key != "":
             var hops := freight_hops(world, int(source_key), int(best_key))
-            var amount := mini(freight_capacity(source), mini(shortage, int(source["goods"]) - 15))
+            var amount := mini(freight_capacity(source), mini(shortage, int(source["goods"]) - freight_reserve(source)))
             var cost := hops * amount
             if amount > 0 and int(source["private_capital"]) >= cost:
                 source["goods"] = int(source["goods"]) - amount
@@ -322,13 +337,16 @@ static func tick(world: Dictionary) -> void:
     var arrival_total := 0
     for shipment in arrivals:
         arrival_total += int(shipment["goods"])
+    for key in active:
+        freight_reserve_total += freight_reserve(settlements[key])
     var ending_stock := 0
     for key in active:
         ending_stock += int(settlements[key]["goods"])
     world["civilian_production_ledger"] = {"year": int(world["tick"]), "systems": production_chains}
     world["civilian_goods_ledger"] = {"year": int(world["tick"]), "produced": production_total,
         "consumed": consumption_total, "opening_stock": opening_stock, "ending_stock": ending_stock,
-        "freight_cost": freight_cost_total, "dispatched": dispatched_total,
+        "freight_cost": freight_cost_total, "reserve_target": freight_reserve_total,
+        "dispatched": dispatched_total,
         "arrived": arrival_total, "transit_before": transit_before,
         "transit_after": transit_goods(world), "shipments": trade.duplicate(true),
         "arrivals": arrivals.duplicate(true)}
