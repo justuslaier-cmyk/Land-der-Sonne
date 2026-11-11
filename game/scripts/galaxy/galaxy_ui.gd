@@ -703,8 +703,22 @@ func _toggle_auto_survey() -> void:
     _show_galaxy()
 
 func _research() -> void:
-    notice = "Forschungsdurchbruch erzielt." if GalaxySystems.start_research(world) else "Nicht genügend Forschungspunkte."
-    _show_galaxy()
+    screen = "research"
+    _clear()
+    _title("FORSCHUNG / SPEZIALISIERUNGEN")
+    _label("Verfügbare Forschungspunkte: %d  •  Gesamtfortschritt: %d" % [int(world["science"]), int(world["research_level"])])
+    for field in ["propulsion", "industry", "society"]:
+        var field_id := field
+        var preview: Dictionary = GalaxySystems.research_preview(world, field)
+        var label_name := {"propulsion": "Antrieb", "industry": "Industrie", "society": "Gesellschaft"}[field]
+        _label("%s  •  Stufe %d  •  Kosten %d  •  %s" % [label_name, int(preview["level"]), int(preview["cost"]), "Forschbar" if bool(preview["allowed"]) else str(preview["reason"])])
+        _button("ERFORSCHEN: " + label_name.to_upper(), func(): _research_field(field_id))
+    _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
+
+func _research_field(field: String) -> void:
+    var preview: Dictionary = GalaxySystems.research_preview(world, field)
+    notice = "Forschungsdurchbruch erzielt." if GalaxySystems.start_research(world, field) else str(preview["reason"])
+    _research()
 
 func _fleet_doctrine() -> void:
     screen = "fleet_doctrine"
