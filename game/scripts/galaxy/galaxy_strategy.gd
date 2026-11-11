@@ -127,6 +127,27 @@ static func set_policy(world: Dictionary, focus: int, tax: int) -> bool:
     return true
 
 # Government models differ in approval thresholds and enactment time.
+# Political blocs respond to the direction of a rights reform. Their
+# weights derive from the evolving culture, not a player-controlled slider.
+static func reform_support(world: Dictionary, rights: int) -> Dictionary:
+    prepare(world)
+    var groups: Dictionary = GalaxyIdentity.social_groups(world["culture"])
+    var current := int(world["governance"]["rights"])
+    var traditionalists := int(groups["traditionalists"])
+    var reformers := int(groups["reformers"])
+    var merchants := int(groups["merchants"])
+    var supporters := 0
+    if rights > current:
+        supporters = reformers + merchants / 2
+    elif rights < current:
+        supporters = traditionalists + merchants / 2
+    else:
+        supporters = 100
+    var opposition := 100 - supporters
+    return {"support": supporters, "opposition": opposition,
+        "traditionalists": traditionalists, "reformers": reformers,
+        "merchants": merchants}
+
 static func propose_rights_reform(world: Dictionary, rights: int) -> bool:
     prepare(world)
     if rights < 0 or rights > 2:
@@ -141,8 +162,13 @@ static func propose_rights_reform(world: Dictionary, rights: int) -> bool:
     var threshold: int = [50, 35, 65, 45][government]
     if approval < threshold:
         return false
+    var blocs: Dictionary = reform_support(world, rights)
+    if int(blocs["support"]) < 30:
+        return false
     var delay: int = [3, 2, 4, 3][government]
-    governance["pending"] = {"rights": rights, "enact_tick": int(world["tick"]) + delay}
+    var resistance := maxi(0, int(blocs["opposition"]) - 50) / 10
+    governance["pending"] = {"rights": rights, "enact_tick": int(world["tick"]) + delay + resistance,
+        "support": int(blocs["support"]), "opposition": int(blocs["opposition"])}
     world["history"].append("Gesellschaftsreform eingeleitet: Bürgerrechte Stufe %d." % rights)
     return true
 
@@ -157,7 +183,8 @@ static func advance_governance(world: Dictionary) -> void:
     governance["rights"] = new_rights
     governance["last_reform"] = int(world["tick"])
     governance["pending"] = {}
-    world["stability"] = clampi(int(world["stability"]) - abs(new_rights - old_rights) * 3, 0, 100)
+    var opposition := int(pending.get("opposition", 0))
+    world["stability"] = clampi(int(world["stability"]) - abs(new_rights - old_rights) * 3 - opposition / 25, 0, 100)
     world["history"].append("Bürgerrechtsreform in Kraft: Stufe %d." % new_rights)
 
 static func configure_ship(world: Dictionary, hull: int, weapon: int, engine: int) -> bool:
