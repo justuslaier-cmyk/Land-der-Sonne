@@ -85,7 +85,7 @@ static func generate(settings: Dictionary, empire: Dictionary) -> Dictionary:
         capitals.append(index)
         stars[index]["owner"] = j + 1
         ai.append({"id": j + 1, "name": names[j % names.size()] if j < names.size() else "Imperium %d" % (j + 1), "capital": index, "temperament": rng.randi_range(0, 3)})
-    return {"version": VERSION, "settings": actual_settings, "empire": empire.duplicate(true), "stars": stars, "ai": ai, "tick": 0, "credits": 100, "science": 0, "selected": 0, "event_done": false, "history": ["Gründung des Reiches " + str(empire["name"])]}
+    return {"version": VERSION, "settings": actual_settings, "empire": empire.duplicate(true), "stars": stars, "lanes": GalaxyRoutes.build(stars), "ai": ai, "tick": 0, "credits": 100, "science": 0, "selected": 0, "event_done": false, "history": ["Gründung des Reiches " + str(empire["name"])]}
 
 static func advance(world: Dictionary) -> void:
     world["tick"] = int(world["tick"]) + 1
