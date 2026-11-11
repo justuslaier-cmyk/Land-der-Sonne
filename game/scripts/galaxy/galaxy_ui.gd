@@ -208,7 +208,67 @@ func _show_empire() -> void:
     _species_gallery()
     _label("Ausgewählt: " + ["Humanoid", "Insektoid", "Aquatisch", "Kristallin", "Synthetisch"][int(empire["portrait"])])
     _choice("Herrschaftsform", ["Republik", "Monarchie", "Technokratie", "Kollektiv"], empire, "government")
-    _choice("Speziesmerkmal", ["Analytisch: +Forschung", "Handelsbegabt: +Credits", "Anpassungsfähig"], empire, "trait")
+    _label("GESELLSCHAFTLICHE GRUNDHALTUNG")
+    var ethics: Array = []
+    for item in GalaxyIdentity.ETHICS:
+        ethics.append(str(item["icon"]) + " " + str(item["name"]))
+    var ethic_index := 0
+    for i in range(GalaxyIdentity.ETHICS.size()):
+        if str(GalaxyIdentity.ETHICS[i]["id"]) == str(empire.get("ethic", "pluralist")):
+            ethic_index = i
+    var ethic_option := OptionButton.new()
+    for value in ethics:
+        ethic_option.add_item(str(value))
+    ethic_option.selected = ethic_index
+    ethic_option.item_selected.connect(func(index: int):
+        empire["ethic"] = str(GalaxyIdentity.ETHICS[index]["id"])
+        _show_empire()
+    )
+    root.add_child(ethic_option)
+    _label("STAATSPRINZIPIEN  •  Genau zwei auswählen")
+    for item in GalaxyIdentity.CIVICS:
+        var civic_id := str(item["id"])
+        var selected_civic: bool = empire.get("civics", ["archives", "commons"]).has(civic_id)
+        var civic_button := Button.new()
+        civic_button.text = ("● " if selected_civic else "○ ") + str(item["icon"]) + " " + str(item["name"]) + "  —  " + str(item["description"])
+        civic_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+        civic_button.pressed.connect(func():
+            var chosen: Array = empire.get("civics", ["archives", "commons"]).duplicate()
+            if chosen.has(civic_id):
+                chosen.erase(civic_id)
+            elif chosen.size() < 2:
+                chosen.append(civic_id)
+            else:
+                chosen.pop_front()
+                chosen.append(civic_id)
+            empire["civics"] = chosen
+            _show_empire()
+        )
+        root.add_child(civic_button)
+    _label("BIOLOGISCHE SPEZIESMERKMALE  •  Budget: höchstens 3 Punkte, maximal 4 Merkmale")
+    var trait_points := 0
+    for trait_id in empire.get("traits", ["curious"]):
+        trait_points += int(GalaxyIdentity.trait(str(trait_id)).get("cost", 0))
+    _label("Verwendete Punkte: %d / 3  •  Nachteile geben Punkte zurück." % trait_points)
+    for item in GalaxyIdentity.TRAITS:
+        var trait_id := str(item["id"])
+        var selected_trait: bool = empire.get("traits", ["curious"]).has(trait_id)
+        var trait_button := Button.new()
+        trait_button.text = ("● " if selected_trait else "○ ") + str(item["icon"]) + " " + str(item["name"]) + " (%+d)  —  " % int(item["cost"]) + str(item["description"])
+        trait_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+        trait_button.pressed.connect(func():
+            var chosen: Array = empire.get("traits", ["curious"]).duplicate()
+            if chosen.has(trait_id):
+                chosen.erase(trait_id)
+            else:
+                chosen.append(trait_id)
+            var candidate: Dictionary = empire.duplicate(true)
+            candidate["traits"] = chosen
+            if GalaxyIdentity.validate(candidate) == "":
+                empire["traits"] = chosen
+            _show_empire()
+        )
+        root.add_child(trait_button)
     _label("Schiffsarchitektur – Vorschau")
     _ship_gallery()
     _button("WEITER: ZUSAMMENFASSUNG", _show_review)
@@ -220,6 +280,8 @@ func _show_review() -> void:
     _title("03 / DEIN UNIVERSUM")
     _label("Reich: %s  |  Spezies: %s" % [empire["name"], empire["species"]])
     _label("Heimat: %s  |  Systeme: %s  |  KI-Reiche: %s" % [empire["homeworld"], settings["size"], settings["ai_count"]])
+    _label("Staatsprinzipien: " + ", ".join(empire.get("civics", [])))
+    _label("Speziesmerkmale: " + ", ".join(empire.get("traits", [])))
     _label("Die Galaxie wird beim Spielstart zufällig erzeugt.")
     _species_gallery(true)
     _ship_gallery(true)
