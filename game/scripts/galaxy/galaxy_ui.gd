@@ -889,13 +889,16 @@ func _diplomacy(rival_id: int = -1) -> void:
         if not world["contacts"].has(id):
             continue
         _label("%s  •  Beziehung: %d  •  Vertrauen: %d/50  •  Strategie: %s" % [rival["name"], int(world["relations"].get(str(id), 0)), int(world.get("diplomatic_trust", {}).get(str(id), 0)), str(world.get("ai_intentions", {}).get(str(id), {}).get("stance", "unbekannt"))])
+        for negotiation in world.get("diplomatic_negotiations", []):
+            if int(negotiation["rival"]) == id:
+                _label("Verhandlung: %s  •  Abschlussprüfung Jahr %d" % [str(negotiation["kind"]), int(negotiation["due"])])
+        for treaty in world.get("diplomatic_treaties", []):
+            if int(treaty["rival"]) == id:
+                _label("Ratifizierter Vertrag: %s  •  Seit Jahr %d" % [str(treaty["kind"]), int(treaty["signed"])])
         _button("GESCHENK SENDEN (-30 Credits)", func(): _diplomatic_choice(id, "gift"))
-        _button("HANDELSABKOMMEN", func(): _diplomatic_choice(id, "trade"))
+        _button("HANDELSVERTRAG VERHANDELN (-15 Credits)", func(): _negotiate(id, "trade"))
         _button("ULTIMATUM", func(): _diplomatic_choice(id, "threat"))
-        _button("NICHTANGRIFFSPAKT (Beziehung +35)", func():
-            notice = "Nichtangriffspakt geschlossen." if GalaxyStrategy.propose_non_aggression(world, id) else "Pakt nicht möglich: Beziehungen oder bestehender Vertrag."
-            _diplomacy()
-        )
+        _button("NICHTANGRIFFSPAKT VERHANDELN (-20 Credits)", func(): _negotiate(id, "non_aggression"))
         if world["wars"].has(id):
             _button("FRIEDEN ANBIETEN (gegebenenfalls 70 Credits)", func():
                 notice = "Friedensvertrag geschlossen." if GalaxyStrategy.offer_peace(world, id) else "Friedensangebot abgelehnt oder nicht finanzierbar."
@@ -904,6 +907,10 @@ func _diplomacy(rival_id: int = -1) -> void:
         else:
             _button("KRIEG ERKLÄREN", func(): _war(id))
     _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
+
+func _negotiate(id: int, kind: String) -> void:
+    notice = "Verhandlungen eröffnet." if GalaxyStrategy.negotiate_treaty(world, id, kind) else "Verhandlung nicht möglich: Beziehung, Credits oder bestehender Vertrag."
+    _diplomacy()
 
 func _diplomatic_choice(id: int, action: String) -> void:
     notice = "Handelsvertrag geschlossen." if action == "trade" and GalaxyStrategy.sign_trade(world, id) else GalaxySystems.diplomatic_action(world, id, action) if action != "trade" else "Handelsvertrag benötigt +15 Beziehung, Erstkontakt und Frieden."
