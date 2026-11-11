@@ -735,7 +735,7 @@ func _fleet_command() -> void:
     var bonuses: Dictionary = GalaxyStrategy.fleet_command_bonuses(world)
     _label("Aktuelle Flotte: Stärke %d  •  Standort %s" % [int(world["fleets"][0]["strength"]), str(world["stars"][int(world["fleets"][0]["location"])]["name"])])
     _label("Befehl: %s  •  Admiral: %s" % [str(command["order"]), str(command["admiral"])])
-    _label("Effekte: Angriff +%d  •  Defensive Reserve +%d  •  Reichweite +%d  •  Reisezeit -%d" % [int(bonuses["attack"]), int(bonuses["defense"]), int(bonuses["range"]), int(bonuses["travel_reduction"])])
+    _label("Effekte: Angriff +%d  •  Schiffbau -%d Credits  •  Reichweite +%d  •  Reisezeit -%d" % [int(bonuses["attack"]), int(bonuses["shipyard_discount"]), int(bonuses["range"]), int(bonuses["travel_reduction"])])
     _label("Die bestehende Simulation verwaltet weiterhin eine gemeinsame Spielerflotte.")
     for order in ["hold", "patrol", "assault"]:
         var selected_order := order
