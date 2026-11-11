@@ -124,12 +124,20 @@ static func _generate_sites(world: Dictionary) -> void:
         ["Die Architekten von Ilyr", "Gravitationsarchitektur", "Versunkene Orbitale"],
         ["Das Thren-Konsortium", "Biotechnologie", "Organische Archive"],
         ["Die Aschefürsten", "Sternenmetallurgie", "Verlassene Schmiedewelten"],
-        ["Der Meridian-Chor", "Quantenkommunikation", "Stille Relais"]
+        ["Der Meridian-Chor", "Quantenkommunikation", "Stille Relais"],
+        ["Die Träumer von Selen", "Traumkartografie", "Schlafende Observatorien"],
+        ["Die Myzel-Königinnen", "Symbiotische Ökologie", "Versteinerte Gärten"],
+        ["Das Obsidian-Kollektiv", "Dunkelmaterie-Forschung", "Schwarze Monolithen"],
+        ["Die Letzten von Aeth", "Sternensegel", "Verlorene Werften"],
+        ["Der Bund der Tausend Augen", "Präkognitive Sensorik", "Blinde Wachtürme"],
+        ["Die Kinder des Nebels", "Nebelchemie", "Schwebende Laboratorien"],
+        ["Die Uhrenhüter", "Chronometrie", "Zerbrochene Zeitkammern"],
+        ["Die Stummen Pilger", "Resonanztechnik", "Kristallene Heiligtümer"]
     ]
     var sites: Array = []
     var occupied: Array = world["ancient_history"]["ruins"].duplicate()
     var count: int = world["stars"].size()
-    for i in range(mini(4, count - 4)):
+    for i in range(mini(cultures.size(), maxi(0, count - 4))):
         var id := rng.randi_range(1, count - 1)
         while occupied.has(id):
             id = 1 + (id % (count - 1))
@@ -174,9 +182,9 @@ static func analyze_artifact(world: Dictionary, index: int) -> bool:
 static func artifact_bonus(world: Dictionary, field: String) -> int:
     var technology: Array = world.get("ancient_technology", [])
     if field == "science":
-        return (3 if technology.has("Quantenkommunikation") else 0) + (2 if technology.has("Biotechnologie") else 0)
+        return (3 if technology.has("Quantenkommunikation") else 0) + (2 if technology.has("Biotechnologie") else 0) + (2 if technology.has("Traumkartografie") else 0) + (2 if technology.has("Dunkelmaterie-Forschung") else 0) + (1 if technology.has("Chronometrie") else 0)
     if field == "alloys":
-        return 3 if technology.has("Sternenmetallurgie") else 0
+        return (3 if technology.has("Sternenmetallurgie") else 0) + (2 if technology.has("Sternensegel") else 0) + (2 if technology.has("Nebelchemie") else 0)
     if field == "credits":
-        return 4 if technology.has("Gravitationsarchitektur") else 0
+        return (4 if technology.has("Gravitationsarchitektur") else 0) + (3 if technology.has("Symbiotische Ökologie") else 0) + (2 if technology.has("Präkognitive Sensorik") else 0) + (2 if technology.has("Resonanztechnik") else 0)
     return 0
