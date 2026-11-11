@@ -13,7 +13,7 @@
 ## Letzte tatsächlich beobachtete Qualität — Phase 01 / Durchlauf 03
 - CI-Lauf [43088734325](https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43088734325) auf Commit `9d713605c708b6792dd6aace330e845961df8df6`.
 - **Bestätigt erfolgreich:** `godot-smoke` mit sämtlichen registrierten Galaxie-, Strategie-, Identitäts-, Fortschritts-, KI- und Vertrags-/Determinismustests; `render-check` erfolgreich.
-- **Noch nicht bestätigt zum Zeitpunkt der Statusaktualisierung:** `windows-export` war in Bearbeitung; vollständiges Workflow-Gesamtergebnis deshalb offen.
+- **Abschließend bestätigt:** `windows-export` erfolgreich; gesamter Workflow `43088734325` abgeschlossen mit **success**. Der Windows-Export wurde nicht nativ gestartet.
 - Die zuvor reproduzierten Parserfehler und der Fehler „AI empire has no cultural identity“ traten im erfolgreichen Smoke-Test nicht mehr auf.
 - Die neue `GALAXY_CONTRACTS_PASS`-Meldung belegt den begrenzten Zwölf-Tick-Replaytest und die strukturellen Negativtests; sie belegt **nicht** Ressourcen-Erhaltung über sämtliche Systeme, deterministische Langzeitsimulation oder native Windows-Spielbarkeit.
 - Nachfolgende Dokumentations-Commits ändern keine Godot-Spielskripte, sind aber **nicht identisch** mit dem getesteten Commit. Vor einer finalen Abnahme stets den aktuellsten SHA prüfen.
