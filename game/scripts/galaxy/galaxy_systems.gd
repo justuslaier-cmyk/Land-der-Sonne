@@ -150,6 +150,29 @@ static func build_fleet(world: Dictionary) -> bool:
 
 # Specialised research consumes finite science and follows explicit
 # prerequisites; the aggregate level remains for legacy milestones.
+# Only laboratories in player-owned systems count as research infrastructure.
+static func research_labs(world: Dictionary) -> int:
+    var labs := 0
+    for key in world.get("buildings", {}).keys():
+        var sid := int(key)
+        if sid >= 0 and sid < world["stars"].size() and int(world["stars"][sid]["owner"]) == 0:
+            labs += maxi(0, int(world["buildings"][key].get("lab", 0)))
+    for key in world.get("planet_colonies", {}).keys():
+        var parts := str(key).split(":")
+        if parts.size() != 2:
+            continue
+        var sid := int(parts[0])
+        if sid >= 0 and sid < world["stars"].size() and int(world["stars"][sid]["owner"]) == 0:
+            labs += maxi(0, int(world["planet_colonies"][key].get("buildings", {}).get("lab", 0)))
+    return labs
+
+static func technology_bonuses(world: Dictionary) -> Dictionary:
+    prepare(world)
+    var levels: Dictionary = world["research_fields"]
+    return {"fleet_range": int(levels.get("propulsion", 0)) * 12,
+        "industry_alloys": int(levels.get("industry", 0)) * research_labs(world),
+        "society_stability": int(levels.get("society", 0))}
+
 static func research_preview(world: Dictionary, field: String) -> Dictionary:
     prepare(world)
     if not ["propulsion", "industry", "society"].has(field):
@@ -164,6 +187,10 @@ static func research_preview(world: Dictionary, field: String) -> Dictionary:
         prerequisite = "Gesellschaft Stufe 1"
     elif field == "society" and level >= 1 and int(levels.get("propulsion", 0)) < 1:
         prerequisite = "Antrieb Stufe 1"
+    var labs_required := maxi(0, level)
+    var labs_available := research_labs(world)
+    if prerequisite == "" and labs_available < labs_required:
+        prerequisite = "Forschungslabore %d/%d" % [labs_available, labs_required]
     var allowed := prerequisite == "" and int(world["science"]) >= cost
     var reason := ("Voraussetzung: " + prerequisite) if prerequisite != "" else ("Nicht genug Forschungspunkte" if int(world["science"]) < cost else "")
     return {"allowed": allowed, "reason": reason, "cost": cost, "level": level}
