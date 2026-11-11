@@ -87,6 +87,33 @@ static func transfer_migrant(source: Dictionary, destination: Dictionary) -> boo
     destination["demographics"] = arrival
     return true
 
+# Independent material chain: ore -> components -> manufactured goods.
+# Legacy household "goods" remain separate; this chain never mints those goods.
+static func production_defaults() -> Dictionary:
+    return {"ore": 0, "components": 0, "manufactures": 0}
+
+static func advance_production(market: Dictionary, resource: int) -> Dictionary:
+    var stock: Dictionary = market.get("production_stock", production_defaults())
+    var ore_before := maxi(0, int(stock.get("ore", 0)))
+    var components_before := maxi(0, int(stock.get("components", 0)))
+    var manufactures_before := maxi(0, int(stock.get("manufactures", 0)))
+    var workers := maxi(0, int(market.get("demographics", {}).get("employed", 0)))
+    var extracted := mini(20, workers * maxi(1, resource) / 5)
+    var ore_available := ore_before + extracted
+    var processed := mini(ore_available / 2, workers / 3)
+    var ore_after := ore_available - processed * 2
+    var components_available := components_before + processed
+    var assembled := mini(components_available / 2, workers / 5)
+    var components_after := components_available - assembled * 2
+    var manufactures_after := manufactures_before + assembled
+    market["production_stock"] = {"ore": ore_after, "components": components_after,
+        "manufactures": manufactures_after}
+    return {"ore_before": ore_before, "extracted": extracted, "ore_used": processed * 2,
+        "ore_after": ore_after, "components_before": components_before,
+        "processed": processed, "components_used": assembled * 2,
+        "components_after": components_after, "manufactures_before": manufactures_before,
+        "assembled": assembled, "manufactures_after": manufactures_after}
+
 static func tick(world: Dictionary) -> void:
     prepare(world)
     var settlements: Dictionary = world["civilian_worlds"]
@@ -107,6 +134,7 @@ static func tick(world: Dictionary) -> void:
     var petitions: Array = []
     var migration := 0
     var trade: Array = []
+    var production_chains: Dictionary = {}
     var opening_stock := 0
     var production_total := 0
     var consumption_total := 0
@@ -143,6 +171,7 @@ static func tick(world: Dictionary) -> void:
         market["private_capital"] = capital
         market["output"] = output
         market["taxes"] = taxes
+        production_chains[key] = advance_production(market, int(world["stars"][sid]["resource"]))
         total_taxes += taxes
         satisfaction_total += satisfaction * int(market["population"])
         population_total += int(market["population"])
@@ -198,6 +227,7 @@ static func tick(world: Dictionary) -> void:
     var ending_stock := 0
     for key in active:
         ending_stock += int(settlements[key]["goods"])
+    world["civilian_production_ledger"] = {"year": int(world["tick"]), "systems": production_chains}
     world["civilian_goods_ledger"] = {"year": int(world["tick"]), "produced": production_total,
         "consumed": consumption_total, "opening_stock": opening_stock, "ending_stock": ending_stock,
         "shipments": trade.duplicate(true)}
