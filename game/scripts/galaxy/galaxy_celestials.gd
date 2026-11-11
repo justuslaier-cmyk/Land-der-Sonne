@@ -22,8 +22,8 @@ static func generate(seed: int, star: Dictionary) -> Dictionary:
     # existing orbital layouts and colony keys remain stable across saves.
     for planet in system["planets"]:
         var type_id := int(planet["type_id"])
-        var climate := ["Gemäßigt", "Gasatmosphäre", "Polar", "Maritim", "Arid", "Vulkanisch", "Tropisch", "Subpolar"][type_id]
-        var ecology := ["Spärlich", "Keine Oberfläche", "Karg", "Ozeanisch", "Trocken", "Steril", "Artenreich", "Tundra"][type_id]
+        var climate: String = ["Gemäßigt", "Gasatmosphäre", "Polar", "Maritim", "Arid", "Vulkanisch", "Tropisch", "Subpolar"][type_id]
+        var ecology: String = ["Spärlich", "Keine Oberfläche", "Karg", "Ozeanisch", "Trocken", "Steril", "Artenreich", "Tundra"][type_id]
         var pressure := clampi(int(planet["resources"]) * 8 + (20 if type_id in [4, 5] else 0), 0, 100)
         planet["climate"] = climate
         planet["ecology"] = ecology
