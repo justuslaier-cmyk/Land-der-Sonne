@@ -77,12 +77,14 @@ static func transfer_migrant(source: Dictionary, destination: Dictionary) -> boo
     arrival[cohort] = int(arrival.get(cohort, 0)) + 1
     source["population"] = int(source["population"]) - 1
     destination["population"] = int(destination["population"]) + 1
-    for market in [source, destination]:
-        var demographic: Dictionary = origin if market == source else arrival
-        var workers := int(demographic["working_age"])
-        demographic["employed"] = mini(workers, maxi(0, int(market["jobs"])))
-        demographic["unemployed"] = workers - int(demographic["employed"])
-        market["demographics"] = demographic
+    var source_workers := int(origin["working_age"])
+    origin["employed"] = mini(source_workers, maxi(0, int(source["jobs"])))
+    origin["unemployed"] = source_workers - int(origin["employed"])
+    source["demographics"] = origin
+    var destination_workers := int(arrival["working_age"])
+    arrival["employed"] = mini(destination_workers, maxi(0, int(destination["jobs"])))
+    arrival["unemployed"] = destination_workers - int(arrival["employed"])
+    destination["demographics"] = arrival
     return true
 
 static func tick(world: Dictionary) -> void:
