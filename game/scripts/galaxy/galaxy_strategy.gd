@@ -398,12 +398,13 @@ static func income_forecast(world: Dictionary) -> Dictionary:
         credits += int(built.get("mine", 0)) * (2 + int(planets[pid]["resources"]))
         science += int(built.get("lab", 0)) * 4
         alloys += int(built.get("factory", 0)) * 3
+    alloys += int(GalaxySystems.technology_bonuses(world)["industry_alloys"])
     var focus := int(world["policies"]["focus"])
     var tax := int(world["policies"]["tax"])
     credits += (tax - 1) * 5 + world["trade_pacts"].size() * 6 + (4 if focus == 0 else 0) + GalaxyLore.artifact_bonus(world, "credits")
     science += (4 if focus == 1 else 0) + GalaxyLore.artifact_bonus(world, "science")
     alloys += (3 if focus == 2 else 0) + GalaxyLore.artifact_bonus(world, "alloys")
-    var next_stability := clampi(int(world["stability"]) + (1 if tax == 0 else -1 if tax == 2 else 0), 0, 100)
+    var next_stability := clampi(int(world["stability"]) + (1 if tax == 0 else -1 if tax == 2 else 0) + int(world["governance"]["rights"]) - 1 + int(GalaxySystems.technology_bonuses(world)["society_stability"]), 0, 100)
     if next_stability < 25:
         credits -= 5
     credits -= colony_upkeep(world)
@@ -493,8 +494,10 @@ static func tick(world: Dictionary) -> void:
     world["science"] = maxi(0, int(world["science"]) + int(GalaxyIdentity.culture_modifiers(world["culture"])["science"]))
     world["science"] = int(world["science"]) + science_bonus + (4 if focus == 1 else 0) + GalaxyLore.artifact_bonus(world, "science")
     world["alloys"] = int(world["alloys"]) + 2 + alloy_bonus + (3 if focus == 2 else 0) + GalaxyLore.artifact_bonus(world, "alloys")
+    var technology: Dictionary = GalaxySystems.technology_bonuses(world)
+    world["alloys"] = int(world["alloys"]) + int(technology["industry_alloys"])
     var rights_effect := int(world["governance"]["rights"]) - 1
-    world["stability"] = clampi(int(world["stability"]) + (1 if tax == 0 else -1 if tax == 2 else 0) + rights_effect, 0, 100)
+    world["stability"] = clampi(int(world["stability"]) + (1 if tax == 0 else -1 if tax == 2 else 0) + rights_effect + int(technology["society_stability"]), 0, 100)
     if focus == 0:
         world["credits"] = int(world["credits"]) + 4
     if int(world["stability"]) < 25:
