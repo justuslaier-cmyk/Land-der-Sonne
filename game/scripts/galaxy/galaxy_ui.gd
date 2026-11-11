@@ -1055,6 +1055,15 @@ func _politics() -> void:
     _label("Kulturelle Effekte/Jahr: Zufriedenheit %+d  •  Privatkapital %+d  •  Forschung %+d  •  Legitimität %+d" % [int(effects["satisfaction"]), int(effects["capital"]), int(effects["science"]), int(effects["legitimacy"])])
     _label("Kulturelle Entwicklung ist gesellschaftlich bedingt und nicht direkt steuerbar.")
     _label("Stabilität: %d%%  •  Politische Ausrichtung beeinflusst die Jahresproduktion." % int(world["stability"]))
+    var governance: Dictionary = world["governance"]
+    _label("Regierungsform: %s  •  Bürgerrechte: %s" % [GalaxyIdentity.GOVERNMENTS[int(world["empire"].get("government", 0))], ["Eingeschränkt", "Standard", "Erweitert"][int(governance["rights"])]])
+    var pending: Dictionary = governance.get("pending", {})
+    if not pending.is_empty():
+        _label("Reform in Beratung: Stufe %d  •  Inkrafttreten Jahr %d" % [int(pending["rights"]), int(pending["enact_tick"])])
+    else:
+        for level in range(3):
+            var reform_level := level
+            _button(["BÜRGERRECHTE EINSCHRÄNKEN", "BÜRGERRECHTE BEIBEHALTEN", "BÜRGERRECHTE ERWEITERN"][level], func(): _propose_rights(reform_level))
     _label("Schwerpunkt: %s" % ["Handel", "Wissenschaft", "Industrie"][int(world["policies"]["focus"])])
     for i in range(3):
         var index := i
@@ -1064,6 +1073,10 @@ func _politics() -> void:
         var index := i
         _button(["NIEDRIG (Stabilität +1)", "NORMAL", "HOCH (+5 Credits, Stabilität -1)"][i], func(): _set_policy(int(world["policies"]["focus"]), index))
     _button("ZURÜCK", _show_galaxy)
+
+func _propose_rights(level: int) -> void:
+    GalaxyStrategy.propose_rights_reform(world, level)
+    _politics()
 
 func _set_policy(focus: int, tax: int) -> void:
     GalaxyStrategy.set_policy(world, focus, tax)
