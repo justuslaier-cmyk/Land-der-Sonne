@@ -5,6 +5,15 @@ func _initialize() -> void:
     settings["seed"] = 100101
     var world := GalaxyModel.generate(settings, GalaxyModel.empire_defaults())
     GalaxyStrategy.prepare(world)
+    var owned_id := -1
+    for star in world["stars"]:
+        if int(star["owner"]) == 0:
+            owned_id = int(star["id"])
+            break
+    if owned_id < 0:
+        _fail("No owned system available for laboratory")
+        return
+    world["buildings"][str(owned_id)] = {"lab": 2}
     world["science"] = 300
     if GalaxySystems.start_research(world, "unknown"):
         _fail("Invalid research field accepted")
