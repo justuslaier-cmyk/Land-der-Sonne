@@ -35,6 +35,8 @@ jobs:
         run: godot --headless --path game --script res://tests/interaction_test.gd
       - name: Test galactic new game and persistence
         run: timeout 100s godot --headless --path game --script res://tests/galaxy_test.gd
+      - name: Verify timed diplomatic negotiations and ratification
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_diplomatic_negotiations_test.gd
       - name: Verify archaeological breakthroughs and one-time research insights
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_research_breakthroughs_test.gd
       - name: Verify research laboratories and technology effects
