@@ -1068,6 +1068,23 @@ func _resolve_system_event(option: int) -> void:
     _show_galaxy()
 
 func _illustration(kind: String) -> void:
+    var asset := "res://assets/art/event_ruins.svg"
+    if kind == "menu":
+        asset = "res://assets/art/menu_city.svg"
+    elif kind in ["ancient_signal", "ancient_echo", "ancient_awakening"]:
+        asset = "res://assets/art/event_reactor.svg"
+    var texture: Texture2D = load(asset)
+    if texture != null:
+        var image := TextureRect.new()
+        image.texture = texture
+        image.custom_minimum_size = Vector2(0, 200)
+        image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+        image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+        image.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+        root.add_child(image)
+        return
+    # Preserve a functional fallback if an art resource fails to import.
     var canvas := Control.new()
     canvas.custom_minimum_size = Vector2(850, 200)
     canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
