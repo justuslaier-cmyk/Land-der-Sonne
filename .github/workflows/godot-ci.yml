@@ -123,24 +123,36 @@ jobs:
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_contracts_test.gd
       - name: Test autonomous rival empires
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_ai_test.gd
-      - name: Verify Phase 13 story chains
-        run: timeout 120s godot --headless --path game --script res://tests/galaxy_story_chains_test.gd
-      - name: Verify Phase 13 narrative director
-        run: timeout 120s godot --headless --path game --script res://tests/galaxy_narrative_director_test.gd
-      - name: Verify Phase 14 AI priority planner
-        run: timeout 120s godot --headless --path game --script res://tests/galaxy_ai_planner_test.gd
-      - name: Verify Phase 14 ownership index
-        run: timeout 120s godot --headless --path game --script res://tests/galaxy_ai_scaling_test.gd
-      - name: Verify Phase 14 long-run deterministic replay
-        run: timeout 120s godot --headless --path game --script res://tests/galaxy_ai_soak_test.gd
-      - name: Verify Phase 15 visual theme
-        run: timeout 120s godot --headless --path game --script res://tests/galaxy_visual_theme_test.gd
-      - name: Verify Phase 15 event card
-        run: timeout 120s godot --headless --path game --script res://tests/galaxy_event_card_test.gd
-      - name: Verify Phase 15 responsive layout and contrast
-        run: timeout 120s godot --headless --path game --script res://tests/galaxy_ui_accessibility_test.gd
       - name: Load main scene
         run: godot --headless --path game --quit-after 10
+
+
+  regression-matrix:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        script:
+          - galaxy_story_chains_test.gd
+          - galaxy_narrative_director_test.gd
+          - galaxy_ai_planner_test.gd
+          - galaxy_ai_scaling_test.gd
+          - galaxy_ai_soak_test.gd
+          - galaxy_visual_theme_test.gd
+          - galaxy_event_card_test.gd
+          - galaxy_ui_accessibility_test.gd
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot 4.3 stable
+        run: |
+          curl --fail --location --retry 3 --output /tmp/godot.zip "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
+          unzip -q /tmp/godot.zip -d /tmp
+          sudo install -m 0755 /tmp/Godot_v4.3-stable_linux.x86_64 /usr/local/bin/godot
+      - name: Import project
+        run: godot --headless --path game --editor --quit
+      - name: Execute isolated regression
+        run: timeout 120s godot --headless --path game --script "res://tests/${{ matrix.script }}"
 
   render-check:
     runs-on: ubuntu-24.04
