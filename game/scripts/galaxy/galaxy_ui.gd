@@ -143,7 +143,7 @@ func _show_menu() -> void:
     _button("SPIEL LADEN", _load_game)
     _button("EINSTELLUNGEN", _show_options)
     _button("BEENDEN", func(): get_tree().quit())
-    _label("Früher Prototyp • Jede neue Galaxie wird zufällig generiert.")
+    _label("Früher Prototyp • Galaxien können zufällig oder mit festem Seed erzeugt werden.")
 
 func _show_options() -> void:
     screen = "options"
@@ -169,7 +169,12 @@ func _spin(label_text: String, key: String, minimum: int, maximum: int, step: in
     spin.step = step
     spin.value = int(settings[key])
     spin.custom_minimum_size.x = 150
-    spin.value_changed.connect(func(value: float): settings[key] = int(value))
+    spin.value_changed.connect(func(value: float):
+        settings[key] = int(value)
+        if key == "size":
+            settings["ai_count"] = mini(int(settings["ai_count"]), mini(20, int(value) / 5))
+            _show_settings()
+    )
     row.add_child(spin)
 
 func _choice(label_text: String, values: Array, dict: Dictionary, key: String) -> void:
@@ -221,7 +226,7 @@ func _show_settings() -> void:
     screen = "settings"
     _clear()
     _title("01 / GALAXIE KONFIGURIEREN")
-    _label("Jedes neue Spiel erschafft automatisch eine einzigartige Zufallsgalaxie.")
+    _label("Seed 0 erzeugt eine Zufallsgalaxie; ein fester Seed erlaubt denselben Start.")
     _spin("Sternensysteme", "size", 20, 250, 10)
     _seed_input()
     _spin("KI-Reiche", "ai_count", 0, mini(20, int(settings["size"]) / 5))
@@ -341,7 +346,17 @@ func _show_empire() -> void:
         root.add_child(trait_button)
     _label("Schiffsarchitektur – Vorschau")
     _ship_gallery()
-    _button("WEITER: ZUSAMMENFASSUNG", _show_review)
+    _button("WEITER: ZUSAMMENFASSUNG", func():
+        var error := GalaxyModel.validate(settings, empire)
+        if error != "":
+            notice = error
+            _show_empire()
+        else:
+            notice = ""
+            _show_review()
+    )
+    if notice != "":
+        _label("Eingabe prüfen: " + notice)
     _button("ZURÜCK ZU GALAXIEEINSTELLUNGEN", _show_settings)
     _button("ABBRECHEN", _cancel_new_game)
 
