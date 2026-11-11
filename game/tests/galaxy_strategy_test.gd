@@ -6,6 +6,18 @@ func _initialize() -> void:
     cfg["ai_count"] = 5
     var w := GalaxyModel.generate(cfg, GalaxyModel.empire_defaults())
     GalaxyStrategy.prepare(w)
+    if not w.has("civilian_worlds") or not w["civilian_worlds"].has("0"):
+        _fail("Independent civilian homeworld missing")
+        return
+    var civilian_population := int(w["civilian_worlds"]["0"]["population"])
+    for year in range(5):
+        GalaxyStrategy.tick(w)
+    if int(w["civilian_worlds"]["0"]["population"]) <= civilian_population:
+        _fail("Civilian population does not grow autonomously")
+        return
+    if int(w["civilian_taxes"]) < 0 or int(w["civilian_worlds"]["0"]["private_capital"]) < 0:
+        _fail("Civilian economic accounting invalid")
+        return
     if not GalaxyStrategy.construct(w, 0, "mine"):
         _fail("Mine construction failed")
         return
