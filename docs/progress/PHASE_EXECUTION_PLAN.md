@@ -43,3 +43,11 @@ Jeder Durchlauf: (a) aktuellen Branch und relevante Pflicht-IDs prüfen; (b) kon
 - **Dokumentation:** `docs/architecture/DATA_CONTRACTS.md` enthält das tatsächliche Galaxie-Schema, die Tick-Reihenfolge und offene Bilanzierungs-/Migrationsrisiken.
 - **Betroffene Pflicht-IDs:** P24, P75, P87, P88, P89, P90, P91, P96; **weiterhin offen**.
 - **Nachweisgrenze:** Neuer vollständiger CI-Lauf zum Stand der Änderungen war bei der letzten Abfrage noch nicht abgeschlossen. Tests gelten daher nicht als bestanden.
+
+### Phase 01 — Durchlauf 03 (2026-11-11)
+- **Ziel:** technische Baseline anhand realer CI-Ergebnisse bestätigen, Qualitätsgrenzen und Übergang in Phase 02 dokumentieren.
+- **Nachgewiesen:** CI-Run [43088734325](https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43088734325), SHA `9d713605c708b6792dd6aace330e845961df8df6`: `godot-smoke` **success** und `render-check` **success**. Der Godot-Test meldet `GALAXY_IDENTITY_PASS`, `GALAXY_PROGRESS_PASS`, `GALAXY_CONTRACTS_PASS` und `GALAXY_AI_PASS`, neben den anderen vorhandenen Tests.
+- **Noch offen bei Kontrolle:** `windows-export` in progress; daher kein behauptetes vollständig grünes Workflow-Ergebnis. Kein tatsächlicher Windows-Spielstart geprüft.
+- **Fazit:** Die bislang bekannten CI-Blocker sind im Smoke-Test behoben. Eine begrenzte technische Regression-Baseline ist vorhanden. Die Produktionsarchitektur ist **nicht** fertig: kein vollständiges Ressourcenledger, keine versionierte Save-Migration, keine unabhängigen RNG-Streams, keine langfristigen Soak- und nativen Interaktionstests.
+- **Betroffene Pflicht-IDs:** P87–P92, P96; **alle offen**, da die jeweiligen umfassenden Akzeptanzkriterien noch nicht erfüllt sind.
+- **Folgearbeit:** Phase 02 / Durchlauf 01 fokussiert Hauptmenü und vollständige Startflows. Architektur- und Bilanzierungsrisiken bleiben parallele Aufgaben und dürfen nicht als „Phase 1 erledigt“ verschwinden.
