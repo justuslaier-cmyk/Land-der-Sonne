@@ -285,6 +285,7 @@ static func ship_blueprint(world: Dictionary) -> Dictionary:
         strength += 4
         alloy_cost += 8
         credit_cost += 10
+    credit_cost = maxi(0, credit_cost - int(fleet_command_bonuses(world)["shipyard_discount"]))
     var required_propulsion := int(design["engine"])
     var available_propulsion := int(world.get("research_fields", {}).get("propulsion", 0))
     return {"role": role, "strength": strength, "alloys": alloy_cost,
@@ -574,7 +575,7 @@ static func fleet_command_bonuses(world: Dictionary) -> Dictionary:
     var order := str(command.get("order", "hold"))
     return {
         "attack": (3 if admiral == "tactician" else 0) + (3 if order == "assault" else 0),
-        "defense": (3 if admiral == "quartermaster" else 0) + (3 if order == "hold" else 0),
+        "shipyard_discount": 5 if admiral == "quartermaster" else 0,
         "range": 25 if admiral == "navigator" else 0,
         "travel_reduction": 1 if admiral == "navigator" else 0
     }
