@@ -106,3 +106,11 @@ Jeder Durchlauf: (a) aktuellen Branch und relevante Pflicht-IDs prüfen; (b) kon
 - **Weitere Grenzen:** Kein vollständiger graphbasierter Pfadfinder, keine Kosten-/Gefahrmodellierung, kein Vermeiden von Sternüberlagerungen, keine visuelle oder native Windows-Abnahme. Keine Pflichtanforderung P05/P11–P15 vollständig erfüllt.
 - **CI:** Die neuen Tests gelten erst nach einem abgeschlossenen grünen Lauf als bestanden; keine vorgezogene Abnahme.
 - **Nächste Phase:** Phase 04 / Durchlauf 01 beginnt mit detaillierten Stern- und Planetensystemen. Offene Navigations- und Graphanforderungen bleiben im Pflichtenregister bestehen.
+
+### Phase 04 — Durchlauf 01 (2026-11-11)
+- **Ziel:** Vorhandene Stern- und Planetengenerierung an sieben Sternklassen und garantiert bewohnbare Reichshauptwelten anbinden.
+- **Befund:** `GalaxyCelestials` enthielt sieben Sternklassen, acht Planetentypen und stabile On-Demand-Generierung, aber `GalaxyModel` erzeugte `star.kind` nur zwischen 0 und 3. KI-Hauptwelten konnten unbewohnbare Systeme erhalten. Die generierte Bewohnbarkeit der Planeten war nicht explizit an die Hauptweltgarantie gebunden.
+- **Implementiert:** `star.kind` wird von 0 bis 6 erzeugt. KI-Hauptsterne werden als bewohnbar markiert. `GalaxyCelestials.generate` erzwingt bei bewohnbaren Systemen einen bewohnbaren zweiten Planeten. Bereits existierende Save-Daten bleiben strukturell kompatibel; für ältere Saves ohne bewohnbare KI-Hauptsterne wird keine rückwirkende Garantie behauptet.
+- **Regression:** `galaxy_planet_systems_test.gd` prüft drei feste Seeds × 100 Sterne = 300 Sternsysteme, sieben Sternklassen, Determinismus, Planeten-/Mond-Grenzen, Umlaufbahnen und alle Reichshauptwelten; im CI-Workflow registriert.
+- **Grenzen:** Planetensysteme sind weiter on-demand generiert und nicht als vollständige eigenständige Weltobjekte persistent gespeichert. Es fehlen Orbitalsimulation, Sternphysik, individuelle Planetenzustände und tiefere Besiedlungsregeln. Bestehende Planetenkolonien sind Prototypen.
+- **Pflichten:** P13, P16–P17, P87–P91 bleiben offen. Keine vollständige Abnahme vor CI und Integrationstests.
