@@ -192,6 +192,8 @@ jobs:
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_identity_test.gd
       - name: Test non-linear galactic objectives and persistence
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_progress_test.gd
+      - name: Verify P5.2 maximum-scale campaigns, tick percentiles, memory and save-resume
+        run: timeout 240s godot --headless --path game --script res://tests/galaxy_max_scale_campaign_test.gd
       - name: Measure 250-star 20-AI simulation baseline
         run: timeout 100s godot --headless --path game --script res://tests/galaxy_performance_baseline_test.gd
       - name: Verify save rotation, corruption fallback and interrupted recovery
@@ -252,6 +254,8 @@ jobs:
         run: godot --headless --path game --editor --quit
       - name: Capture real engine render
         run: xvfb-run -a -s "-screen 0 1920x1080x24" godot --path game --rendering-method gl_compatibility --script res://tests/render_capture.gd
+      - name: Measure P5.2 maximum-scale interactive map redraws at both resolutions
+        run: timeout 180s xvfb-run -a -s "-screen 0 1920x1080x24" godot --path game --rendering-method gl_compatibility --script res://tests/galaxy_max_scale_render_test.gd
       - name: Publish screenshot evidence
         uses: actions/upload-artifact@v4
         with:

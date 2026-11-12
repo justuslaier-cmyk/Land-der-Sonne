@@ -4,6 +4,11 @@ const UiComponents = preload("res://scripts/galaxy/galaxy_ui_components.gd")
 const Comfort = preload("res://scripts/galaxy/galaxy_comfort.gd")
 const AudioDirector = preload("res://scripts/galaxy/galaxy_audio.gd")
 const OPTIONS_ART = preload("res://assets/art/ui_comfort_panel.svg")
+# Map resources are immutable and reused across redraws, including 250-star maps.
+const MAP_NEBULA = preload("res://assets/art/galaxy_nebula.svg")
+const MAP_STAR_STRIP = preload("res://assets/art/star_sprite_strip.svg")
+const MAP_PLAYER_SHIP = preload("res://assets/art/ship_style_0.svg")
+const MAP_RIVAL_SHIP = preload("res://assets/art/ship_style_3.svg")
 
 const BG := GalaxyVisualTheme.BACKGROUND
 const PANEL := GalaxyVisualTheme.PANEL
@@ -751,7 +756,7 @@ func _draw_map() -> void:
     var height := map_area.size.y
     map_area.draw_rect(Rect2(Vector2.ZERO, Vector2(width, height)), Color("#080e20"))
     # Illustrated nebula backdrop, behind all interactive map objects.
-    var nebula: Texture2D = load("res://assets/art/galaxy_nebula.svg")
+    var nebula: Texture2D = MAP_NEBULA
     if nebula != null:
         map_area.draw_texture_rect(nebula, Rect2(0, 0, width, height), false, Color(1, 1, 1, 0.28))
     var seed := int(world["settings"]["seed"])
@@ -808,7 +813,7 @@ func _draw_map() -> void:
         if rival_loc < 0 or rival_loc >= world["stars"].size() or not world["known"].has(rival_loc):
             continue
         var rp := _star_pos(world["stars"][rival_loc])
-        var hostile_icon: Texture2D = load("res://assets/art/ship_style_3.svg")
+        var hostile_icon: Texture2D = MAP_RIVAL_SHIP
         if hostile_icon != null:
             map_area.draw_texture_rect(hostile_icon, Rect2(rp + Vector2(-12, 10), Vector2(24, 24)), false, Color("#e991b3"))
         else:
@@ -819,14 +824,14 @@ func _draw_map() -> void:
             var loc := int(fleet["location"])
             if loc >= 0 and loc < world["stars"].size():
                 var p := _star_pos(world["stars"][loc])
-                var friendly_icon: Texture2D = load("res://assets/art/ship_style_0.svg")
+                var friendly_icon: Texture2D = MAP_PLAYER_SHIP
                 if friendly_icon != null:
                     map_area.draw_texture_rect(friendly_icon, Rect2(p + Vector2(-12, -33), Vector2(24, 24)), false, Color("#7ce3cc"))
                 else:
                     map_area.draw_colored_polygon(PackedVector2Array([p + Vector2(0, -15), p + Vector2(-7, -26), p + Vector2(7, -26)]), Color("#7ce3cc"))
 
 func _draw_pixel_star(pos: Vector2, radius: float, tint: Color, star_id: int) -> void:
-    var star_strip: Texture2D = load("res://assets/art/star_sprite_strip.svg")
+    var star_strip: Texture2D = MAP_STAR_STRIP
     if star_strip != null:
         var diameter: float = maxf(15.0, radius * 3.5)
         var kind: int = int(world["stars"][star_id]["kind"]) if world.has("stars") and star_id >= 0 and star_id < world["stars"].size() else 0
