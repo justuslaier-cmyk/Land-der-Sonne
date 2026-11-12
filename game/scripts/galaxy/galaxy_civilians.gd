@@ -173,6 +173,9 @@ static func settle_freight(world: Dictionary) -> Array:
             remaining.append(shipment)
             continue
         var valid_target := markets.has(target) and freight_hops(world, int(shipment["from"]), int(shipment["to"])) > 0
+        # Blockaded lanes are not deleted: the merchant cargo returns intact.
+        if world.get("freight_blockades", []).has(int(shipment["to"])):
+            valid_target = false
         if valid_target:
             markets[target]["goods"] = int(markets[target]["goods"]) + quantity
             arrivals.append(shipment)
@@ -212,6 +215,7 @@ static func tick(world: Dictionary) -> void:
     if not world.has("civilian_freight_transit"):
         world["civilian_freight_transit"] = []
     var transit_before := transit_goods(world)
+    var piracy_losses := 0
     # The reserve is a physical household inventory threshold, not free goods.
     # Snapshot transport volume before any dispatch for annual conservation.
     var arrivals: Array = settle_freight(world)
@@ -305,6 +309,14 @@ static func tick(world: Dictionary) -> void:
             var amount := mini(freight_capacity(source), mini(shortage, int(source["goods"]) - freight_reserve(source)))
             var cost := hops * amount
             if amount > 0 and int(source["private_capital"]) >= cost:
+                # Deterministic piracy risk affects transport profitability, not
+                # physical goods: a seized convoy is returned before dispatch.
+                var security := clampi(int(world.get("trade_security", 0)), 0, 3)
+                var exposure := maxi(0, hops - security)
+                var piracy := exposure > 0 and posmod(int(world["tick"]) + int(source_key) * 7 + int(best_key) * 11, 17) < exposure
+                if piracy:
+                    piracy_losses += cost
+                    continue
                 source["goods"] = int(source["goods"]) - amount
                 source["private_capital"] = int(source["private_capital"]) - cost
                 freight_cost_total += cost
@@ -350,7 +362,7 @@ static func tick(world: Dictionary) -> void:
     world["civilian_production_ledger"] = {"year": int(world["tick"]), "systems": production_chains}
     world["civilian_goods_ledger"] = {"year": int(world["tick"]), "produced": production_total,
         "consumed": consumption_total, "opening_stock": opening_stock, "ending_stock": ending_stock,
-        "freight_cost": freight_cost_total, "reserve_target": freight_reserve_total,
+        "freight_cost": freight_cost_total, "piracy_avoided_cost": piracy_losses, "reserve_target": freight_reserve_total,
         "dispatched": dispatched_total,
         "arrived": arrival_total, "returned": int(world.get("civilian_freight_returned", 0)), "transit_before": transit_before,
         "transit_after": transit_goods(world), "shipments": trade.duplicate(true),

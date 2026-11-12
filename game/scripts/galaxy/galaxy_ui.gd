@@ -1068,6 +1068,15 @@ func _economy_report() -> void:
     var public_budget: Dictionary = world.get("public_budget_ledger", {})
     if not public_budget.is_empty():
         _label("STAATSHAUSHALT LETZTES JAHR: Anfang %d + Steuern %d − Sozialausgaben %d = %d" % [int(public_budget["opening"]), int(public_budget["tax_receipts"]), int(public_budget["welfare_spending"]), int(public_budget["closing"])])
+    _label("HANDELSWEGE / SICHERHEIT")
+    _illustration("freight_security")
+    _label("Konvoischutz: Stufe %d/3  •  Blockierte Zielsysteme: %d" % [int(world.get("trade_security", 0)), world.get("freight_blockades", []).size()])
+    var cargo_ledger: Dictionary = world.get("civilian_goods_ledger", {})
+    _label("Letztes Jahr: %d Frachteinheiten versandt  •  %d Transportkosten durch Piraterierisiko vermieden" % [int(cargo_ledger.get("dispatched", 0)), int(cargo_ledger.get("piracy_avoided_cost", 0))])
+    _button("KONVOISICHERHEIT VERBESSERN", func():
+        notice = "Handelswege gesichert." if GalaxyStrategy.improve_trade_security(world) else "Nicht genug Credits oder maximale Sicherheitsstufe."
+        _economy_report()
+    )
     _label("ERWARTETE REGULÄRE JAHRESPRODUKTION")
     _label("Credits: %+d   Forschung: %+d   Legierungen: %+d" % [int(forecast["credits"]), int(forecast["science"]), int(forecast["alloys"])])
     _label("Prognose ohne Zufallsereignisse, Kriege und einmalige Entscheidungen.")
@@ -1281,6 +1290,8 @@ func _illustration(kind: String) -> void:
             asset = "res://assets/art/scene_research.svg"
         "research_exchange":
             asset = "res://assets/art/scene_research_exchange.svg"
+        "freight_security":
+            asset = "res://assets/art/scene_freight_security.svg"
         "fleet", "shipyard":
             asset = "res://assets/art/scene_fleet.svg"
         "diplomacy":

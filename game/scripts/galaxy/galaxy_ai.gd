@@ -11,6 +11,8 @@ static func prepare(world: Dictionary) -> void:
         world["ai_conflicts"] = []
     if not world.has("ai_activity"):
         world["ai_activity"] = []
+    if not world.has("ai_military_assessments"):
+        world["ai_military_assessments"] = {}
     if not world.has("ai_societies"):
         world["ai_societies"] = {}
     for rival in world["ai"]:
@@ -73,6 +75,11 @@ static func tick(world: Dictionary) -> void:
             _expand(world, rival, fleet)
         if year % 12 == id % 12 and temperament >= 2 and str(world["ai_intentions"][key]["stance"]) == "militarisierung":
             _rival_tension(world, rival, fleet)
+        # Explainable military intent: only observed owned systems are considered.
+        # No omniscient player fleet or hidden stockpile values are read.
+        world["ai_military_assessments"][key] = {"year": year, "at_war": world["wars"].has(id),
+            "fleet_strength": int(fleet["strength"]), "stance": str(world["ai_intentions"][key]["stance"]),
+            "reason": "Krieg: Grenzsysteme prüfen" if world["wars"].has(id) else "Frieden: keine Angriffe"}
         # Player systems are attacked only during a declared war.
         if not world["wars"].has(id) or year % 4 != id % 4:
             continue

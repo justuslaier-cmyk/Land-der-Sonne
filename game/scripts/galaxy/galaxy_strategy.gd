@@ -23,6 +23,8 @@ static func prepare(world: Dictionary) -> void:
         world["wars"] = []
     if not world.has("trade_pacts"):
         world["trade_pacts"] = []
+    if not world.has("trade_security"):
+        world["trade_security"] = 0
     if not world.has("diplomatic_negotiations"):
         world["diplomatic_negotiations"] = []
     if not world.has("diplomatic_treaties"):
@@ -572,6 +574,18 @@ static func dependency_income(world: Dictionary) -> int:
         if not world["wars"].has(int(key)):
             total += int(world["diplomatic_dependencies"][key].get("tribute", 0))
     return total
+
+# Patrol investment is paid immediately; freight disruption uses this level.
+static func improve_trade_security(world: Dictionary) -> bool:
+    prepare(world)
+    var level := int(world.get("trade_security", 0))
+    var cost := 20 + level * 15
+    if level >= 3 or int(world.get("credits", 0)) < cost:
+        return false
+    world["credits"] = int(world["credits"]) - cost
+    world["trade_security"] = level + 1
+    world["history"].append("Zivile Handelskonvois werden stärker gesichert (Stufe %d)." % (level + 1))
+    return true
 
 static func sign_trade(world: Dictionary, rival_id: int) -> bool:
     prepare(world)
