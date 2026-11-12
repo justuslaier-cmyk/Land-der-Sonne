@@ -13,6 +13,10 @@ static func prepare(world: Dictionary) -> void:
         world["ai_activity"] = []
     if not world.has("ai_military_assessments"):
         world["ai_military_assessments"] = {}
+    if not world.has("ai_fleet_logistics"):
+        world["ai_fleet_logistics"] = {}
+    if not world.has("ai_war_exhaustion"):
+        world["ai_war_exhaustion"] = {}
     if not world.has("ai_societies"):
         world["ai_societies"] = {}
     for rival in world["ai"]:
@@ -46,6 +50,25 @@ static func tick(world: Dictionary) -> void:
                 break
         if fleet.is_empty():
             continue
+        # F3: rival fleets pay real upkeep from their own treasury and
+        # consume supplies outside owned territory. Friendly ports replenish.
+        if not world["ai_fleet_logistics"].has(key):
+            world["ai_fleet_logistics"][key] = {"supply": 100, "maintenance_paid": 0, "attrition": 0}
+        var logistics: Dictionary = world["ai_fleet_logistics"][key]
+        var upkeep := maxi(1, ceili(float(maxi(1, int(fleet["strength"]))) / 20.0))
+        var paid := mini(upkeep, maxi(0, int(world["ai_treasury"].get(key, 0))))
+        world["ai_treasury"][key] = int(world["ai_treasury"].get(key, 0)) - paid
+        logistics["maintenance_paid"] = int(logistics.get("maintenance_paid", 0)) + paid
+        var fleet_location := int(fleet["location"])
+        var friendly_port: bool = fleet_location >= 0 and fleet_location < world["stars"].size() and int(world["stars"][fleet_location]["owner"]) == id
+        var supply := clampi(int(logistics.get("supply", 100)), 0, 100)
+        supply = mini(100, supply + 8) if friendly_port and paid == upkeep else maxi(0, supply - (9 if not friendly_port else 4))
+        logistics["supply"] = supply
+        if supply == 0 and int(fleet["strength"]) > 1:
+            fleet["strength"] = int(fleet["strength"]) - 1
+            logistics["attrition"] = int(logistics.get("attrition", 0)) + 1
+        var exhaustion := clampi(int(world["ai_war_exhaustion"].get(key, 0)) + (3 if world["wars"].has(id) else -4), 0, 100)
+        world["ai_war_exhaustion"][key] = exhaustion
         if year % 3 == id % 3 and treasury >= 28:
             var strength := 2 + temperament
             fleet["strength"] = int(fleet["strength"]) + strength
@@ -83,9 +106,12 @@ static func tick(world: Dictionary) -> void:
         # F2: bounded defensive response; explicit AI command remains traceable.
         var assessment: Dictionary = world["ai_military_assessments"][key]
         assessment["doctrine"] = "defend" if int(fleet["strength"]) < 12 else "patrol"
-        assessment["supply_estimate"] = maxi(0, 100 - int(world["wars"].has(id)) * 20)
+        assessment["supply_estimate"] = int(logistics["supply"])
+        assessment["upkeep_paid"] = paid
+        assessment["war_exhaustion"] = exhaustion
+        assessment["reason"] = "Nachschub kritisch: Rückzug erforderlich" if supply < 20 else str(assessment["reason"])
         # Player systems are attacked only during a declared war.
-        if not world["wars"].has(id) or year % 4 != id % 4:
+        if not world["wars"].has(id) or year % 4 != id % 4 or supply < 20 or exhaustion >= 85:
             continue
         var target := -1
         var closest := 999999.0
@@ -100,6 +126,7 @@ static func tick(world: Dictionary) -> void:
         if target < 0:
             continue
         fleet["location"] = target
+        logistics["supply"] = maxi(0, int(logistics["supply"]) - 18)
         var defending := 8 + int(world["stars"][target]["resource"]) * 2 + (6 if str(world.get("fleet_doctrine", "balanced")) == "defense" else 0)
         for colony_key in world["planet_colonies"].keys():
             if str(colony_key).begins_with(str(target) + ":"):

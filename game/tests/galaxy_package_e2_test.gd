@@ -5,6 +5,8 @@ func _initialize() -> void:
     GalaxyStrategy.prepare(world)
     GalaxySystems.prepare(world)
     world["buildings"] = {"0": {"lab": 3}}
+    GalaxyCivilians.prepare(world)
+    world["civilian_worlds"]["0"]["demographics"]["employed"] = 15
     world["science"] = 10
     world["tick"] = 7
     GalaxySystems.settle_research_exchange(world)
