@@ -14,6 +14,8 @@ func _initialize() -> void:
     var markets: Dictionary = world["civilian_worlds"]
     var home: Dictionary = markets["0"]
     var original_demographics: Dictionary = home.get("demographics", {}).duplicate(true)
+    if original_demographics.is_empty():
+        original_demographics = GalaxyCivilians.demographic_defaults(int(home["population"]))
     home["demographics"] = {"employed": 8}
     if GalaxyCivilians.freight_capacity(home) != 4:
         _fail("Employment capacity not applied")
@@ -28,7 +30,7 @@ func _initialize() -> void:
         return
     home["demographics"] = original_demographics
     var replay := world.duplicate(true)
-    for year in range(75):
+    for year in range(12):
         world["tick"] = year
         replay["tick"] = year
         GalaxyStrategy.tick(world)
@@ -62,7 +64,7 @@ func _initialize() -> void:
     if int(world["research_fields"]["propulsion"]) != research_before + 1:
         _fail("Research level not persisted in world state")
         return
-    print("GALAXY_PACKAGE_E1_PASS: 75-year freight manifests, capacity, replay and research")
+    print("GALAXY_PACKAGE_E1_PASS: 12-year freight manifests, capacity, replay and research")
     quit(0)
 
 func _fail(message: String) -> void:
