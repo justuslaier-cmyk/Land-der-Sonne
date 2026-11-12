@@ -3,9 +3,9 @@ extends SceneTree
 func _initialize() -> void:
     # CI shares user:// across smoke scripts. This test owns slot 4 and
     # clears only its own fixture files to avoid stale recovery rotations.
-    var slot_path := GalaxyModel.slot_path(4)
+    var slot_path: String = GalaxyModel.slot_path(4)
     for suffix in ["", ".bak", ".previous", ".tmp"]:
-        var candidate := slot_path + suffix
+        var candidate: String = slot_path + str(suffix)
         if FileAccess.file_exists(candidate):
             if DirAccess.remove_absolute(ProjectSettings.globalize_path(candidate)) != OK:
                 _fail("Cannot reset test save fixture: " + suffix)
