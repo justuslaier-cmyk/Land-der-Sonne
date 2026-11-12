@@ -39,8 +39,17 @@ func _initialize() -> void:
     if GalaxyStrategy.ship_strength(w) < 10:
         _fail("Ship design strength missing")
         return
+    # Engine tier 1 requires propulsion research tier 1; this test checks
+    # construction after unlocking the prerequisite (gating is tested separately).
+    w["research_fields"]["propulsion"] = maxi(1, int(w["research_fields"].get("propulsion", 0)))
+    var blueprint: Dictionary = GalaxyStrategy.ship_blueprint(w)
+    if not bool(blueprint["allowed"]):
+        _fail("Ship blueprint still locked after propulsion prerequisite")
+        return
+    w["credits"] = maxi(int(w["credits"]), int(blueprint["credits"]))
+    w["alloys"] = maxi(int(w["alloys"]), int(blueprint["alloys"]))
     if not GalaxyStrategy.build_ships(w):
-        _fail("Ship construction failed")
+        _fail("Ship construction failed despite unlocked blueprint and sufficient resources")
         return
     if GalaxyStrategy.declare_war(w, 1):
         _fail("War without first contact permitted")
