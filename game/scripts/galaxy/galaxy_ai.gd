@@ -69,6 +69,8 @@ static func tick(world: Dictionary) -> void:
             logistics["attrition"] = int(logistics.get("attrition", 0)) + 1
         var exhaustion := clampi(int(world["ai_war_exhaustion"].get(key, 0)) + (3 if world["wars"].has(id) else -4), 0, 100)
         world["ai_war_exhaustion"][key] = exhaustion
+        # Read the live balance: social crises and fleet upkeep have already charged it.
+        treasury = int(world["ai_treasury"].get(key, 0))
         if year % 3 == id % 3 and treasury >= 28:
             var strength := 2 + temperament
             fleet["strength"] = int(fleet["strength"]) + strength
@@ -94,6 +96,8 @@ static func tick(world: Dictionary) -> void:
             if decisions.size() > 240:
                 decisions.pop_front()
             world["ai_decision_log"] = decisions
+        # Recruitment must not silently restore upkeep or fund expansion twice.
+        treasury = int(world["ai_treasury"].get(key, 0))
         if year % 6 == id % 6 and treasury >= 45 and str(world["ai_intentions"][key]["stance"]) != "reformen":
             _expand(world, rival, fleet)
         if year % 12 == id % 12 and temperament >= 2 and str(world["ai_intentions"][key]["stance"]) == "militarisierung":

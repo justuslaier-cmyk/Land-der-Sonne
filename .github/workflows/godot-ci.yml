@@ -94,6 +94,8 @@ jobs:
         run: timeout 90s godot --headless --path game --script res://tests/galaxy_package_g2_test.gd
       - name: Verify package G1 deterministic causal narrative and cooldowns
         run: timeout 90s godot --headless --path game --script res://tests/galaxy_package_g1_test.gd
+      - name: Verify AI treasury never double-spends upkeep, recruitment or expansion
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_ai_treasury_regression_test.gd
       - name: Verify package F3 rival supply, upkeep, attrition and exhaustion
         run: timeout 90s godot --headless --path game --script res://tests/galaxy_package_f3_test.gd
       - name: Verify package E6 finite foreign market, physical imports and scientific workforce
