@@ -998,6 +998,7 @@ func _society_report() -> void:
     for trait_id in identity.get("traits", ["curious"]):
         var trait_data: Dictionary = GalaxyIdentity.trait_info(str(trait_id))
         _label(str(trait_data["icon"]) + "  " + str(trait_data["name"]) + "  •  " + str(trait_data["description"]))
+    _illustration("society")
     _label("ÖFFENTLICHE ZUSTIMMUNG  •  %d%%" % int(world.get("civilian_approval", 65)))
     for petition in world.get("civilian_petitions", []):
         _label("⚑ Anliegen aus %s: %s" % [world["stars"][int(petition["system"])]["name"], petition["demand"]])
@@ -1022,6 +1023,9 @@ func _society_report() -> void:
         _label("    Beschäftigte %d  •  Erwerbslose %d  •  Geburten %d  •  Todesfälle %d" % [int(cohorts["employed"]), int(cohorts["unemployed"]), int(cohorts["births"]), int(cohorts["deaths"])])
         _label("    Gesundheitsindex: %d/100  •  Geburten und Sterbefälle beeinflussen die Einwohnerzahl" % int(cohorts.get("health", 50)))
     _label("BEVÖLKERUNG GESAMT: %d  •  ZIVILE STEUERN: %d  •  WANDERUNGEN: %d" % [population, int(world.get("civilian_taxes", 0)), int(world.get("civilian_migration", 0))])
+    var public_budget: Dictionary = world.get("public_budget_ledger", {})
+    if not public_budget.is_empty():
+        _label("ÖFFENTLICHER HAUSHALT: Steuereingang %d  •  Sozialausgaben %d  •  Begünstigte Kolonien %d" % [int(public_budget["tax_receipts"]), int(public_budget["welfare_spending"]), public_budget["recipients"].size()])
     _label("HANDELSROUTEN DER PRIVATWIRTSCHAFT")
     var ledger: Dictionary = world.get("civilian_goods_ledger", {})
     if not ledger.is_empty():
@@ -1052,6 +1056,9 @@ func _economy_report() -> void:
     _title("WIRTSCHAFT / REICHSBILANZ")
     _illustration("economy")
     var forecast: Dictionary = GalaxyStrategy.income_forecast(world)
+    var public_budget: Dictionary = world.get("public_budget_ledger", {})
+    if not public_budget.is_empty():
+        _label("STAATSHAUSHALT LETZTES JAHR: Anfang %d + Steuern %d − Sozialausgaben %d = %d" % [int(public_budget["opening"]), int(public_budget["tax_receipts"]), int(public_budget["welfare_spending"]), int(public_budget["closing"])])
     _label("ERWARTETE REGULÄRE JAHRESPRODUKTION")
     _label("Credits: %+d   Forschung: %+d   Legierungen: %+d" % [int(forecast["credits"]), int(forecast["science"]), int(forecast["alloys"])])
     _label("Prognose ohne Zufallsereignisse, Kriege und einmalige Entscheidungen.")
@@ -1257,6 +1264,8 @@ func _illustration(kind: String) -> void:
             asset = "res://assets/art/event_political.svg"
         "colonies", "construction":
             asset = "res://assets/art/event_colonies.svg"
+        "society":
+            asset = "res://assets/art/scene_society.svg"
         "market", "economy":
             asset = "res://assets/art/event_market.svg"
         "research":
@@ -1421,6 +1430,10 @@ func _politics() -> void:
     for i in range(3):
         var index := i
         _button(["HANDEL (+4 Credits)", "WISSENSCHAFT (+4 Forschung)", "INDUSTRIE (+3 Legierungen)"][i], func(): _set_policy(index, int(world["policies"]["tax"])))
+    _label("Sozialhaushalt: %s" % ["Keiner", "Grundversorgung", "Ausgebaut"][clampi(int(world["policies"].get("welfare", 0)), 0, 2)])
+    for level in range(3):
+        var welfare_level := level
+        _button(["SOZIALHAUSHALT AUS", "GRUNDVERSORGUNG (3/KOLONIE)", "AUSGEBAUT (6/KOLONIE)"][level], func(): _set_welfare(welfare_level))
     _label("Steuersatz: %s" % ["Niedrig", "Normal", "Hoch"][int(world["policies"]["tax"])])
     for i in range(3):
         var index := i
@@ -1433,6 +1446,10 @@ func _propose_rights(level: int) -> void:
 
 func _set_policy(focus: int, tax: int) -> void:
     GalaxyStrategy.set_policy(world, focus, tax)
+    _politics()
+
+func _set_welfare(level: int) -> void:
+    GalaxyStrategy.set_welfare(world, level)
     _politics()
 
 func _shipyard() -> void:

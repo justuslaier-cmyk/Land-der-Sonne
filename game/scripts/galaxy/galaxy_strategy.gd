@@ -39,6 +39,8 @@ static func prepare(world: Dictionary) -> void:
         world["counterintelligence"] = 0
     if not world.has("policies"):
         world["policies"] = {"focus": 0, "tax": 1}
+    if not world["policies"].has("welfare"):
+        world["policies"]["welfare"] = 0
     if not world.has("stability"):
         world["stability"] = 70
     if not world.has("governance"):
@@ -191,6 +193,56 @@ static func set_policy(world: Dictionary, focus: int, tax: int) -> bool:
 # Government models differ in approval thresholds and enactment time.
 # Political blocs respond to the direction of a rights reform. Their
 # weights derive from the evolving culture, not a player-controlled slider.
+# Public welfare is a bounded treasury expenditure; no household goods are minted.
+static func set_welfare(world: Dictionary, level: int) -> bool:
+    prepare(world)
+    if level < 0 or level > 2:
+        return false
+    world["policies"]["welfare"] = level
+    world["history"].append("Sozialhaushalt: Stufe %d." % level)
+    return true
+
+static func settle_public_budget(world: Dictionary) -> void:
+    prepare(world)
+    var opening := int(world["credits"])
+    var receipts := maxi(0, int(world.get("civilian_taxes", 0)))
+    # Civilian enterprises already paid these taxes in GalaxyCivilians.tick.
+    # This is the one and only transfer of assessed taxes to the treasury.
+    world["credits"] = opening + receipts
+    var level := clampi(int(world["policies"].get("welfare", 0)), 0, 2)
+    var markets: Dictionary = world.get("civilian_worlds", {})
+    var active: Array = []
+    for key in markets.keys():
+        var sid := int(key)
+        if sid >= 0 and sid < world["stars"].size() and int(world["stars"][sid]["owner"]) == 0:
+            active.append(str(key))
+    active.sort_custom(func(a: String, b: String): return int(a) < int(b))
+    var budget := mini(maxi(0, int(world["credits"])), active.size() * level * 3)
+    var spent := 0
+    var recipients: Array = []
+    for key in active:
+        var market: Dictionary = markets[key]
+        var cost := mini(level * 3, budget - spent)
+        if cost <= 0:
+            break
+        # Transfers fund services (not goods or direct household capital).
+        var before := int(market["satisfaction"])
+        market["satisfaction"] = clampi(before + cost / 3, 0, 100)
+        spent += cost
+        recipients.append({"system": int(key), "cost": cost, "satisfaction_gain": int(market["satisfaction"]) - before})
+    world["credits"] = int(world["credits"]) - spent
+    world["public_budget_ledger"] = {"year": int(world["tick"]), "opening": opening,
+        "tax_receipts": receipts, "welfare_spending": spent, "closing": int(world["credits"]),
+        "recipients": recipients}
+    # Approval is recalculated after welfare effects, before governance advances.
+    var weighted := 0
+    var population := 0
+    for key in active:
+        var market: Dictionary = markets[key]
+        weighted += int(market["population"]) * int(market["satisfaction"])
+        population += int(market["population"])
+    world["civilian_approval"] = weighted / maxi(1, population)
+
 static func reform_support(world: Dictionary, rights: int) -> Dictionary:
     prepare(world)
     var groups: Dictionary = GalaxyIdentity.social_groups(world["culture"])
@@ -750,7 +802,7 @@ static func income_forecast(world: Dictionary) -> Dictionary:
     alloys += int(GalaxySystems.technology_bonuses(world)["industry_alloys"])
     var focus := int(world["policies"]["focus"])
     var tax := int(world["policies"]["tax"])
-    credits += (tax - 1) * 5 + world["trade_pacts"].size() * 6 + dependency_income(world) + (4 if focus == 0 else 0) + GalaxyLore.artifact_bonus(world, "credits")
+    credits += maxi(0, int(world.get("civilian_taxes", 0))) - mini(maxi(0, int(world.get("credits", 0))), int(world.get("civilian_worlds", {}).size()) * clampi(int(world["policies"].get("welfare", 0)), 0, 2) * 3) + (tax - 1) * 5 + world["trade_pacts"].size() * 6 + dependency_income(world) + (4 if focus == 0 else 0) + GalaxyLore.artifact_bonus(world, "credits")
     science += (4 if focus == 1 else 0) + GalaxyLore.artifact_bonus(world, "science")
     alloys += (3 if focus == 2 else 0) + GalaxyLore.artifact_bonus(world, "alloys")
     var next_stability := clampi(int(world["stability"]) + (1 if tax == 0 else -1 if tax == 2 else 0) + int(world["governance"]["rights"]) - 1 + int(GalaxySystems.technology_bonuses(world)["society_stability"]), 0, 100)
@@ -807,6 +859,7 @@ static func tick(world: Dictionary) -> void:
     advance_fleet_logistics(world)
     GalaxyCivilians.tick(world)
     GalaxySocietyAudit.record(world)
+    settle_public_budget(world)
     advance_diplomacy(world)
     advance_intelligence(world)
     advance_governance(world)
