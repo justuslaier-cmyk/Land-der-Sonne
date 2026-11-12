@@ -80,7 +80,7 @@ func _initialize() -> void:
         return
     for slot in range(1, 5):
         for suffix in ["", ".bak", ".previous", ".tmp"]:
-            var slot_file := GalaxyModel.slot_path(slot) + suffix
+            var slot_file: String = GalaxyModel.slot_path(slot) + str(suffix)
             if FileAccess.file_exists(slot_file):
                 DirAccess.remove_absolute(ProjectSettings.globalize_path(slot_file))
     print("GALAXY_SAVE_RECOVERY_PASS: backup rotation, corrupt primary, interrupted promotion")
