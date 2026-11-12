@@ -831,6 +831,12 @@ func _show_selection() -> void:
             var incident: Dictionary = incidents[i]
             var amount := int(incident["effect"])
             _label("Jahr %d  •  %s  (%s%d %s)" % [int(incident["year"]) + 2200, str(incident["text"]), "+" if amount >= 0 else "", amount, str(incident["resource"])])
+    GalaxyNarrative.prepare(world)
+    var narrative: Array = world.get("narrative_chronicle", [])
+    if not narrative.is_empty():
+        _label("KAUSALE EREIGNISCHRONIK")
+        for entry in narrative.slice(maxi(0, narrative.size() - 12)):
+            _label("Jahr %d  •  %s  •  Ursache: %s  •  Folge: %s" % [int(entry["year"]) + 2200, str(entry["title"]), str(entry["cause"]), str(entry["effect"])])
     var history: Array = world["history"]
     _side_label(str(history.back()) if not history.is_empty() else "Keine Einträge")
 

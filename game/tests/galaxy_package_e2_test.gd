@@ -6,6 +6,7 @@ func _initialize() -> void:
     GalaxySystems.prepare(world)
     world["buildings"] = {"0": {"lab": 3}}
     GalaxyCivilians.prepare(world)
+    world["civilian_worlds"]["0"]["demographics"] = GalaxyCivilians.demographic_defaults(int(world["civilian_worlds"]["0"]["population"]))
     world["civilian_worlds"]["0"]["demographics"]["employed"] = 15
     world["science"] = 10
     world["tick"] = 7

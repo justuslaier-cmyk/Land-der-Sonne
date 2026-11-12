@@ -1118,6 +1118,7 @@ static func tick(world: Dictionary) -> void:
     # Autonomous rival behavior advances with the same simulation clock.
     GalaxyAI.tick(world)
     GalaxyProgress.tick(world)
+    GalaxyNarrative.tick(world)
     # Bounded economic history, persisted in ordinary saves.
     if not world.has("economy_history"):
         world["economy_history"] = []
