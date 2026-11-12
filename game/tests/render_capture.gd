@@ -14,6 +14,7 @@ func _capture() -> void:
         return
     var instance: Control = packed.instantiate()
     root.add_child(instance)
+    var captures := 0
     for resolution in VIEWPORTS:
         root.get_window().size = resolution
         for screen_name in SCREENS:
@@ -50,11 +51,19 @@ func _capture() -> void:
             if image == null or image.is_empty():
                 _fail("Empty render: " + screen_name)
                 return
+            if image.get_width() != resolution.x or image.get_height() != resolution.y:
+                _fail("Incorrect screenshot resolution: " + screen_name)
+                return
             var out_path := "user://render-%s-%dx%d.png" % [screen_name, resolution.x, resolution.y]
             if image.save_png(out_path) != OK:
                 _fail("Could not save: " + out_path)
                 return
+            captures += 1
             print("RENDER_CAPTURE_PASS: ", ProjectSettings.globalize_path(out_path), " size=", image.get_width(), "x", image.get_height())
+    if captures != VIEWPORTS.size() * SCREENS.size():
+        _fail("Incomplete render evidence: %d captures" % captures)
+        return
+    print("RENDER_MATRIX_PASS: %d captures" % captures)
     instance.queue_free()
     quit(0)
 
