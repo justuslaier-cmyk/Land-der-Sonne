@@ -109,22 +109,43 @@ static func save_game(world: Dictionary) -> bool:
     var full := ProjectSettings.globalize_path(SAVE_PATH)
     var stage := ProjectSettings.globalize_path(temp)
     var backup := ProjectSettings.globalize_path(SAVE_PATH + ".bak")
-    if FileAccess.file_exists(SAVE_PATH + ".bak"):
-        DirAccess.remove_absolute(backup)
-    if FileAccess.file_exists(SAVE_PATH):
-        if DirAccess.rename_absolute(full, backup) != OK:
+    var previous := ProjectSettings.globalize_path(SAVE_PATH + ".previous")
+    # Preserve the existing backup until the new save has been promoted.
+    # An interrupted previous rotation may leave .previous as the only
+    # recoverable copy, so never overwrite it without validating it first.
+    if FileAccess.file_exists(SAVE_PATH + ".previous"):
+        if _read(SAVE_PATH + ".previous").is_empty():
+            return false
+        if FileAccess.file_exists(SAVE_PATH):
+            return false
+        if DirAccess.rename_absolute(previous, full) != OK:
+            return false
+    var had_current := FileAccess.file_exists(SAVE_PATH)
+    if had_current:
+        if DirAccess.rename_absolute(full, previous) != OK:
             return false
     if DirAccess.rename_absolute(stage, full) != OK:
-        if FileAccess.file_exists(SAVE_PATH + ".bak"):
-            DirAccess.rename_absolute(backup, full)
+        if had_current:
+            DirAccess.rename_absolute(previous, full)
         return false
+    if had_current:
+        # The new primary is now valid. Keep the old backup until the
+        # previous primary can replace it; .previous is itself recoverable.
+        if FileAccess.file_exists(SAVE_PATH + ".bak"):
+            if DirAccess.remove_absolute(backup) != OK:
+                return true
+        if DirAccess.rename_absolute(previous, backup) != OK:
+            return true
     return true
 
 static func load_game() -> Dictionary:
     var world := _read(SAVE_PATH)
     if not world.is_empty():
         return world
-    return _read(SAVE_PATH + ".bak")
+    var backup := _read(SAVE_PATH + ".bak")
+    if not backup.is_empty():
+        return backup
+    return _read(SAVE_PATH + ".previous")
 
 static func _read(path: String) -> Dictionary:
     if not FileAccess.file_exists(path):
