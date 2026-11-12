@@ -59,5 +59,9 @@ Ein einziger Entwicklungsdurchlauf ist für 98 voneinander abhängige Pflichtabn
 
 Die [P01–P98-Codeinventur](../quality/P01_P98_CODE_COVERAGE_AUDIT.md) erfasst 127 Dateien im Branchvergleich gegenüber `main` (18 Implementierungsskripte, 59 Testskripte, 16 SVG-Grafiken, 30 Dokumentationsdateien) und ordnet allen 98 Pflichten konkrete zu prüfende Dateien oder ausdrücklich fehlende Nachweise zu. Dies ist keine Vollabnahme und kein vollständiger rekursiver Basisbranch-Scan. **P89:** Risiko bei der Backup-Rotation erkannt, noch nicht behoben; vor Änderung Fehlerfalltests erforderlich.
 
+## Optimierter künftiger Entwicklungsplan (2026-11-12)
+
+Der [komprimierte Plan mit acht priorisierten Paketen und 18 geplanten Durchläufen](OPTIMIZED_COMPLETION_PLAN_2026_11_12.md) bündelt bestehende Implementierungen, Grafik, KI, UI, CI und einzelne Abnahmen. **18 ist keine verifizierte Fertigstellungszahl**; P01–P98 bleiben verbindlich und werden nicht pauschal abgehakt. Der historische 48-Durchläufe-Plan bleibt unverändert als Arbeitsprotokoll erhalten. Start: Paket A, Durchlauf 1 (Save-Integrität und technische Verträge).
+
 ## Prozess
 Keine ungeprüften Merges nach `main`; das andere Projekt `grenzmark` bleibt unangetastet. Die 48 Planungsdurchläufe sind **kein** Fertigstellungsversprechen.
