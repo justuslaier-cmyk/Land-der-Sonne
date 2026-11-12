@@ -187,9 +187,27 @@ func _show_menu() -> void:
     _button("NEUES SPIEL", _begin_new_game)
     _button("SPIEL LADEN", _load_game)
     _button("SPIELSTÄNDE 1–4", _show_save_slots)
+    _button("SPIELANLEITUNG", _show_help)
     _button("EINSTELLUNGEN", _show_options)
     _button("BEENDEN", func(): get_tree().quit())
     _label("Früher Prototyp • Galaxien können zufällig oder mit festem Seed erzeugt werden.")
+
+func _show_help() -> void:
+    var from_game := not world.is_empty()
+    screen = "help"
+    _clear()
+    _title("SPIELANLEITUNG")
+    _illustration("menu")
+    _label("1. NEUES SPIEL: Galaxiegröße, Seed und KI-Reiche wählen; danach Reich, Spezies und Heimatwelt bestimmen.")
+    _label("2. GALAXIE: Systeme auswählen, erkunden und eigene Kolonien verwalten. Die Kartenansicht zeigt den bekannten Raum.")
+    _label("3. ZEIT: Die Simulation startet pausiert. Mit PAUSE / WEITER fortsetzen und mit 1× bis 8× beschleunigen.")
+    _label("4. FORSCHUNG UND WIRTSCHAFT: Forschungspunkte in Technologien investieren, Ressourcen und Produktion überwachen.")
+    _label("5. DIPLOMATIE UND FLOTTEN: Beziehungen verwalten, Flotten befehligen und ihre Versorgung beachten.")
+    _label("6. EREIGNISSE: Offene Entscheidungen unterbrechen die Zeit. Eine Auswahl setzt die Simulation fort.")
+    _label("7. SPIELSTÄNDE: Vier manuelle Slots im Menü SPIELSTÄNDE; der automatische Spielstand wird alle zehn Jahre erneuert.")
+    _label("8. CHRONIK UND ZIELE: Langfristigen Fortschritt über die Berichte nachvollziehen.")
+    _label("Hinweis: Dies ist eine Anleitung zum experimentellen Prototyp, kein vollständiges interaktives Tutorial.")
+    _button("ZUR GALAXIE" if from_game else "ZUM MENÜ", _show_galaxy if from_game else _show_menu)
 
 func _show_options() -> void:
     screen = "options"
@@ -526,7 +544,7 @@ func _show_galaxy() -> void:
     var bar := HBoxContainer.new()
     bar.add_theme_constant_override("separation", 6)
     toolbar_scroll.add_child(bar)
-    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["FLOTTENKOMMANDO", _fleet_command], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["ZIELE", _goals_report], ["GESELLSCHAFT", _society_report], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["SPIELSTÄNDE", _show_save_slots], ["MENÜ", _show_menu]]:
+    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["FLOTTENKOMMANDO", _fleet_command], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["ZIELE", _goals_report], ["GESELLSCHAFT", _society_report], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["SPIELSTÄNDE", _show_save_slots], ["HILFE", _show_help], ["MENÜ", _show_menu]]:
         var button := Button.new()
         button.text = spec[0]
         button.custom_minimum_size.y = 42
