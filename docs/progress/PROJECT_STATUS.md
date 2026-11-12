@@ -1,3 +1,11 @@
+## Paket B / Durchlauf 2 — bestätigte technische Integration (2026-11-12)
+
+- Commit `9c99a63599205c99a936429933dbed577a16c431`: F1-Hilfe, Esc-Rückkehr und Leertaste-Pause mit Fokus-Schutz, zusammen mit dem zuvor integrierten achtteiligen Hilfebildschirm und dessen Regressionstest.
+- [GitHub Actions 43218500463](https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43218500463): **17/17 Jobs success**, darunter Godot-Smoke, 13 Regressionen, Render, Windows-Export und Windows-2022-Headless-Runtime.
+- Godot-Smoke bestätigt `GALAXY_HELP_PASS`, `GALAXY_SAVE_RECOVERY_PASS` und `GALAXY_PERFORMANCE_BASELINE` (250 Sterne, 20 KI, 30 Jahre; 35 ms Generierung, 63 ms Simulation im CI-Runner). Windows bestätigt `GALAXY_INTEGRATION_PASS`.
+- **Abgenommen:** B2-Tastaturkürzel und Hilfenavigation im automatisierten Test, vorhandene Integrations-/Exportpipeline.
+- **Nicht abgenommen:** vollständige P01–P10/P85–P86-Bedienungsanforderungen, interaktives Tutorial, echte Windows-10/11-GUI-Bedienung, P89-Schema-Migration, vollständiges Paket A und vollständiges Paket B. Keine Vollabnahme ohne Einzelbelege.
+
 # Projektstatus — 2026-11-11 — Land der Sonne (galaktisches Strategiespiel)
 
 ## Arbeitsstand
