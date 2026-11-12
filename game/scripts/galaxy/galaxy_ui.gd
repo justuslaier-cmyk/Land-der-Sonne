@@ -1252,7 +1252,7 @@ func _diplomacy(rival_id: int = -1) -> void:
         if world["wars"].has(id):
             var war_goal: Dictionary = world.get("war_goals", {}).get(str(id), {})
             var target_id := int(war_goal.get("target", -1))
-            var goal_met := bool(war_goal.get("achieved", false)) or (target_id >= 0 and target_id < world["stars"].size() and int(world["stars"][target_id]["owner"]) == 0)
+            var goal_met: bool = bool(war_goal.get("achieved", false)) or (target_id >= 0 and target_id < world["stars"].size() and int(world["stars"][target_id]["owner"]) == 0)
             if target_id >= 0 and target_id < world["stars"].size():
                 _label("Kriegsziel: %s — %s" % [str(world["stars"][target_id]["name"]), "erreicht" if goal_met else "offen"])
             var relation := int(world["relations"].get(str(id), -100))

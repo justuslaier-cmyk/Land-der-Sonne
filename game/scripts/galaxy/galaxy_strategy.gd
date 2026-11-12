@@ -780,7 +780,7 @@ static func offer_peace(world: Dictionary, rival_id: int) -> bool:
     var treasury := int(world["credits"])
     var goal: Dictionary = world["war_goals"].get(str(rival_id), {})
     var objective := int(goal.get("target", -1))
-    var achieved := bool(goal.get("achieved", false)) or (objective >= 0 and objective < world["stars"].size() and int(world["stars"][objective]["owner"]) == 0)
+    var achieved: bool = bool(goal.get("achieved", false)) or (objective >= 0 and objective < world["stars"].size() and int(world["stars"][objective]["owner"]) == 0)
     var peace_cost := 35 if achieved and relation < -80 else 70 if relation < -80 else 0
     if treasury < peace_cost:
         return false
