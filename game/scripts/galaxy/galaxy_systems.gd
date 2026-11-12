@@ -298,10 +298,15 @@ static func tick(world: Dictionary) -> void:
         var id := int(rival["id"])
         var key := str(id)
         var owned := 0
+        var rival_production := 0
         for star in world["stars"]:
             if int(star["owner"]) == id:
                 owned += 1
-        world["ai_treasury"][key] = int(world["ai_treasury"].get(key, 50)) + owned * 4
+                rival_production += int(star["resource"])
+        # Identical basic territorial tax base as the player's economy.
+        # No hidden flat rival income bonus on normal difficulty.
+        var income := owned * 2 + int(rival_production / 3)
+        world["ai_treasury"][key] = int(world["ai_treasury"].get(key, 50)) + income
     # Rival expansion is handled by GalaxyAI to avoid duplicate claims and costs.
     # Periodic events are tied to actual simulated conditions and a deterministic cadence.
     if str(world["pending_event"]) == "" and int(world["tick"]) > 3 and int(world["tick"]) % 7 == 0:
