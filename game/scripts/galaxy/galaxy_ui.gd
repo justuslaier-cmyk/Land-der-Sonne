@@ -1143,12 +1143,42 @@ func _chronicle() -> void:
                 notice = "Großprojekt begonnen." if GalaxyEndgame.start_project(world, project_id) else "Nicht möglich: Ressourcen, Forschung oder laufendes Projekt."
                 _chronicle()
             )
+    GalaxyNarrative.prepare(world)
+    var followups: Array = GalaxyNarrative.pending_followups(world)
+    if not followups.is_empty():
+        _label("EREIGNISFOLGEN / ENTSCHEIDUNGEN")
+        var aftermath_icon := TextureRect.new()
+        aftermath_icon.texture = load("res://assets/art/chronicle_aftermath.svg")
+        aftermath_icon.custom_minimum_size = Vector2(48, 48)
+        aftermath_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+        aftermath_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+        root.add_child(aftermath_icon)
+        for incident_id in followups:
+            var key := str(incident_id)
+            _label("Nachwirkung: %s — seit Jahr %d" % [key, int(world["narrative_chains"][key]["origin"])])
+            _button("WIEDERAUFBAU / INVESTITION (-20 Credits)", func():
+                notice = "Folgeentscheidung umgesetzt." if GalaxyNarrative.resolve_followup(world, key, "invest") else "Nicht genügend Credits."
+                _chronicle()
+            )
+            _button("ANPASSUNG / RISIKO (kostenlos)", func():
+                notice = "Folgeentscheidung umgesetzt." if GalaxyNarrative.resolve_followup(world, key, "adapt") else "Entscheidung nicht möglich."
+                _chronicle()
+            )
+    _label("LANGZEITZIELE / SANDBOX")
+    GalaxyProgress.evaluate_victories(world)
+    for route in ["exploration", "prosperity", "resilience"]:
+        _label("%s  %s" % ["✓" if world["victory_paths"].has(route) else "○", route])
+    _label("Erreichte Ziele erlauben unbegrenztes Weiterspielen.")
     var crisis: Dictionary = world.get("galactic_crisis", {})
     if not crisis.is_empty():
         _label("GALAKTISCHE KRISE: %s  •  Bedrohung %d  •  Status %s" % [str(crisis.get("title", "")), int(crisis.get("threat", 0)), str(crisis.get("state", ""))])
         if str(crisis.get("state", "")) == "active":
             _button("KRISENABWEHR FINANZIEREN (25 Credits, 10 Legierungen)", func():
                 notice = "Abwehrmaßnahmen finanziert." if GalaxyEndgame.defend_crisis(world) else "Nicht genug Ressourcen."
+                _chronicle()
+            )
+            _button("KRISENFORSCHUNG (35 Forschung, 10 Credits; Stufe 3)", func():
+                notice = "Wissenschaftliche Gegenmaßnahme erfolgreich." if GalaxyEndgame.research_crisis(world) else "Forschung, Credits oder Technologie fehlen."
                 _chronicle()
             )
     var lore: Dictionary = world["ancient_history"]
