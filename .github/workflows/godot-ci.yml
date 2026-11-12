@@ -84,6 +84,8 @@ jobs:
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_culture_effects_test.gd
       - name: Verify cultural development, generations and save persistence
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_culture_test.gd
+      - name: Verify package D1 social accounting and invariant diagnostics
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_package_d1_test.gd
       - name: Verify colony growth, environmental limits and forecast
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_colony_simulation_test.gd
       - name: Verify planetary ecology, colony capacity and pollution

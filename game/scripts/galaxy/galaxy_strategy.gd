@@ -806,6 +806,7 @@ static func tick(world: Dictionary) -> void:
     GalaxySystems.tick(world)
     advance_fleet_logistics(world)
     GalaxyCivilians.tick(world)
+    GalaxySocietyAudit.record(world)
     advance_diplomacy(world)
     advance_intelligence(world)
     advance_governance(world)
