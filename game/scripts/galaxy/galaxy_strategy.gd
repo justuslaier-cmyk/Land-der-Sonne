@@ -802,7 +802,7 @@ static func income_forecast(world: Dictionary) -> Dictionary:
     alloys += int(GalaxySystems.technology_bonuses(world)["industry_alloys"])
     var focus := int(world["policies"]["focus"])
     var tax := int(world["policies"]["tax"])
-    credits += maxi(0, int(world.get("civilian_taxes", 0))) - mini(maxi(0, int(world.get("credits", 0))), int(world.get("civilian_worlds", {}).size()) * clampi(int(world["policies"].get("welfare", 0)), 0, 2) * 3) + (tax - 1) * 5 + world["trade_pacts"].size() * 6 + dependency_income(world) + (4 if focus == 0 else 0) + GalaxyLore.artifact_bonus(world, "credits")
+    credits += (tax - 1) * 5 + world["trade_pacts"].size() * 6 + dependency_income(world) + (4 if focus == 0 else 0) + GalaxyLore.artifact_bonus(world, "credits")
     science += (4 if focus == 1 else 0) + GalaxyLore.artifact_bonus(world, "science")
     alloys += (3 if focus == 2 else 0) + GalaxyLore.artifact_bonus(world, "alloys")
     var next_stability := clampi(int(world["stability"]) + (1 if tax == 0 else -1 if tax == 2 else 0) + int(world["governance"]["rights"]) - 1 + int(GalaxySystems.technology_bonuses(world)["society_stability"]), 0, 100)
@@ -810,6 +810,19 @@ static func income_forecast(world: Dictionary) -> Dictionary:
         credits -= 5
     credits -= colony_upkeep(world)
     credits -= fleet_upkeep(world)
+    # Predict next-year civilian receipts from an isolated copy, not last year's
+    # assessed taxes. This preserves exact deterministic baseline forecasts.
+    var projection := world.duplicate(true)
+    GalaxySystems.tick(projection)
+    GalaxyCivilians.tick(projection)
+    var predicted_receipts := maxi(0, int(projection.get("civilian_taxes", 0)))
+    var welfare_level := clampi(int(world["policies"].get("welfare", 0)), 0, 2)
+    var active_count := 0
+    for star in projection["stars"]:
+        if int(star["owner"]) == 0:
+            active_count += 1
+    var welfare_cost := mini(maxi(0, int(world["credits"]) + predicted_receipts), active_count * welfare_level * 3)
+    credits += predicted_receipts - welfare_cost
     science += int(GalaxyIdentity.culture_modifiers(world.get("culture", {}))["science"])
     return {"credits": credits, "science": science, "alloys": alloys}
 
