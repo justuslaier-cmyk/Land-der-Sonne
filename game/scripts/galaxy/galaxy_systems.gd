@@ -307,6 +307,10 @@ static func tick(world: Dictionary) -> void:
         # No hidden flat rival income bonus on normal difficulty.
         var income := owned * 2 + int(rival_production / 3)
         world["ai_treasury"][key] = int(world["ai_treasury"].get(key, 50)) + income
+        # Rival research uses an explicit, persistent science stockpile.
+        if not world.has("ai_science"):
+            world["ai_science"] = {}
+        world["ai_science"][key] = int(world["ai_science"].get(key, 0)) + owned * 2
     # Rival expansion is handled by GalaxyAI to avoid duplicate claims and costs.
     # Periodic events are tied to actual simulated conditions and a deterministic cadence.
     if str(world["pending_event"]) == "" and int(world["tick"]) > 3 and int(world["tick"]) % 7 == 0:

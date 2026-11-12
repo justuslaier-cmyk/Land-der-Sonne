@@ -19,8 +19,16 @@ static func prepare(world: Dictionary) -> void:
         world["ai_war_exhaustion"] = {}
     if not world.has("ai_societies"):
         world["ai_societies"] = {}
+    if not world.has("ai_science"):
+        world["ai_science"] = {}
+    if not world.has("ai_research_fields"):
+        world["ai_research_fields"] = {}
     for rival in world["ai"]:
         var key := str(rival["id"])
+        if not world["ai_science"].has(key):
+            world["ai_science"][key] = 0
+        if not world["ai_research_fields"].has(key):
+            world["ai_research_fields"][key] = {"propulsion": 0, "industry": 0, "society": 0}
         if not world.has("ai_cultures"):
             world["ai_cultures"] = {}
         if not world["ai_cultures"].has(key):
@@ -42,6 +50,15 @@ static func tick(world: Dictionary) -> void:
         var treasury := int(world["ai_treasury"].get(key, 0))
         var temperament := int(rival["temperament"])
         var capital := int(rival["capital"])
+        # The AI buys research from its own accumulated science, never free unlocks.
+        # The same first-tier 25-point cost applies to player research.
+        var fields: Dictionary = world["ai_research_fields"][key]
+        if year % 5 == id % 5 and int(world["ai_science"][key]) >= 25:
+            var field := "propulsion" if temperament == 0 else "industry" if temperament == 1 else "society"
+            if int(fields.get(field, 0)) == 0:
+                world["ai_science"][key] = int(world["ai_science"][key]) - 25
+                fields[field] = 1
+                _record(world, "%s finanziert Forschung: %s." % [str(rival["name"]), field])
         _society_tick(world, rival, treasury, year, ownership)
         var fleet: Dictionary = {}
         for candidate in world["ai_fleets"]:
@@ -142,7 +159,7 @@ static func tick(world: Dictionary) -> void:
         var base_power := int(fleet["strength"])
         var attack_supply := clampi(int(logistics["supply"]), 0, 100)
         var penalty := 0 if attack_supply >= 50 else maxi(1, ceili(float(base_power) * float(50 - attack_supply) / 100.0))
-        var power := maxi(0, base_power - penalty)
+        var power := maxi(0, base_power - penalty + int(world["ai_research_fields"][key].get("industry", 0)) * 2)
         if power > defending + 5:
             world["stars"][target]["owner"] = id
             fleet["strength"] = maxi(2, power - defending / 2)
@@ -178,7 +195,7 @@ static func _society_tick(world: Dictionary, rival: Dictionary, treasury: int, y
     var faction_reform := clampi(20 + inequality / 2 + (35 - prosperity) / 2, 0, 100)
     var faction_security := clampi(15 + int(rival["temperament"]) * 12 + (50 - legitimacy) / 3, 0, 100)
     var faction_commerce := clampi(20 + prosperity / 3 - inequality / 5, 0, 100)
-    legitimacy = clampi(legitimacy + (1 if prosperity >= 55 else -2 if prosperity < 30 else 0) - (1 if inequality >= 60 else 0) + int(identity["legitimacy"]), 0, 100)
+    legitimacy = clampi(legitimacy + (1 if prosperity >= 55 else -2 if prosperity < 30 else 0) - (1 if inequality >= 60 else 0) + int(identity["legitimacy"]) + int(world["ai_research_fields"][key].get("society", 0)), 0, 100)
     var growth := maxi(0, 1 + int(identity["growth"])) if prosperity >= 40 and population < capacity else 0
     var emigration := 1 if prosperity < 25 and population > 10 else 0
     population = maxi(5, population + growth - emigration)
