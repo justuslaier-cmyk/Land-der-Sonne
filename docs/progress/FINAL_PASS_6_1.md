@@ -23,6 +23,7 @@ Plan `docs/progress/FINAL_GAME_EXECUTION_PLAN.md` (6.1): alle 98 Pflichtanforder
 
 - Technische Vorbasis: [Commit 3d0ed275](https://github.com/justuslaier-cmyk/Land-der-Sonne/commit/3d0ed27528c3331a762fdc1612a8bb5d512311ef), [Actions 43259805258](https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43259805258), **17/17 Jobs erfolgreich**.
 - Paket-6.1-Implementierung: `f4c94c5df000c9accb7e0f0053ed388d5a0c6f8d`, Root-Pfad-Korrektur `f3cc953f6af0ed77add996782f493227529f1c9c`.
+- **Finaler integrierter CI-Nachweis des Dokumentationscommits `d3088fe7aebf4b222f4eae236b400060788c4971`: [GitHub Actions 43260926145](https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43260926145), 18/18 Jobs erfolgreich**, einschließlich `release-evidence-audit`, Godot-Smoke, Regression-Matrix, Render, Windows-Export und Windows-2022-Headless-Runtime. **Audit-Gate erfolgreich blockiert** die Freigabe; kein Release-Erfolg behauptet.
 - Neue Tests: `python3 -m unittest discover -s game/tests -p release_gate_test.py -v`; `python3 tools/release_gate.py --mode audit`; `python3 tools/release_gate.py --mode release` (erwartet Exit 1, keine Freigabe). CI-Nachweis des finalen Dokumentationscommits separat prüfen.
 
 ## Offene Blocker / Endentscheidung
