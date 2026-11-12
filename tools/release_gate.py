@@ -11,7 +11,7 @@ import pathlib
 import re
 import sys
 
-ROOT = pathlib.Path(__file__).resolve().parents[2]
+ROOT = pathlib.Path(__file__).resolve().parents[1]
 CHECKLIST = ROOT / "docs/vision/BINDING_GAME_REQUIREMENTS_CHECKLIST.md"
 REGISTER = ROOT / "docs/quality/RELEASE_6_1_REQUIREMENTS_REGISTER.md"
 EVIDENCE = ROOT / "docs/quality/RELEASE_6_1_NATIVE_EVIDENCE.json"
