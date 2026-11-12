@@ -21,6 +21,10 @@ static func prepare(world: Dictionary) -> void:
         world["diplomatic_trust"] = {}
     if not world.has("wars"):
         world["wars"] = []
+    if not world.has("war_goals"):
+        world["war_goals"] = {}
+    if not world.has("peace_history"):
+        world["peace_history"] = []
     if not world.has("trade_pacts"):
         world["trade_pacts"] = []
     if not world.has("trade_security"):
@@ -434,6 +438,18 @@ static func declare_war(world: Dictionary, rival_id: int) -> bool:
     prepare(world)
     if not world["contacts"].has(rival_id) or world["wars"].has(rival_id) or world["alliances"].has(rival_id) or world.get("non_aggression", []).has(rival_id) or int(world.get("truce_until", {}).get(str(rival_id), 0)) > int(world["tick"]):
         return false
+    # Objective is a real rival-held system, not a hidden AI value.
+    var objective := -1
+    var nearest := INF
+    var home: Dictionary = world["stars"][0]
+    for candidate in world["stars"]:
+        if int(candidate["owner"]) != rival_id:
+            continue
+        var distance := GalaxySystems.distance(home, candidate)
+        if distance < nearest:
+            nearest = distance
+            objective = int(candidate["id"])
+    world["war_goals"][str(rival_id)] = {"target": objective, "declared": int(world["tick"]), "achieved": false}
     world["wars"].append(rival_id)
     world["relations"][str(rival_id)] = -100
     world["history"].append("Krieg gegen %s erklärt." % GalaxySystems.empire_name(world, rival_id))
@@ -762,10 +778,16 @@ static func offer_peace(world: Dictionary, rival_id: int) -> bool:
         return false
     var relation := int(world["relations"].get(str(rival_id), -100))
     var treasury := int(world["credits"])
-    if relation < -80 and treasury < 70:
+    var goal: Dictionary = world["war_goals"].get(str(rival_id), {})
+    var objective := int(goal.get("target", -1))
+    var achieved := bool(goal.get("achieved", false)) or (objective >= 0 and objective < world["stars"].size() and int(world["stars"][objective]["owner"]) == 0)
+    var peace_cost := 35 if achieved and relation < -80 else 70 if relation < -80 else 0
+    if treasury < peace_cost:
         return false
-    if relation < -80:
-        world["credits"] = treasury - 70
+    world["credits"] = treasury - peace_cost
+    world["peace_history"].append({"rival": rival_id, "year": int(world["tick"]), "goal": objective,
+        "achieved": achieved, "cost": peace_cost})
+    world["war_goals"].erase(str(rival_id))
     world["wars"].erase(rival_id)
     world["relations"][str(rival_id)] = -25
     if not world.has("truce_until"):
@@ -920,6 +942,10 @@ static func attack(world: Dictionary, star_id: int) -> String:
     var victory := power > defense
     if victory:
         star["owner"] = 0
+        var goal: Dictionary = world["war_goals"].get(str(defender), {})
+        if int(goal.get("target", -1)) == star_id:
+            goal["achieved"] = true
+            world["history"].append("Kriegsziel erreicht: %s." % str(star["name"]))
         fleet["strength"] = maxi(1, before - maxi(3, defense / 2))
         world["stability"] = maxi(0, int(world["stability"]) - 3)
         world["fleet_experience"] = mini(60, int(world["fleet_experience"]) + 3)
