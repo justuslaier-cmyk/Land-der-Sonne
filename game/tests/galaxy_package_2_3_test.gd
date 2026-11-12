@@ -95,7 +95,7 @@ func _initialize() -> void:
     if resumed["victory_paths"] != loaded["victory_paths"] or resumed["crisis_response_history"].size() != loaded["crisis_response_history"].size():
         _fail("Endgame history not persisted")
         return
-    var count := resumed["victory_paths"].size()
+    var count: int = resumed["victory_paths"].size()
     GalaxyProgress.evaluate_victories(resumed)
     if resumed["victory_paths"].size() != count:
         _fail("Victory duplicated")
