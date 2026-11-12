@@ -1250,7 +1250,14 @@ func _diplomacy(rival_id: int = -1) -> void:
         if world.get("diplomatic_dependencies", {}).has(str(id)):
             _label("Wirtschaftliches Abkommen: +%d Credits pro Jahr" % int(world["diplomatic_dependencies"][str(id)]["tribute"]))
         if world["wars"].has(id):
-            _button("FRIEDEN ANBIETEN (gegebenenfalls 70 Credits)", func():
+            var war_goal: Dictionary = world.get("war_goals", {}).get(str(id), {})
+            var target_id := int(war_goal.get("target", -1))
+            var goal_met := bool(war_goal.get("achieved", false)) or (target_id >= 0 and target_id < world["stars"].size() and int(world["stars"][target_id]["owner"]) == 0)
+            if target_id >= 0 and target_id < world["stars"].size():
+                _label("Kriegsziel: %s — %s" % [str(world["stars"][target_id]["name"]), "erreicht" if goal_met else "offen"])
+            var relation := int(world["relations"].get(str(id), -100))
+            var peace_cost := (35 if goal_met else 70) if relation < -80 else 0
+            _button("FRIEDEN ANBIETEN (-%d Credits)" % peace_cost, func():
                 notice = "Friedensvertrag geschlossen." if GalaxyStrategy.offer_peace(world, id) else "Friedensangebot abgelehnt oder nicht finanzierbar."
                 _diplomacy()
             )
