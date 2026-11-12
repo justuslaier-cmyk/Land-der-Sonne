@@ -1,6 +1,6 @@
 # Paket 2 – Durchlauf 2: Forschung, Diplomatie, Militär und KI
 
-**Abnahmeentscheidung:** NICHT BESTANDEN, solange die vollständigen GitHub-Actions-Läufe für den aktuellen HEAD nicht erfolgreich abgeschlossen sind. Die technische Umsetzung ist integriert; CI- und visuelle Evidenz werden nicht erfunden.
+**Abnahmeentscheidung:** **CI BESTANDEN / manuelle visuelle Windows-Abnahme OFFEN.** Der gesamte integrierte Code-Stand `f449a22c` wurde in zwei vollständigen GitHub-Actions-Läufen erfolgreich geprüft. Technische Paketkriterien sind automatisiert erfüllt; eine vollständige manuelle Abnahme wird ausdrücklich nicht behauptet.
 
 ## Scope und Aufgabenprüfung
 
@@ -37,4 +37,4 @@ Alle neuen Tests sind im `.github/workflows/godot-ci.yml` registriert. Aufrufsmu
 
 ## Offene Nachweise
 
-Vollständige aktuelle CI inkl. Godot-Smoke, Regression-Matrix, Render-Check und Windows-Export; echte manuelle Windows-GUI-Spielprüfung; Sichtkontrolle des neuen Kriegsziels im tatsächlich gerenderten Diplomatiemenü. Diese Punkte nicht als bestanden ausgeben. Paket 2.3 erst als abgenommen markieren, wenn dessen eigene Kriterien nachgewiesen sind.
+**CI-Nachweis:** [GitHub Actions 43244069555](https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43244069555) und [43244083513](https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43244083513), beide `success` für Commit `f449a22c`. Godot-Smoke, Regression-Matrix, Render-Check und Windows-Export/Runtime wurden im Workflow erfolgreich ausgeführt. **Weiterhin offen:** echte manuelle Windows-GUI-Spielprüfung und gezielte Sichtkontrolle des Kriegsziel-Panels. Diese offenen menschlichen Abnahmen werden einmalig als separat nachzuholende Punkte dokumentiert; sie blockieren die unabhängige Arbeit an Paket 2.3 nicht. Paket 2.3 erst als abgenommen markieren, wenn dessen eigene Kriterien nachgewiesen sind.
