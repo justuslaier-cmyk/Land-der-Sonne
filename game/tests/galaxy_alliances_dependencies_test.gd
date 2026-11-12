@@ -40,8 +40,19 @@ func _initialize() -> void:
         _fail("Alliance save failed")
         return
     var loaded := GalaxyModel.load_game()
-    if not loaded["alliances"].has(rival) or int(loaded["diplomatic_dependencies"][str(rival)]["tribute"]) != 4:
-        _fail("Alliance or dependency did not persist")
+    if loaded.is_empty():
+        _fail("Save file rejected during load")
+        return
+    var alliance_found := false
+    for member in loaded.get("alliances", []):
+        if int(member) == rival:
+            alliance_found = true
+    if not alliance_found:
+        _fail("Alliance did not persist for rival %d; saved alliances: %s" % [rival, str(loaded.get("alliances", []))])
+        return
+    var dependency: Dictionary = loaded.get("diplomatic_dependencies", {}).get(str(rival), {})
+    if int(dependency.get("tribute", -1)) != 4:
+        _fail("Dependency tribute did not persist for rival %d; saved dependency: %s" % [rival, str(dependency)])
         return
     if GalaxyStrategy.negotiate_treaty(loaded, rival, "alliance"):
         _fail("Duplicate alliance accepted")
