@@ -144,10 +144,12 @@ func _apply_action_icon(button: Button) -> void:
 func _button(value: String, callback: Callable) -> void:
     var button := Button.new()
     button.text = value
-    button.custom_minimum_size = Vector2(0, 44)
+    # In a VBoxContainer, SHRINK_BEGIN with a zero minimum width can collapse
+    # action buttons into tiny icon-only rectangles, hiding their labels.
+    button.custom_minimum_size = Vector2(280, 44)
     button.add_theme_font_size_override("font_size", 16)
     button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-    button.clip_text = true
+    button.clip_text = false
     GalaxyVisualTheme.apply_button(button)
     _apply_action_icon(button)
     button.pressed.connect(callback)
