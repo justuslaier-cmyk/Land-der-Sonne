@@ -1,6 +1,6 @@
 # Paket 1 – Durchlauf 1: technische Bestandsprüfung und Blocker
 
-**Status:** IN ARBEIT – keine Abnahme vor vollständig grüner GitHub-CI.
+**Status:** ABGENOMMEN für den geprüften Umfang – beide vollständigen CI-Läufe des geprüften Commits `62e42f7` erfolgreich.
 
 ## Inventur
 Die aktuelle Repository-Struktur umfasst 25 GDScript-Produktionsskripte (davon 18 unter `game/scripts/galaxy`) und 80+ GDScript-Testdateien. Die vorhandene CI prüft Godot-Import, Kernsimulation, militärische Versorgung, Diplomatie, Wirtschafts-/Bevölkerungsinvarianten, Langzeitkampagnen, Rendering, Windows-Export und Windows-Runtime. Dies ist eine technische Bestandsprüfung, **kein Beweis**, dass jeder Codepfad vollständig manuell auditiert wurde.
@@ -22,4 +22,4 @@ Die aktuelle Repository-Struktur umfasst 25 GDScript-Produktionsskripte (davon 1
 3. Für jeden behobenen Fehler ein Regressionstest.
 4. Restliche Prüfgrenzen und nachfolgende Durchläufe ausdrücklich dokumentiert.
 
-**Entscheidung:** OFFEN bis CI-Nachweis vorliegt.
+**Entscheidung:** Durchlauf 1.1 für den dokumentierten Prüf- und Korrekturumfang erfolgreich abgenommen. CI-Nachweise: [43234111102](https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43234111102) und [43234121051](https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43234121051), beide vollständig erfolgreich. Nicht geprüfte Pfade und manueller Spieltest sind nicht als fehlerfrei zertifiziert.
