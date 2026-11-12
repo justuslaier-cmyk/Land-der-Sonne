@@ -64,6 +64,13 @@ func _initialize() -> void:
         var total_us := 0
         for duration in times:
             total_us += int(duration)
+        # CI guardrails are generous regression limits, not hardware certification.
+        if generation_us > 1000000 or int(sorted[sorted.size() - 1]) > 50000:
+            _fail("Generation/tick exceeds CI regression budget seed " + str(seed_value))
+            return
+        if save_bytes >= GalaxyModel.MAX_BYTES or mem_peak > 268435456:
+            _fail("Save size or engine static memory exceeds CI regression budget")
+            return
         results.append({"seed": seed_value, "stars": 250, "ai": 20, "years": YEARS,
             "generation_ms": float(generation_us) / 1000.0,
             "mean_tick_ms": float(total_us) / float(times.size()) / 1000.0,

@@ -31,6 +31,12 @@ func _run() -> void:
         var before_memory := OS.get_static_memory_usage()
         for i in range(FRAMES):
             var started := Time.get_ticks_usec()
+            if i % 18 == 0:
+                ui._economy_report()
+                ui._show_galaxy()
+            elif i % 18 == 9:
+                ui._research()
+                ui._show_galaxy()
             if i % 9 == 0:
                 ui.zoom = clampf(ui.zoom * 1.08, 0.3, 2.0)
                 ui.map_offset = Vector2(float(i * 3), float(-i))
@@ -44,6 +50,9 @@ func _run() -> void:
         var total_us := 0
         for elapsed in timings:
             total_us += int(elapsed)
+        if int(timings[FRAMES - 1]) > 150000:
+            _fail("Interactive frame exceeds Xvfb CI regression budget")
+            return
         results.append({"width": size.x, "height": size.y, "frames": FRAMES,
             "mean_frame_ms": float(total_us) / float(FRAMES) / 1000.0,
             "p95_frame_ms": float(timings[int(ceil(float(FRAMES) * 0.95)) - 1]) / 1000.0,
