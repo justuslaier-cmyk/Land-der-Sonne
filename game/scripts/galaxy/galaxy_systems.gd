@@ -264,10 +264,11 @@ static func settle_research_exchange(world: Dictionary) -> void:
     for rival_id in world.get("trade_pacts", []):
         if world.get("contacts", []).has(rival_id) and not world.get("wars", []).has(rival_id) and not world.get("trade_embargoes", []).has(rival_id):
             partners += 1
-    var grant := mini(12, labs * mini(3, partners))
+    var scientists := int(research_workforce(world)["scientists"])
+    var grant := mini(12, mini(labs, scientists) * mini(3, partners))
     world["science"] = int(world["science"]) + grant
     world["research_exchange_ledger"] = {"year": int(world.get("tick", 0)),
-        "laboratories": labs, "eligible_partners": partners, "science_granted": grant}
+        "laboratories": labs, "scientists": scientists, "eligible_partners": partners, "science_granted": grant}
 
 static func tick(world: Dictionary) -> void:
     prepare(world)
