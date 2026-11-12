@@ -56,7 +56,7 @@ func _run() -> void:
                         return
                     for field in ["credits", "science", "alloys", "stability"]:
                         if int(world[field]) < 0:
-                            _fail("Negative stock: " + field)
+                            _fail("Negative stock: %s seed %d difficulty %d strategy %s year %d" % [field, seed_value, difficulty, strategy_name, year])
                             return
                     if str(world.get("pending_event", "")) != "":
                         GalaxySystems.resolve_event(world, 0)

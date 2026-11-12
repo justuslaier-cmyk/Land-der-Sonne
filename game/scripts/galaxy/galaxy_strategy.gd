@@ -1121,7 +1121,19 @@ static func tick(world: Dictionary) -> void:
     var focus := int(world["policies"]["focus"])
     var tax := int(world["policies"]["tax"])
     world["credits"] = int(world["credits"]) + credits_bonus + (tax - 1) * 5 + world["trade_pacts"].size() * 6 + dependency_income(world) + GalaxyLore.artifact_bonus(world, "credits")
-    world["credits"] = int(world["credits"]) - colony_upkeep(world)
+    # Colony maintenance cannot create negative currency. Record the uncovered
+    # obligation and apply an explicit legitimacy cost rather than silently
+    # permitting debt or generating a free subsidy.
+    var maintenance_due := colony_upkeep(world)
+    var available := maxi(0, int(world["credits"]))
+    var maintenance_paid := mini(available, maintenance_due)
+    var maintenance_shortfall := maintenance_due - maintenance_paid
+    world["credits"] = available - maintenance_paid
+    world["treasury_shortfall"] = maintenance_shortfall
+    if maintenance_shortfall > 0:
+        world["stability"] = maxi(0, int(world["stability"]) - mini(5, maintenance_shortfall))
+        if int(world["tick"]) % 5 == 0:
+            world["history"].append("Kolonieunterhalt unterfinanziert: %d Credits fehlen." % maintenance_shortfall)
     world["science"] = maxi(0, int(world["science"]) + int(GalaxyIdentity.culture_modifiers(world["culture"])["science"]))
     world["science"] = int(world["science"]) + science_bonus + (4 if focus == 1 else 0) + GalaxyLore.artifact_bonus(world, "science")
     world["alloys"] = int(world["alloys"]) + 2 + alloy_bonus + (3 if focus == 2 else 0) + GalaxyLore.artifact_bonus(world, "alloys")
