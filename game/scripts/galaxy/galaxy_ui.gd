@@ -2,6 +2,7 @@ extends Control
 
 const UiComponents = preload("res://scripts/galaxy/galaxy_ui_components.gd")
 const Comfort = preload("res://scripts/galaxy/galaxy_comfort.gd")
+const AudioDirector = preload("res://scripts/galaxy/galaxy_audio.gd")
 const OPTIONS_ART = preload("res://assets/art/ui_comfort_panel.svg")
 
 const BG := GalaxyVisualTheme.BACKGROUND
@@ -35,9 +36,13 @@ var system_search: LineEdit
 var comfort: Dictionary = Comfort.defaults()
 var options_return: String = "menu"
 var onboarding_dismissed: bool = false
+var audio_director: GalaxyAudio
 
 func _ready() -> void:
     get_window().title = "Land der Sonne | Galaktische Chroniken"
+    audio_director = AudioDirector.new()
+    audio_director.name = "GalaxyAudioDirector"
+    add_child(audio_director)
     comfort = Comfort.load_preferences()
     _apply_comfort()
     _show_menu()
@@ -124,6 +129,8 @@ func _back_from_options() -> void:
 
 func _clear() -> void:
     for child in get_children():
+        if child == audio_director:
+            continue
         remove_child(child)
         child.queue_free()
     var backdrop := ColorRect.new()
@@ -169,7 +176,13 @@ func _apply_action_icon(button: Button) -> void:
     UiComponents.apply_icon(button)
 
 func _button(value: String, callback: Callable) -> void:
-    root.add_child(UiComponents.action_button(value, callback))
+    var button := UiComponents.action_button(value, callback)
+    button.pressed.connect(func(): _play_ui_sound("click"))
+    root.add_child(button)
+
+func _play_ui_sound(kind: String = "click") -> void:
+    if is_instance_valid(audio_director):
+        audio_director.play_effect(kind)
 
 func _begin_new_game() -> void:
     # A fresh wizard must not inherit settings or identity from a previous game.
@@ -637,6 +650,7 @@ func _show_galaxy() -> void:
     for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["FLOTTENKOMMANDO", _fleet_command], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["ZIELE", _goals_report], ["GESELLSCHAFT", _society_report], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["SPIELSTÄNDE", _show_save_slots], ["HILFE", _show_help], ["EINSTELLUNGEN", func(): _open_options("galaxy")], ["MENÜ", _show_menu]]:
         var button: Button = UiComponents.action_button(str(spec[0]), spec[1], true)
         button.custom_minimum_size.y = 42
+        button.pressed.connect(func(): _play_ui_sound("click"))
         bar.add_child(button)
     var search_row := HBoxContainer.new()
     root.add_child(search_row)
@@ -840,6 +854,7 @@ func _map_input(event: InputEvent) -> void:
                 found = int(star["id"])
         if found >= 0:
             selected = found
+            _play_ui_sound("select")
             world["selected"] = selected
             notice = ""
             _show_galaxy()
@@ -922,7 +937,9 @@ func _side_label(value: String, heading: bool = false) -> void:
     galaxy_details.add_child(label)
 
 func _side_button(value: String, callback: Callable) -> void:
-    galaxy_details.add_child(UiComponents.action_button(value, callback, true))
+    var button := UiComponents.action_button(value, callback, true)
+    button.pressed.connect(func(): _play_ui_sound("click"))
+    galaxy_details.add_child(button)
 
 func _move_fleet() -> void:
     var preview: Dictionary = GalaxySystems.route_preview(world, selected)
@@ -1428,6 +1445,7 @@ func _event_category(kind: String) -> String:
 
 func _show_event() -> void:
     screen = "event"
+    _play_ui_sound("event")
     _clear()
     var kind := str(world["pending_event"])
     _event_card_header(kind)
@@ -1512,6 +1530,9 @@ func _illustration(kind: String) -> void:
         image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
         image.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
         root.add_child(image)
+        image.modulate.a = 0.0
+        var reveal := create_tween()
+        reveal.tween_property(image, "modulate:a", 1.0, 0.28).set_trans(Tween.TRANS_SINE)
         return
     # Preserve a functional fallback if an art resource fails to import.
     var canvas := Control.new()

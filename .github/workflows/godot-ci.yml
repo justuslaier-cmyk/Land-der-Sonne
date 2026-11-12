@@ -38,6 +38,8 @@ jobs:
         run: timeout 90s godot --headless --path game --script res://tests/galaxy_comfort_flow_test.gd
       - name: Verify individual original sprite imports and gallery integration
         run: timeout 90s godot --headless --path game --script res://tests/galaxy_art_production_test.gd
+      - name: Verify original procedural music, SFX, audio buses and volume/mute
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_audio_animation_test.gd
       - name: Test player input and scene interaction
         run: godot --headless --path game --script res://tests/interaction_test.gd
       - name: Test galactic new game and persistence
