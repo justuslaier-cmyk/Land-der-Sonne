@@ -15,6 +15,18 @@ permissions:
 # Preserve every validation run until runner allocation or a real failure.
 
 jobs:
+  release-evidence-audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate all 98 release evidence records and fail-closed release status
+        run: |
+          python3 -m unittest discover -s game/tests -p release_gate_test.py -v
+          python3 tools/release_gate.py --mode audit
+          if python3 tools/release_gate.py --mode release; then
+            echo "Unexpected release eligibility without manual evidence" >&2
+            exit 1
+          fi
   godot-smoke:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
