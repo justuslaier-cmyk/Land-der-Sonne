@@ -39,6 +39,11 @@ func _process(delta: float) -> void:
     while simulation_elapsed >= 4.0 and steps < 8:
         simulation_elapsed -= 4.0
         GalaxyStrategy.tick(world)
+        # Autosave every ten completed simulation years, independent of manual slots.
+        if int(world.get("tick", 0)) > 0 and int(world["tick"]) % 10 == 0:
+            world["selected"] = selected
+            if not GalaxyModel.save_game(world, 0):
+                notice = "Automatisches Speichern fehlgeschlagen."
         steps += 1
         if str(world.get("pending_event", "")) != "":
             simulation_paused = true
