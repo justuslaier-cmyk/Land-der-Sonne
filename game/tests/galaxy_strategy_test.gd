@@ -24,14 +24,14 @@ func _initialize() -> void:
     if int(w["buildings"]["0"]["mine"]) != 1:
         _fail("Building state missing")
         return
+    var counterfactual: Dictionary = w.duplicate(true)
     if not GalaxyStrategy.set_policy(w, 1, 0):
         _fail("Policy setting failed")
         return
-    var science_before := int(w["science"])
-    var stability_before := int(w["stability"])
+    GalaxyStrategy.tick(counterfactual)
     GalaxyStrategy.tick(w)
-    if int(w["science"]) <= science_before or int(w["stability"]) <= stability_before:
-        _fail("Policy income or stability failed")
+    if int(w["science"]) < int(counterfactual["science"]) + 4 or int(w["stability"]) < int(counterfactual["stability"]):
+        _fail("Policy science bonus or relative stability effect failed")
         return
     if not GalaxyStrategy.configure_ship(w, 2, 2, 1):
         _fail("Ship design failed")
