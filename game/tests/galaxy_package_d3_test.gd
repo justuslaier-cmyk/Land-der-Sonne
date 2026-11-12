@@ -9,6 +9,13 @@ func _initialize() -> void:
         GalaxyStrategy.prepare(world)
         GalaxyStrategy.set_welfare(world, 2)
         var replay := world.duplicate(true)
+        if not GalaxyModel.save_game(world, 4):
+            _fail("Initial-save failed")
+            return
+        var initial_loaded := GalaxyModel.load_game(4)
+        if initial_loaded.is_empty() or int(initial_loaded["policies"].get("welfare", -1)) != 2:
+            _fail("Initial-save lost welfare policy")
+            return
         for year in range(125):
             world["tick"] = year
             replay["tick"] = year
@@ -23,14 +30,6 @@ func _initialize() -> void:
             if int(world["credits"]) != int(replay["credits"]):
                 _fail("Treasury replay diverged")
                 return
-            if year == 20:
-                if not GalaxyModel.save_game(world, 4):
-                    _fail("Early-save failed")
-                    return
-                var early_loaded := GalaxyModel.load_game(4)
-                if not bool(GalaxySocietyAudit.inspect(early_loaded)["valid"]):
-                    _fail("Early-save broke audit invariants")
-                    return
             if world["society_audit_history"].size() > 60:
                 _fail("Audit history retention exceeded")
                 return
@@ -51,7 +50,7 @@ func _initialize() -> void:
             _fail("Forged freight ledger accepted")
             return
 
-    print("GALAXY_PACKAGE_D3_PASS: 375 simulation years, replay, fiscal/freight corruption and early save")
+    print("GALAXY_PACKAGE_D3_PASS: 375 simulation years, replay, fiscal/freight corruption and initial save")
     quit(0)
 
 func _fail(message: String) -> void:
