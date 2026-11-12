@@ -31,6 +31,14 @@ static func prepare(world: Dictionary) -> void:
         world["trade_tariffs"] = {}
     if not world.has("trade_market_ledger"):
         world["trade_market_ledger"] = {}
+    if not world.has("foreign_market_stocks"):
+        world["foreign_market_stocks"] = {}
+    if not world.has("foreign_market_prices"):
+        world["foreign_market_prices"] = {}
+    if not world.has("foreign_market_shipments"):
+        world["foreign_market_shipments"] = []
+    if not world.has("scientific_workforce"):
+        world["scientific_workforce"] = {"scientists": 0, "institutions": 0}
     if not world.has("communications"):
         world["communications"] = []
     if not world.has("communication_history"):
@@ -665,20 +673,71 @@ static func set_trade_tariff(world: Dictionary, rival_id: int, rate: int) -> boo
     world["trade_tariffs"][str(rival_id)] = rate
     return true
 
+# Foreign stockpiles are finite; imports enter domestic inventories only
+# when an in-flight consignment arrives. Prices react to actual scarcity.
 static func settle_international_market(world: Dictionary) -> void:
     prepare(world)
+    var markets: Dictionary = world.get("civilian_worlds", {})
+    var incoming: Array = []
+    var delivered := 0
+    for cargo in world["foreign_market_shipments"]:
+        if int(cargo["arrival"]) > int(world["tick"]):
+            incoming.append(cargo)
+            continue
+        var destination := str(cargo["destination"])
+        if markets.has(destination):
+            var stock: Dictionary = markets[destination].get("production_stock", GalaxyCivilians.production_defaults())
+            stock["ore"] = int(stock.get("ore", 0)) + int(cargo["ore"])
+            markets[destination]["production_stock"] = stock
+            delivered += int(cargo["ore"])
+        else:
+            # A lost colony cannot silently destroy foreign-owned cargo.
+            incoming.append(cargo)
+    world["foreign_market_shipments"] = incoming
     var income := 0
     var partners := 0
     var dependency := 0
+    var purchased := 0
+    var purchases := 0
     for id in world["trade_pacts"]:
-        if world["contacts"].has(id) and not world["wars"].has(id) and not world["trade_embargoes"].has(id):
-            partners += 1
-            var tariff := clampi(int(world["trade_tariffs"].get(str(id), 0)), 0, 3)
-            income += 6 + tariff * 2
-            dependency += 1 + tariff
+        if not world["contacts"].has(id) or world["wars"].has(id) or world["trade_embargoes"].has(id):
+            continue
+        partners += 1
+        var key := str(id)
+        if not world["foreign_market_stocks"].has(key):
+            world["foreign_market_stocks"][key] = 24
+        var foreign_stock := maxi(0, int(world["foreign_market_stocks"][key]))
+        var tariff := clampi(int(world["trade_tariffs"].get(key, 0)), 0, 3)
+        var price := 2 + tariff + (2 if foreign_stock < 8 else 0)
+        world["foreign_market_prices"][key] = price
+        var destination := ""
+        var lowest := 999999
+        for market_key in markets.keys():
+            var sid := int(market_key)
+            if sid < 0 or sid >= world["stars"].size() or int(world["stars"][sid]["owner"]) != 0:
+                continue
+            var stock: Dictionary = markets[market_key].get("production_stock", GalaxyCivilians.production_defaults())
+            if int(stock.get("ore", 0)) < lowest:
+                lowest = int(stock.get("ore", 0))
+                destination = str(market_key)
+        var units := mini(3, foreign_stock)
+        if destination != "" and units > 0 and int(world["credits"]) >= units * price:
+            var cost := units * price
+            world["credits"] = int(world["credits"]) - cost
+            world["foreign_market_stocks"][key] = foreign_stock - units
+            world["foreign_market_shipments"].append({"rival": id, "destination": destination,
+                "ore": units, "arrival": int(world["tick"]) + 2})
+            purchased += units
+            purchases += cost
+        # Treaty service revenue is distinct from physical commodity purchases.
+        income += 6 + tariff * 2
+        dependency += 1 + tariff
     world["credits"] = int(world["credits"]) + income
     world["trade_market_ledger"] = {"year": int(world["tick"]), "partners": partners,
-        "tariff_revenue": income - partners * 6, "trade_revenue": income, "dependency": dependency}
+        "tariff_revenue": income - partners * 6, "trade_revenue": income,
+        "dependency": dependency, "ore_purchased": purchased,
+        "purchase_cost": purchases, "ore_delivered": delivered,
+        "ore_in_transit": world["foreign_market_shipments"].size()}
 
 static func set_propaganda(world: Dictionary, level: int) -> bool:
     prepare(world)

@@ -156,6 +156,18 @@ static func build_fleet(world: Dictionary) -> bool:
 # Specialised research consumes finite science and follows explicit
 # prerequisites; the aggregate level remains for legacy milestones.
 # Only laboratories in player-owned systems count as research infrastructure.
+static func research_workforce(world: Dictionary) -> Dictionary:
+    var labs := research_labs(world)
+    var workers := 0
+    for key in world.get("civilian_worlds", {}).keys():
+        var sid := int(key)
+        if sid < 0 or sid >= world["stars"].size() or int(world["stars"][sid]["owner"]) != 0:
+            continue
+        var market: Dictionary = world["civilian_worlds"][key]
+        workers += maxi(0, int(market.get("demographics", {}).get("employed", 0)))
+    var scientists := mini(workers / 5, labs * 3)
+    return {"scientists": scientists, "institutions": labs, "workforce": workers}
+
 static func research_labs(world: Dictionary) -> int:
     var labs := 0
     for key in world.get("buildings", {}).keys():
