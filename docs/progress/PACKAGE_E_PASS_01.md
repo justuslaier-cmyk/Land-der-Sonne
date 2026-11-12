@@ -13,4 +13,4 @@ P40–P43, P50–P55. Dies ist ein erster daten- und regelbasierter Integrations
 P41: Piraterie, echte Lieferunterbrechungen und Sicherheit; P42: Zoll- und Embargoverträge sowie internationale Marktpreise; P43: wirtschaftliche KI-Steuerung; P50: Nachrichtenlaufzeiten/Propaganda; P52: Bildungs-/Wissenschaftlerressourcen; P55: Technologietransfer und Rückstand. Die vorhandenen Forschungszweige und Handelsverträge sind nicht als vollwertige Erfüllung dieser Pflichten zu werten.
 
 ## Nachweis
-CI-Lauf und Commit nach erfolgreicher Prüfung ergänzen.
+**E1 bestätigt:** Commit `38f10dd8bc515f1db308403e589718c61c4fd72a`, GitHub Actions Run `43226666764`, SUCCESS (17/17 Jobs). Der Test wurde auf 12 Jahre begrenzt und die anfänglichen Demografiekohorten korrekt initialisiert. https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43226666764
