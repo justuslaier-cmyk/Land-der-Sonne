@@ -88,6 +88,8 @@ jobs:
         run: timeout 120s godot --headless --path game --script res://tests/galaxy_package_d1_test.gd
       - name: Verify package H1 long campaigns, deterministic replay and strategy diversity
         run: timeout 420s godot --headless --path game --script res://tests/galaxy_package_h1_test.gd
+      - name: Verify package 2.1 production and physical freight conservation
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_production_freight_test.gd
       - name: Verify package 2.1 budget conservation and welfare shortage shocks
         run: timeout 90s godot --headless --path game --script res://tests/galaxy_budget_shock_test.gd
       - name: Verify long campaign endgame, megaprojects, crises and save continuation
