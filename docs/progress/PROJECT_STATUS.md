@@ -55,5 +55,9 @@ Ein einziger Entwicklungsdurchlauf ist für 98 voneinander abhängige Pflichtabn
 - Distant Worlds 2: Automatisierung, private Wirtschaft, Logistik, kontextuelle Hilfe, Galaxiegröße: https://store.steampowered.com/app/1531540/Distant_Worlds_2/
 - Vergleich ist eine Design-Gap-Analyse, **kein** Beleg, dass jedes Referenzspielsystem unverändert übernommen werden soll. Die verbindlichen P01–P98 entscheiden den Umfang.
 
+## Codeinventur und Anforderungsabdeckung (2026-11-12)
+
+Die [P01–P98-Codeinventur](../quality/P01_P98_CODE_COVERAGE_AUDIT.md) erfasst 127 Dateien im Branchvergleich gegenüber `main` (18 Implementierungsskripte, 59 Testskripte, 16 SVG-Grafiken, 30 Dokumentationsdateien) und ordnet allen 98 Pflichten konkrete zu prüfende Dateien oder ausdrücklich fehlende Nachweise zu. Dies ist keine Vollabnahme und kein vollständiger rekursiver Basisbranch-Scan. **P89:** Risiko bei der Backup-Rotation erkannt, noch nicht behoben; vor Änderung Fehlerfalltests erforderlich.
+
 ## Prozess
 Keine ungeprüften Merges nach `main`; das andere Projekt `grenzmark` bleibt unangetastet. Die 48 Planungsdurchläufe sind **kein** Fertigstellungsversprechen.
