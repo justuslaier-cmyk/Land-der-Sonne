@@ -17,6 +17,8 @@ static func prepare(world: Dictionary) -> void:
         world["galactic_crisis"] = {}
     if not world.has("galactic_crises_survived"):
         world["galactic_crises_survived"] = 0
+    if not world.has("galactic_crisis_resolved_ids"):
+        world["galactic_crisis_resolved_ids"] = []
 
 static func start_project(world: Dictionary, id: String) -> bool:
     prepare(world)
@@ -69,11 +71,14 @@ static func tick(world: Dictionary) -> void:
             world[field] = mini(100, int(world[field]))
     var crisis: Dictionary = world["galactic_crisis"]
     var year := int(world["tick"])
-    if crisis.is_empty() and year >= 70 and (world.get("wars", []).size() >= 2 or int(world.get("stability", 100)) < 35):
+    if str(crisis.get("state", "")) == "survived":
+        world["galactic_crisis"] = {}
+        crisis = world["galactic_crisis"]
+    if crisis.is_empty() and year >= 70 and not world["galactic_crisis_resolved_ids"].has("fracture") and (world.get("wars", []).size() >= 2 or int(world.get("stability", 100)) < 35):
         world["galactic_crisis"] = {"id": "fracture", "title": "Die galaktische Spaltung", "state": "active", "threat": 75, "started": year}
         world["history"].append("Galaktische Krise: Krieg und Instabilität zerreißen die Sternenordnung.")
         return
-    if crisis.is_empty() and year >= 110 and world.get("ancient_history", {}).get("completed", false):
+    if crisis.is_empty() and year >= 110 and not world["galactic_crisis_resolved_ids"].has("ancient") and world.get("ancient_history", {}).get("completed", false):
         world["galactic_crisis"] = {"id": "ancient", "title": "Die Rückkehr der Alten", "state": "active", "threat": 90, "started": year}
         world["history"].append("Galaktische Krise: Die alten Archive aktivieren vergessene Maschinen.")
         return
@@ -82,6 +87,7 @@ static func tick(world: Dictionary) -> void:
     if int(crisis["threat"]) <= 0:
         crisis["state"] = "survived"
         world["galactic_crises_survived"] = int(world["galactic_crises_survived"]) + 1
+        world["galactic_crisis_resolved_ids"].append(str(crisis["id"]))
         world["history"].append("Galaktische Krise überwunden: %s." % str(crisis["title"]))
         return
     crisis["threat"] = mini(100, int(crisis["threat"]) + 2)
