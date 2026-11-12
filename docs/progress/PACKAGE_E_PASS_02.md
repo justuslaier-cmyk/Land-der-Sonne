@@ -11,4 +11,4 @@
 Dies ist **nicht** die vollständige Erfüllung von P40–P43/P50–P55. Insbesondere Piraterie, Zölle, internationale Gütermärkte, autonome wirtschaftliche KI-Steuerung, Propaganda, Wissenschaftlerberufe, komplexe Forschungsnetze und Technologiehandel bleiben offen. Visuelle Abnahme erfordert einen tatsächlich gerenderten Screenshot und Prüfung, nicht nur SVG-Import und CI.
 
 ## CI
-Status und Commit nach Ausführung ergänzen.
+**E2 technisch bestätigt:** Commit `c5646823fe8f9a3c95556571169926f171203cfe`, GitHub Actions Run `43226851045`, SUCCESS (17/17 Jobs). E1-Regression im selben Workflow erfolgreich. https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43226851045. Originalillustration integriert und Import getestet; native manuelle Bildabnahme bleibt offen.
