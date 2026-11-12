@@ -10,10 +10,9 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: godot-foundation-${{ github.ref }}
-  # Keep a complete validation run instead of repeatedly cancelling it on rapid commits.
-  cancel-in-progress: false
+# No workflow-level concurrency group: GitHub permits only one pending run
+# per group and replaces older pending runs even with cancel-in-progress=false.
+# Preserve every validation run until runner allocation or a real failure.
 
 jobs:
   godot-smoke:
