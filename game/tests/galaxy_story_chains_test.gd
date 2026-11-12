@@ -5,12 +5,12 @@ const Events = preload("res://scripts/galaxy_event_engine.gd")
 
 func _initialize() -> void:
 	var world := {"tick": 5, "credits": 100, "science": 0, "alloys": 10, "explored_count": 1}
-	var signal: Dictionary = {}
+	var signal_event: Dictionary = {}
 	for event in Events.candidates(world):
 		if str(event["id"]) == "ancient_signal":
-			signal = event
-	assert(not signal.is_empty(), "Ancient signal must be eligible after exploration")
-	assert(Events.apply(world, signal, "study"), "Study must succeed")
+			signal_event = event
+	assert(not signal_event.is_empty(), "Ancient signal must be eligible after exploration")
+	assert(Events.apply(world, signal_event, "study"), "Study must succeed")
 	assert(Chains.begin(world, "first_signal", "ancient_signal", "study"), "Chain must start")
 	assert(not Chains.begin(world, "first_signal", "ancient_signal", "study"), "Duplicate chain must fail")
 	assert(Chains.pending(world).is_empty(), "Stage must respect delay")
