@@ -1492,7 +1492,10 @@ func _species_gallery(readonly: bool = false) -> void:
 func _draw_species(canvas: Control, index: int) -> void:
     var w := canvas.size.x
     canvas.draw_rect(Rect2(0, 0, w, 170), Color("#13233a"))
-    var portraits: Texture2D = load("res://assets/art/species_portrait_strip.svg")
+    # The SVG strip imports but its atlas regions render as white cards in
+    # Godot 4.3 CI screenshots. Use the existing original procedural portraits
+    # until the atlas is verified as a correctly sampled texture.
+    var portraits: Texture2D = null
     if portraits != null:
         canvas.draw_texture_rect_region(portraits, Rect2((w - 112.0) * 0.5, 2, 112, 166), Rect2(float(index) * 64.0, 0, 64, 96))
         if index == int(empire["portrait"]):
@@ -1551,7 +1554,9 @@ func _draw_ship(canvas: Control, style: int, hull: int) -> void:
     var w := canvas.size.x
     var h := canvas.size.y
     canvas.draw_rect(Rect2(0, 0, w, h), Color("#102039"))
-    var ship_strip: Texture2D = load("res://assets/art/ship_sprite_strip.svg")
+    # Use the original procedural silhouettes: the SVG strip currently
+    # appears as white tiles in the captured Godot 4.3 gallery.
+    var ship_strip: Texture2D = null
     if ship_strip != null:
         var diameter: float = minf(w * 0.76, h * 0.9)
         var dest := Rect2(Vector2((w - diameter) * 0.5, (h - diameter) * 0.5), Vector2.ONE * diameter)
