@@ -27,7 +27,17 @@ func _initialize() -> void:
     if int(loaded["war_goals"][str(rival)]["target"]) != target:
         _fail("War goal lost on load")
         return
-    world["stars"][target]["owner"] = 0
+    var fleet: Dictionary = world["fleets"][0]
+    fleet["location"] = target
+    fleet["destination"] = -1
+    fleet["strength"] = 500
+    world["fleet_logistics"]["supply"] = 100
+    if GalaxyStrategy.attack(world, target) != "Sieg! System erobert.":
+        _fail("Real battle did not achieve territorial objective")
+        return
+    if not bool(world["war_goals"][str(rival)]["achieved"]):
+        _fail("Battle victory did not update objective")
+        return
     world["credits"] = 34
     if GalaxyStrategy.offer_peace(world, rival):
         _fail("Underfunded objective peace accepted")
