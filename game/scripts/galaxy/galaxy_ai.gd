@@ -54,11 +54,14 @@ static func tick(world: Dictionary) -> void:
         # The same first-tier 25-point cost applies to player research.
         var fields: Dictionary = world["ai_research_fields"][key]
         if year % 5 == id % 5 and int(world["ai_science"][key]) >= 25:
-            var field := "propulsion" if temperament == 0 else "industry" if temperament == 1 else "society"
-            if int(fields.get(field, 0)) == 0:
+            var priorities := ["propulsion", "industry", "society"] if temperament == 0 else ["industry", "society", "propulsion"] if temperament == 1 else ["society", "propulsion", "industry"]
+            for field in priorities:
+                if int(fields.get(field, 0)) > 0:
+                    continue
                 world["ai_science"][key] = int(world["ai_science"][key]) - 25
                 fields[field] = 1
                 _record(world, "%s finanziert Forschung: %s." % [str(rival["name"]), field])
+                break
         _society_tick(world, rival, treasury, year, ownership)
         var fleet: Dictionary = {}
         for candidate in world["ai_fleets"]:
@@ -143,7 +146,7 @@ static func tick(world: Dictionary) -> void:
             if int(star["owner"]) != 0:
                 continue
             var distance := GalaxySystems.distance(origin, star)
-            if distance < closest and distance <= 175.0:
+            if distance < closest and distance <= 175.0 + float(world["ai_research_fields"][key].get("propulsion", 0)) * 12.0:
                 closest = distance
                 target = int(star["id"])
         if target < 0:
