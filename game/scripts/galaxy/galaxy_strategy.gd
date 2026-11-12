@@ -33,6 +33,12 @@ static func prepare(world: Dictionary) -> void:
         world["trade_market_ledger"] = {}
     if not world.has("communications"):
         world["communications"] = []
+    if not world.has("communication_history"):
+        world["communication_history"] = []
+    if not world.has("market_automation"):
+        world["market_automation"] = {"enabled": true, "reserve": 20}
+    if not world.has("technology_diffusion"):
+        world["technology_diffusion"] = {"insights": 0, "last_year": -1}
     if not world.has("propaganda_level"):
         world["propaganda_level"] = 0
     if not world.has("diplomatic_negotiations"):
@@ -597,6 +603,50 @@ static func improve_trade_security(world: Dictionary) -> bool:
     world["history"].append("Zivile Handelskonvois werden stärker gesichert (Stufe %d)." % (level + 1))
     return true
 
+# Messages travel through the diplomatic network. Only arrived messages
+# become visible in the history; secret dispatches remain private.
+static func send_communication(world: Dictionary, rival_id: int, kind: String) -> bool:
+    prepare(world)
+    if not world["contacts"].has(rival_id) or not ["news", "secret", "warning"].has(kind):
+        return false
+    var delay := 1 + maxi(0, 3 - int(world.get("research_fields", {}).get("propulsion", 0)))
+    world["communications"].append({"rival": rival_id, "kind": kind,
+        "sent": int(world["tick"]), "due": int(world["tick"]) + delay})
+    return true
+
+static func advance_communications(world: Dictionary) -> void:
+    prepare(world)
+    var remaining: Array = []
+    for message in world["communications"]:
+        if int(message["due"]) > int(world["tick"]):
+            remaining.append(message)
+            continue
+        var kind := str(message["kind"])
+        var delivered := {"rival": int(message["rival"]), "kind": kind, "year": int(world["tick"])}
+        world["communication_history"].append(delivered)
+        if kind != "secret":
+            world["history"].append("Interstellare Nachricht von %s eingetroffen: %s." % [GalaxySystems.empire_name(world, int(message["rival"])), kind])
+    world["communications"] = remaining
+    if world["communication_history"].size() > 80:
+        world["communication_history"] = world["communication_history"].slice(-80)
+
+static func set_market_automation(world: Dictionary, enabled: bool, reserve: int) -> bool:
+    prepare(world)
+    if reserve < 0 or reserve > 100:
+        return false
+    world["market_automation"] = {"enabled": enabled, "reserve": reserve}
+    return true
+
+static func advance_technology_diffusion(world: Dictionary) -> void:
+    prepare(world)
+    var partners := int(world.get("trade_market_ledger", {}).get("partners", 0))
+    var labs := GalaxySystems.research_labs(world)
+    var gain := mini(3, mini(partners, labs))
+    if gain > 0 and int(world["tick"]) % 3 == 0:
+        world["research_insights"]["society"] = int(world["research_insights"].get("society", 0)) + 1
+        world["technology_diffusion"]["insights"] = int(world["technology_diffusion"]["insights"]) + 1
+        world["technology_diffusion"]["last_year"] = int(world["tick"])
+
 static func set_trade_embargo(world: Dictionary, rival_id: int, enabled: bool) -> bool:
     prepare(world)
     if not world["contacts"].has(rival_id):
@@ -940,6 +990,8 @@ static func tick(world: Dictionary) -> void:
     advance_diplomacy(world)
     advance_intelligence(world)
     settle_international_market(world)
+    advance_communications(world)
+    advance_technology_diffusion(world)
     var propaganda_cost := int(world["propaganda_level"]) * 3
     if int(world["credits"]) >= propaganda_cost:
         world["credits"] = int(world["credits"]) - propaganda_cost

@@ -890,6 +890,7 @@ func _research() -> void:
     var exchange: Dictionary = world.get("research_exchange_ledger", {})
     _label("Wissenschaftlicher Austausch: +%d Forschung/Jahr  •  %d Partner  •  %d Labore" % [int(exchange.get("science_granted", 0)), int(exchange.get("eligible_partners", 0)), int(exchange.get("laboratories", 0))])
     _label("Wissenschaftsnetz: Handelsabkommen und Labore erforderlich; Krieg unterbricht den Austausch.")
+    _label("Technologiediffusion: %d wissenschaftliche Impulse, letzter Austausch Jahr %d" % [int(world.get("technology_diffusion", {}).get("insights", 0)), int(world.get("technology_diffusion", {}).get("last_year", -1))])
     _illustration("research_exchange")
     var insights: Dictionary = world.get("research_insights", {})
     _label("Archäologische Erkenntnisse: Antrieb %d  •  Industrie %d  •  Gesellschaft %d" % [int(insights.get("propulsion", 0)), int(insights.get("industry", 0)), int(insights.get("society", 0))])
@@ -1068,6 +1069,21 @@ func _economy_report() -> void:
     var public_budget: Dictionary = world.get("public_budget_ledger", {})
     if not public_budget.is_empty():
         _label("STAATSHAUSHALT LETZTES JAHR: Anfang %d + Steuern %d − Sozialausgaben %d = %d" % [int(public_budget["opening"]), int(public_budget["tax_receipts"]), int(public_budget["welfare_spending"]), int(public_budget["closing"])])
+    _label("ZIVILE HANDELSAUTOMATISIERUNG")
+    var automation: Dictionary = world.get("market_automation", {"enabled": true, "reserve": 20})
+    _label("Autonomer Markt: %s  •  Strategische Reserve: %d" % ["aktiv" if bool(automation.get("enabled", true)) else "pausiert", int(automation.get("reserve", 20))])
+    _button("AUTOMATISIERUNG UMSCHALTEN", func():
+        GalaxyStrategy.set_market_automation(world, not bool(world["market_automation"]["enabled"]), int(world["market_automation"]["reserve"]))
+        _economy_report()
+    )
+    _button("RESERVE ERHÖHEN", func():
+        GalaxyStrategy.set_market_automation(world, bool(world["market_automation"]["enabled"]), mini(100, int(world["market_automation"]["reserve"]) + 10))
+        _economy_report()
+    )
+    _button("RESERVE SENKEN", func():
+        GalaxyStrategy.set_market_automation(world, bool(world["market_automation"]["enabled"]), maxi(0, int(world["market_automation"]["reserve"]) - 10))
+        _economy_report()
+    )
     _label("INTERNATIONALER HANDEL / ZOLL UND ABHÄNGIGKEIT")
     _illustration("trade_policy")
     var market: Dictionary = world.get("trade_market_ledger", {})
@@ -1155,6 +1171,15 @@ func _diplomacy(rival_id: int = -1) -> void:
         var stance := str(world.get("ai_intentions", {}).get(str(id), {}).get("stance", "unbekannt")) if intel >= 2 else "unbekannt"
         _label("%s  •  Beziehung: %d  •  Vertrauen: %d/50  •  Strategie: %s" % [rival["name"], int(world["relations"].get(str(id), 0)), int(world.get("diplomatic_trust", {}).get(str(id), 0)), stance])
         _label("Geheimdienstinformationen: Stufe %d/3" % intel)
+        var messages: int = 0
+        for message in world.get("communications", []):
+            if int(message["rival"]) == id:
+                messages += 1
+        _label("Interstellare Nachrichten unterwegs: %d" % messages)
+        _button("NACHRICHT SENDEN", func():
+            notice = "Nachricht unterwegs." if GalaxyStrategy.send_communication(world, id, "news") else "Nachricht nicht möglich."
+            _diplomacy(id)
+        )
         var tariff := int(world.get("trade_tariffs", {}).get(str(id), 0))
         _label("Zollstufe %d/3  •  Embargo %s" % [tariff, "aktiv" if world.get("trade_embargoes", []).has(id) else "inaktiv"])
         _button("ZOLL ERHÖHEN", func():
