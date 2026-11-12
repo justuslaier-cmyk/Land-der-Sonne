@@ -26,6 +26,7 @@ var simulation_paused: bool = true
 var simulation_elapsed: float = 0.0
 var time_status: Label
 var forecast_status: Label
+var tutorial_step: int = 0
 
 func _ready() -> void:
     get_window().title = "Land der Sonne | Galaktische Chroniken"
@@ -208,6 +209,7 @@ func _show_menu() -> void:
     _button("SPIEL LADEN", _load_game)
     _button("SPIELSTÄNDE 1–4", _show_save_slots)
     _button("SPIELANLEITUNG", _show_help)
+    _button("INTERAKTIVER EINSTIEG", _start_tutorial)
     _button("EINSTELLUNGEN", _show_options)
     _button("BEENDEN", func(): get_tree().quit())
     _label("Früher Prototyp • Galaxien können zufällig oder mit festem Seed erzeugt werden.")
@@ -229,6 +231,37 @@ func _show_help() -> void:
     _label("Tastatur: F1 öffnet diese Hilfe, Esc schließt sie, Leertaste pausiert oder startet die Galaxie.")
     _label("Hinweis: Dies ist eine Anleitung zum experimentellen Prototyp, kein vollständiges interaktives Tutorial.")
     _button("ZUR GALAXIE" if from_game else "ZUM MENÜ", _show_galaxy if from_game else _show_menu)
+
+# A short interactive onboarding that requires user input at each step.
+func _start_tutorial() -> void:
+    tutorial_step = 0
+    _show_tutorial()
+
+func _show_tutorial() -> void:
+    screen = "tutorial"
+    _clear()
+    _title("ERSTE SCHRITTE  %d / 4" % (tutorial_step + 1))
+    _illustration("menu")
+    var steps := [
+        "Eine Galaxie entsteht aus Sternenzahl, Form und Seed. Derselbe Seed erzeugt denselben Ausgangspunkt.",
+        "Dein Reich erhält einen Namen, eine Spezies und eine Heimatwelt. Die Vorlagen sind veränderbar.",
+        "Im Galaxiebildschirm wählst du Sterne und Verwaltungsbereiche. Die Simulation startet pausiert.",
+        "Forschung, Wirtschaft, Diplomatie und Flotten wirken über mehrere Jahre zusammen. F1 öffnet jederzeit die Hilfe."
+    ]
+    _label(steps[tutorial_step])
+    if tutorial_step > 0:
+        _button("ZURÜCK", func():
+            tutorial_step -= 1
+            _show_tutorial()
+        )
+    if tutorial_step < steps.size() - 1:
+        _button("NÄCHSTER SCHRITT", func():
+            tutorial_step += 1
+            _show_tutorial()
+        )
+    else:
+        _button("JETZT SPIEL STARTEN", _begin_new_game)
+    _button("TUTORIAL BEENDEN", _show_menu)
 
 func _show_options() -> void:
     screen = "options"
