@@ -887,6 +887,10 @@ func _research() -> void:
     _label("Verfügbare Forschungspunkte: %d  •  Gesamtfortschritt: %d" % [int(world["science"]), int(world["research_level"])])
     var technology: Dictionary = GalaxySystems.technology_bonuses(world)
     _label("Forschungslabore in eigenen Systemen: %d" % GalaxySystems.research_labs(world))
+    var exchange: Dictionary = world.get("research_exchange_ledger", {})
+    _label("Wissenschaftlicher Austausch: +%d Forschung/Jahr  •  %d Partner  •  %d Labore" % [int(exchange.get("science_granted", 0)), int(exchange.get("eligible_partners", 0)), int(exchange.get("laboratories", 0))])
+    _label("Wissenschaftsnetz: Handelsabkommen und Labore erforderlich; Krieg unterbricht den Austausch.")
+    _illustration("research_exchange")
     var insights: Dictionary = world.get("research_insights", {})
     _label("Archäologische Erkenntnisse: Antrieb %d  •  Industrie %d  •  Gesellschaft %d" % [int(insights.get("propulsion", 0)), int(insights.get("industry", 0)), int(insights.get("society", 0))])
     _label("Entschlüsselte wissenschaftliche Durchbrüche: %d" % world.get("research_breakthroughs", []).size())
@@ -1275,6 +1279,8 @@ func _illustration(kind: String) -> void:
             asset = "res://assets/art/event_market.svg"
         "research":
             asset = "res://assets/art/scene_research.svg"
+        "research_exchange":
+            asset = "res://assets/art/scene_research_exchange.svg"
         "fleet", "shipyard":
             asset = "res://assets/art/scene_fleet.svg"
         "diplomacy":

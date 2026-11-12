@@ -26,6 +26,8 @@ static func prepare(world: Dictionary) -> void:
         world["research_insights"] = {"propulsion": 0, "industry": 0, "society": 0}
     if not world.has("research_breakthroughs"):
         world["research_breakthroughs"] = []
+    if not world.has("research_exchange_ledger"):
+        world["research_exchange_ledger"] = {}
     if not world.has("pending_event"):
         world["pending_event"] = ""
     if not world.has("event_counter"):
@@ -241,9 +243,24 @@ static func start_research(world: Dictionary, field: String = "propulsion") -> b
     world["history"].append("Forschungsdurchbruch: %s Stufe %d." % [field, int(world["research_fields"][field])])
     return true
 
+# Civilian academic exchange requires laboratories and a ratified trade pact.
+# It grants science, not free technology levels, and cannot operate during war.
+static func settle_research_exchange(world: Dictionary) -> void:
+    prepare(world)
+    var labs := research_labs(world)
+    var partners := 0
+    for rival_id in world.get("trade_pacts", []):
+        if world.get("contacts", []).has(rival_id) and not world.get("wars", []).has(rival_id):
+            partners += 1
+    var grant := mini(12, labs * mini(3, partners))
+    world["science"] = int(world["science"]) + grant
+    world["research_exchange_ledger"] = {"year": int(world.get("tick", 0)),
+        "laboratories": labs, "eligible_partners": partners, "science_granted": grant}
+
 static func tick(world: Dictionary) -> void:
     prepare(world)
     GalaxyModel.advance(world)
+    settle_research_exchange(world)
     GalaxyLore.tick(world)
     _automated_survey(world)
     _ambient_event(world)
