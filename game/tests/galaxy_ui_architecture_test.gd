@@ -22,7 +22,7 @@ func _run() -> void:
     if Components.find_known_system(ui.world, name.to_lower()) != known_id:
         _fail("Case insensitive known-system lookup failed")
         return
-    var previous := ui.selected
+    var previous: int = ui.selected
     ui._search_system("unknown-system-xyz")
     if ui.selected != previous or not ui.notice.contains("Kein bekanntes System"):
         _fail("Missing search result must not change selection")
