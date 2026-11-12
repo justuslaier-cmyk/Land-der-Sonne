@@ -620,7 +620,7 @@ static func advance_fleet_logistics(world: Dictionary) -> void:
     var upkeep := fleet_upkeep(world)
     world["credits"] = maxi(0, int(world["credits"]) - upkeep)
     var location := int(fleet.get("location", -1))
-    var friendly := location >= 0 and location < world["stars"].size() and int(world["stars"][location]["owner"]) == 0
+    var friendly: bool = location >= 0 and location < world["stars"].size() and int(world["stars"][location]["owner"]) == 0
     var transit := int(fleet.get("destination", -1)) >= 0
     var logistics: Dictionary = world["fleet_logistics"]
     var supply := clampi(int(logistics.get("supply", 100)), 0, 100)
