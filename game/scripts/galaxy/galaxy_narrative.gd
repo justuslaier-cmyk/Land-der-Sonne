@@ -44,6 +44,9 @@ static func apply(world: Dictionary, event: Dictionary) -> bool:
         return false
     if year < int(world["narrative_cooldowns"].get(key, -10000)):
         return false
+    var existing: Dictionary = world["narrative_chains"].get(key, {})
+    if not existing.is_empty() and not bool(existing.get("resolved", true)):
+        return false
     var field := str(event["effect"])
     var before := int(world.get(field, 0))
     var after := maxi(0, before + int(event["delta"]))
