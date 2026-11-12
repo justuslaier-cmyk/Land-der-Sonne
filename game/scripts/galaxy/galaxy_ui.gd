@@ -804,7 +804,15 @@ func _show_selection() -> void:
         if owner > 0 and world["wars"].has(owner):
             _side_button("ANGREIFEN", _attack)
         if owner == -1 and bool(star["habitable"]):
-            _side_button("KOLONISIEREN (50)", _colonize)
+            var stationed := false
+            for fleet in world["fleets"]:
+                if int(fleet.get("owner", -1)) == 0 and int(fleet.get("location", -1)) == selected and int(fleet.get("destination", -1)) < 0:
+                    stationed = true
+                    break
+            if stationed and int(world["credits"]) >= 50:
+                _side_button("KOLONISIEREN (50)", _colonize)
+            else:
+                _side_label("Kolonie: eigene Flotte vor Ort und 50 Credits erforderlich.")
         if owner > 0:
             _side_button("DIPLOMATIE", func(): _diplomacy(owner))
     var fleet: Dictionary = world["fleets"][0]
@@ -852,13 +860,8 @@ func _explore() -> void:
     _show_galaxy()
 
 func _colonize() -> void:
-    if int(world["credits"]) < 50:
-        return
-    if not world["known"].has(selected) or int(world["stars"][selected]["owner"]) != -1 or not bool(world["stars"][selected]["habitable"]):
-        return
-    world["credits"] = int(world["credits"]) - 50
-    world["stars"][selected]["owner"] = 0
-    world["history"].append("Kolonie auf %s gegründet" % world["stars"][selected]["name"])
+    var reason := GalaxyStrategy.colonize_system(world, selected)
+    notice = "Sternensystem kolonisiert." if reason.is_empty() else "Kolonisierung nicht möglich: " + reason
     _show_galaxy()
 
 func _advance() -> void:

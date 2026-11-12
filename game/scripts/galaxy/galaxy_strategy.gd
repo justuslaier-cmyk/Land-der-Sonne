@@ -83,6 +83,33 @@ static func planet_colony(world: Dictionary, star_id: int, planet_index: int) ->
     prepare(world)
     return world["planet_colonies"].get(planet_key(star_id, planet_index), {})
 
+# System claims require a surveyed world, credits and a stationed fleet.
+# Individual planet settlement remains a separate, already implemented action.
+static func colonize_system(world: Dictionary, star_id: int) -> String:
+    prepare(world)
+    if star_id < 0 or star_id >= world["stars"].size():
+        return "Ungültiges Sternensystem."
+    if not world.get("known", []).has(star_id):
+        return "Sternensystem noch nicht kartografiert."
+    var star: Dictionary = world["stars"][star_id]
+    if int(star["owner"]) != -1:
+        return "Sternensystem bereits beansprucht."
+    if not bool(star["habitable"]):
+        return "Keine bewohnbare Welt in diesem Sternensystem."
+    var stationed := false
+    for fleet in world.get("fleets", []):
+        if int(fleet.get("owner", -1)) == 0 and int(fleet.get("location", -1)) == star_id and int(fleet.get("destination", -1)) < 0:
+            stationed = true
+            break
+    if not stationed:
+        return "Eine eigene Flotte muss sich im Zielsystem befinden."
+    if int(world["credits"]) < 50:
+        return "Nicht genügend Credits (50 benötigt)."
+    world["credits"] = int(world["credits"]) - 50
+    star["owner"] = 0
+    world["history"].append("Sternensystem %s kolonisiert." % star["name"])
+    return ""
+
 static func settle_planet(world: Dictionary, star_id: int, planet_index: int) -> bool:
     prepare(world)
     if star_id < 0 or star_id >= world["stars"].size():

@@ -39,6 +39,32 @@ static func build(stars: Array) -> Array:
                 parent[candidate] = current
     return lanes
 
+# Test multi-hop accessibility through direct legal-range jumps.
+# Visual lane connections remain geographical markers, not ship orders.
+static func reachable(stars: Array, origin: int, jump_range: float) -> Array:
+    var reached: Array = []
+    if origin < 0 or origin >= stars.size() or jump_range <= 0.0:
+        return reached
+    var seen: Dictionary = {origin: true}
+    reached.append(origin)
+    var cursor := 0
+    var squared_range := jump_range * jump_range
+    while cursor < reached.size():
+        var current := int(reached[cursor])
+        cursor += 1
+        var start := Vector2(float(stars[current]["x"]), float(stars[current]["y"]))
+        for i in range(stars.size()):
+            if seen.has(i):
+                continue
+            var target := Vector2(float(stars[i]["x"]), float(stars[i]["y"]))
+            if start.distance_squared_to(target) <= squared_range:
+                seen[i] = true
+                reached.append(i)
+    return reached
+
+static func fully_reachable(stars: Array, jump_range: float) -> bool:
+    return stars.is_empty() or reachable(stars, 0, jump_range).size() == stars.size()
+
 static func valid(stars: Array, lanes: Array) -> bool:
     if stars.is_empty():
         return lanes.is_empty()

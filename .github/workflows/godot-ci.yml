@@ -98,6 +98,8 @@ jobs:
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_start_spacing_test.gd
       - name: Verify interactive onboarding
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_tutorial_test.gd
+      - name: Verify package C2 reachable stars and fleet-gated colonies
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_package_c2_test.gd
       - name: Verify seeded geography property matrix
         run: timeout 120s godot --headless --path game --script res://tests/galaxy_geography_property_test.gd
       - name: Verify quick-start help and navigation

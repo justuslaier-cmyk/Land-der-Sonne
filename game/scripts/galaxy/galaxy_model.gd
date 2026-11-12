@@ -58,6 +58,20 @@ static func generate(settings: Dictionary, empire: Dictionary) -> Dictionary:
         var resource_roll := rng.randi_range(0, 99) + int(settings["resources"]) / 5
         var resource_level := clampi(1 + resource_roll / 24, 1, 5)
         stars.append({"id": i, "name": star_name, "x": snappedf(p.x, 0.1), "y": snappedf(p.y, 0.1), "kind": kind, "resource": resource_level, "habitable": rng.randi_range(0, 99) < int(settings["habitable"]), "owner": -1})
+    # The old MST guaranteed a connected drawing but could contain legs
+    # too long to survey. Uniform deterministic scaling preserves relative
+    # distances and seed identity while guaranteeing <=170-unit MST legs.
+    var geography_lanes: Array = GalaxyRoutes.build(stars)
+    var longest := 0.0
+    for lane in geography_lanes:
+        var first: Dictionary = stars[int(lane[0])]
+        var second: Dictionary = stars[int(lane[1])]
+        longest = maxf(longest, Vector2(float(first["x"]), float(first["y"])).distance_to(Vector2(float(second["x"]), float(second["y"]))))
+    if longest > 169.0:
+        var scale := 169.0 / longest
+        for star in stars:
+            star["x"] = snappedf(float(star["x"]) * scale, 0.1)
+            star["y"] = snappedf(float(star["y"]) * scale, 0.1)
     stars[0]["name"] = str(empire["homeworld"])
     stars[0]["habitable"] = true
     stars[0]["owner"] = 0
