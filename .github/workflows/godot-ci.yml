@@ -86,6 +86,8 @@ jobs:
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_culture_test.gd
       - name: Verify package D1 social accounting and invariant diagnostics
         run: timeout 120s godot --headless --path game --script res://tests/galaxy_package_d1_test.gd
+      - name: Verify package E1 freight route, delivery and research contracts
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_package_e1_test.gd
       - name: Verify package D3 freight and fiscal invariants under long simulations
         run: timeout 180s godot --headless --path game --script res://tests/galaxy_package_d3_test.gd
       - name: Verify package D2 public budget, welfare and society UI integration

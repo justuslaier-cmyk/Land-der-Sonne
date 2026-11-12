@@ -57,6 +57,23 @@ static func inspect(world: Dictionary) -> Dictionary:
         if household_goods != ending:
             errors.append("Household goods differ from ledger closing stock")
         var returned := int(ledger.get("returned", 0))
+        var dispatched_shipments := 0
+        for shipment in ledger.get("shipments", []):
+            var quantity := int(shipment.get("goods", -1))
+            var hops := int(shipment.get("hops", -1))
+            var cost := int(shipment.get("cost", -1))
+            if quantity <= 0 or hops <= 0 or cost != quantity * hops:
+                errors.append("Invalid freight shipment capacity, route or cost")
+            if int(shipment.get("arrival_tick", -1)) - int(shipment.get("departure_tick", -1)) != hops:
+                errors.append("Freight travel time differs from lane hops")
+            dispatched_shipments += maxi(0, quantity)
+        if dispatched_shipments != dispatched:
+            errors.append("Dispatched goods differ from shipment manifest")
+        var arrived_manifest := 0
+        for shipment in ledger.get("arrivals", []):
+            arrived_manifest += maxi(0, int(shipment.get("goods", 0)))
+        if arrived_manifest != int(ledger.get("arrived", 0)):
+            errors.append("Freight arrivals differ from manifest")
         var arrivals := int(ledger.get("arrived", 0))
         if returned < 0 or arrivals < 0 or int(ledger.get("transit_after", 0)) < 0:
             errors.append("Negative freight settlement flow")

@@ -212,6 +212,8 @@ static func tick(world: Dictionary) -> void:
     if not world.has("civilian_freight_transit"):
         world["civilian_freight_transit"] = []
     var transit_before := transit_goods(world)
+    # The reserve is a physical household inventory threshold, not free goods.
+    # Snapshot transport volume before any dispatch for annual conservation.
     var arrivals: Array = settle_freight(world)
     # A newly acquired system creates its own civilian market; lost systems no
     # longer contribute to domestic taxation or migration.
