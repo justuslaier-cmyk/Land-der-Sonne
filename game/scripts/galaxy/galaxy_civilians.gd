@@ -291,8 +291,10 @@ static func tick(world: Dictionary) -> void:
     # Civilian freight routes move real goods between surplus and shortage.
     # The state cannot order a shipment: merchants respond to market scarcity.
     for source_key in active:
+        if not bool(world.get("market_automation", {}).get("enabled", true)):
+            break
         var source: Dictionary = settlements[source_key]
-        if int(source["goods"]) <= freight_reserve(source):
+        if int(source["goods"]) <= maxi(freight_reserve(source), int(world.get("market_automation", {}).get("reserve", 0))):
             continue
         var best_key := ""
         var shortage := 0
