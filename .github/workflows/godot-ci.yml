@@ -5,6 +5,7 @@ on:
     branches: [main, design/galactic-grand-strategy-pivot]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -182,7 +183,7 @@ jobs:
           name: godot-render-evidence
           path: ~/.local/share/godot/app_userdata/Land der Sonne/render-*.png
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
 
   windows-export:
     needs: [godot-smoke, regression-matrix, render-check]
@@ -214,10 +215,12 @@ jobs:
           (cd dist && sha256sum LandDerSonne.exe LandDerSonne.pck > SHA256SUMS.txt)
           (cd dist && zip -9 LandDerSonne-Windows-x64.zip LandDerSonne.exe LandDerSonne.pck BUILD_INFO.txt SHA256SUMS.txt)
           test -s dist/LandDerSonne-Windows-x64.zip
+          unzip -t dist/LandDerSonne-Windows-x64.zip
+          (cd dist && sha256sum -c SHA256SUMS.txt)
       - name: Publish experimental Windows build
         uses: actions/upload-artifact@v4
         with:
           name: LandDerSonne-Windows-experimental
           path: dist/LandDerSonne-Windows-x64.zip
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
