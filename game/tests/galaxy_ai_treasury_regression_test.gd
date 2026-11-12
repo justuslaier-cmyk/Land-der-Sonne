@@ -43,8 +43,8 @@ func _initialize() -> void:
         if opening == 45 and closing != 16:
             _fail("Expansion used stale pre-recruitment balance")
             return
-        if opening == 46 and closing != 17:
-            _fail("Expansion ignored construction costs")
+        if opening == 46 and closing != 0:
+            _fail("Affordable expansion did not take priority over recruitment")
             return
         if opening == 28 and int(world["ai_fleets"][fleet_index]["strength"]) != strength_before:
             _fail("Unaffordable recruitment increased fleet strength")
