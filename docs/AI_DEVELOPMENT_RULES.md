@@ -1,5 +1,13 @@
 # Binding AI development rules
 
+## Zwingendes Preflight-Gate vor JEDEM Entwicklungsbefehl (Nutzeranweisung 12.11.2026)
+
+**Nicht nur einmal pro Sitzung:** Vor **jedem einzelnen** GitHub-Schreibbefehl, Tool-Aufruf mit Entwicklungswirkung, Commit, Testauftrag und jeder Entwicklungsabgabe die aktuelle Fassung von `docs/AI_DEVELOPMENT_RULES.md` **und** `docs/progress/FINAL_GAME_EXECUTION_PLAN.md` erneut lesen und auf den beabsichtigten Befehl anwenden. Ohne diesen Preflight den Befehl nicht ausführen. Auch bei Wiederholung, Eile und Chatwechseln keine Ausnahme.
+
+**Ausführungs-Gate:** (1) Gehört die Aktion zum derzeitigen, unveränderten Paketdurchlauf? (2) Ist sie Teil einer vollständigen gebündelten Implementierung statt einer isolierten Mikroabgabe? (3) Werden Spielmechanik, Integration, Tests und Abnahme gemeinsam vorangetrieben? (4) Sind offene Prüfungen ehrlich dokumentiert, ohne Fortschritt an anderen Paketen zu blockieren? (5) Ist der Branch korrekt? Wenn eine Antwort nein ist: zuerst Arbeitsweise korrigieren.
+
+**Stoppsignal vor Nutzerantwort:** Keine Entwicklungsabgabe, die nur einen einzelnen neuen Test, Commit oder die Ankündigung weiterer Arbeit enthält. Nur zusammenhängendes Durchlaufergebnis oder eine explizit angeforderte Statusauskunft. Eine technisch erzwungene Unterbrechung niemals als fertigen Durchlauf darstellen.
+
 ## Verbindliche Arbeitsdisziplin: ein Durchlauf ist eine vollständige Arbeitseinheit
 
 **Ausdrückliche Nutzerkorrektur vom 12.11.2026. Diese Regel hat Vorrang vor der bisherigen Gewohnheit, nach jedem Commit einen Zwischenbericht abzugeben.** Für Land der Sonne gilt der genehmigte Plan `docs/progress/FINAL_GAME_EXECUTION_PLAN.md` mit **sechs Paketen und zwölf Durchläufen**.
