@@ -12,6 +12,7 @@ func _initialize() -> void:
         "res://assets/art/event_market.svg",
         "res://assets/art/scene_fleet.svg",
         "res://assets/art/scene_diplomacy.svg",
+        "res://assets/art/war_objective.svg",
         "res://assets/art/scene_research.svg",
         "res://assets/art/galaxy_nebula.svg",
         "res://assets/art/planet_sprite_strip.svg",
@@ -25,6 +26,8 @@ func _initialize() -> void:
         assert(ResourceLoader.exists(path), "Missing art resource: " + path)
         var texture: Texture2D = load(path)
         assert(texture != null, "Unimportable art resource: " + path)
+    var objective: Texture2D = load("res://assets/art/war_objective.svg")
+    assert(objective.get_size() == Vector2(48, 48), "War objective icon size incorrect")
     var planets: Texture2D = load("res://assets/art/planet_sprite_strip.svg")
     var ships: Texture2D = load("res://assets/art/ship_sprite_strip.svg")
     assert(planets.get_width() == 512 and planets.get_height() == 64, "Planet strip must contain 8 cells of 64x64")

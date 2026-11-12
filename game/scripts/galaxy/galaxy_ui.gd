@@ -1254,6 +1254,12 @@ func _diplomacy(rival_id: int = -1) -> void:
             var target_id := int(war_goal.get("target", -1))
             var goal_met: bool = bool(war_goal.get("achieved", false)) or (target_id >= 0 and target_id < world["stars"].size() and int(world["stars"][target_id]["owner"]) == 0)
             if target_id >= 0 and target_id < world["stars"].size():
+                var objective_icon := TextureRect.new()
+                objective_icon.texture = load("res://assets/art/war_objective.svg")
+                objective_icon.custom_minimum_size = Vector2(48, 48)
+                objective_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+                objective_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+                root.add_child(objective_icon)
                 _label("Kriegsziel: %s — %s" % [str(world["stars"][target_id]["name"]), "erreicht" if goal_met else "offen"])
             var relation := int(world["relations"].get(str(id), -100))
             var peace_cost := (35 if goal_met else 70) if relation < -80 else 0
