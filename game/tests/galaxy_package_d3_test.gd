@@ -1,6 +1,15 @@
 extends SceneTree
 
 func _initialize() -> void:
+    # CI shares user:// across smoke scripts. This test owns slot 4 and
+    # clears only its own fixture files to avoid stale recovery rotations.
+    var slot_path := GalaxyModel.slot_path(4)
+    for suffix in ["", ".bak", ".previous", ".tmp"]:
+        var candidate := slot_path + suffix
+        if FileAccess.file_exists(candidate):
+            if DirAccess.remove_absolute(ProjectSettings.globalize_path(candidate)) != OK:
+                _fail("Cannot reset test save fixture: " + suffix)
+                return
     for seed_value in [11027, 812741, 99001]:
         var settings := GalaxyModel.defaults()
         settings["seed"] = seed_value
