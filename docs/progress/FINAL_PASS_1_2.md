@@ -25,3 +25,10 @@
 ## Grenzen der Abnahme
 
 Automatisierte End-to-End- und Langzeittests belegen **keine vollständige menschliche Kampagne** und keine subjektive Spielqualität. Diese manuellen Nachweise sind im Releaseplan ausdrücklich offen. Der CI-Nachweis liegt vor; **ABGENOMMEN** bleibt bis zur dokumentierten manuellen End-to-End-Partie gesperrt.
+
+## Konsolidierung innerhalb des einzigen Durchlaufs 1.2
+
+- Der Endgame-Test `galaxy_campaign_endgame_test.gd` wurde mit Commit `21598822` eingeführt; beide CI-Läufe `43236888123` und `43236901496` waren erfolgreich.
+- In Commit `15014756` erweitert: tatsächliche Erkundungsaktion, Flottenflug, Kolonisierung, Erstkontakt/Kriegserklärung und bezahlte Krisenabwehr statt direkter Manipulation des Bedrohungswerts. Die Voraussetzungen für späte Krisen (Jahreszahl, Kriegszustand, antike Geschichte) werden weiterhin gezielt gesetzt; dieser Test ist kein Beleg einer natürlich vollständig gespielten Partie.
+- Die CI für die Erweiterung ist erneut zu prüfen. Es gibt **keinen zusätzlichen Durchlauf**: alle Korrekturen zählen zu 1.2.
+- **Verbleibende Abnahmegrenze:** Manuelle Windows-Partie mit echter Bedienung und Screenshots kann aus GitHub-Actions-Smoke-Tests nicht abgeleitet werden. Ohne diesen Beleg darf gemäß Ausführungsplan weder `ABGENOMMEN` noch der Beginn von 2.1 behauptet werden.
