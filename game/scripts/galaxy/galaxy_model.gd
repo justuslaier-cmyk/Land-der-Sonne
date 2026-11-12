@@ -93,11 +93,21 @@ static func advance(world: Dictionary) -> void:
     world["credits"] = int(world["credits"]) + 3 + int(world["empire"]["trait"] == 1) * 2
     world["science"] = int(world["science"]) + 2 + int(world["empire"]["trait"] == 0) * 2
 
-static func save_game(world: Dictionary) -> bool:
+# Explicit slots preserve the legacy default save path for existing users.
+# Save files remain schema version 1; no destructive migration is attempted.
+static func slot_path(slot: int = 0) -> String:
+    if slot < 0 or slot > 4:
+        return ""
+    return SAVE_PATH if slot == 0 else "user://galaxy_slot_%d_v1.json" % slot
+
+static func save_game(world: Dictionary, slot: int = 0) -> bool:
+    var path := slot_path(slot)
+    if path.is_empty():
+        return false
     var payload := JSON.stringify(world)
     if payload.to_utf8_buffer().size() > MAX_BYTES:
         return false
-    var temp := SAVE_PATH + ".tmp"
+    var temp := path + ".tmp"
     var file := FileAccess.open(temp, FileAccess.WRITE)
     if file == null:
         return false
@@ -106,22 +116,32 @@ static func save_game(world: Dictionary) -> bool:
     file.close()
     if _read(temp).is_empty():
         return false
-    var full := ProjectSettings.globalize_path(SAVE_PATH)
+    var full := ProjectSettings.globalize_path(path)
     var stage := ProjectSettings.globalize_path(temp)
-    var backup := ProjectSettings.globalize_path(SAVE_PATH + ".bak")
-    var previous := ProjectSettings.globalize_path(SAVE_PATH + ".previous")
-    # Preserve the existing backup until the new save has been promoted.
-    # An interrupted previous rotation may leave .previous as the only
-    # recoverable copy, so never overwrite it without validating it first.
-    if FileAccess.file_exists(SAVE_PATH + ".previous"):
-        if _read(SAVE_PATH + ".previous").is_empty():
+    var backup := ProjectSettings.globalize_path(path + ".bak")
+    var previous := ProjectSettings.globalize_path(path + ".previous")
+    # First repair a rotation interrupted before the new primary was installed.
+    if FileAccess.file_exists(path + ".previous"):
+        if _read(path + ".previous").is_empty():
             return false
-        if FileAccess.file_exists(SAVE_PATH):
-            return false
-        if DirAccess.rename_absolute(previous, full) != OK:
-            return false
-    var had_current := FileAccess.file_exists(SAVE_PATH)
+        if not FileAccess.file_exists(path):
+            if DirAccess.rename_absolute(previous, full) != OK:
+                return false
+        else:
+            # Primary exists: the old .previous is still the safest backup.
+            # Retain it until a new primary has been committed.
+            pass
+    var had_current := FileAccess.file_exists(path)
     if had_current:
+        # Keep a second recovery copy while moving the current primary.
+        # Never delete an existing valid .previous before promotion.
+        if FileAccess.file_exists(path + ".previous"):
+            if not FileAccess.file_exists(path + ".bak"):
+                if DirAccess.rename_absolute(previous, backup) != OK:
+                    return false
+            else:
+                # A stale .previous must not be discarded during a new write.
+                return false
         if DirAccess.rename_absolute(full, previous) != OK:
             return false
     if DirAccess.rename_absolute(stage, full) != OK:
@@ -129,23 +149,25 @@ static func save_game(world: Dictionary) -> bool:
             DirAccess.rename_absolute(previous, full)
         return false
     if had_current:
-        # The new primary is now valid. Keep the old backup until the
-        # previous primary can replace it; .previous is itself recoverable.
-        if FileAccess.file_exists(SAVE_PATH + ".bak"):
+        # .previous contains the immediately preceding valid primary.
+        # If backup replacement fails, both primary and .previous remain.
+        if FileAccess.file_exists(path + ".bak"):
             if DirAccess.remove_absolute(backup) != OK:
                 return true
-        if DirAccess.rename_absolute(previous, backup) != OK:
-            return true
+        DirAccess.rename_absolute(previous, backup)
     return true
 
-static func load_game() -> Dictionary:
-    var world := _read(SAVE_PATH)
+static func load_game(slot: int = 0) -> Dictionary:
+    var path := slot_path(slot)
+    if path.is_empty():
+        return {}
+    var world := _read(path)
     if not world.is_empty():
         return world
-    var backup := _read(SAVE_PATH + ".bak")
+    var backup := _read(path + ".bak")
     if not backup.is_empty():
         return backup
-    return _read(SAVE_PATH + ".previous")
+    return _read(path + ".previous")
 
 static func _read(path: String) -> Dictionary:
     if not FileAccess.file_exists(path):
