@@ -44,9 +44,6 @@ static func apply(world: Dictionary, event: Dictionary) -> bool:
         return false
     if year < int(world["narrative_cooldowns"].get(key, -10000)):
         return false
-    var existing: Dictionary = world["narrative_chains"].get(key, {})
-    if not existing.is_empty() and not bool(existing.get("resolved", true)):
-        return false
     var field := str(event["effect"])
     var before := int(world.get(field, 0))
     var after := maxi(0, before + int(event["delta"]))
@@ -61,7 +58,9 @@ static func apply(world: Dictionary, event: Dictionary) -> bool:
         world["narrative_chronicle"].pop_front()
     world["history"].append("%s: %s (%s)." % [entry["title"], entry["cause"], entry["effect"]])
     # Follow-up chains are persistent and can influence subsequent incidents.
-    world["narrative_chains"][key] = {"origin": year, "last_effect": after, "stage": "awaiting", "ready": year + 2, "resolved": false}
+    var previous: Dictionary = world["narrative_chains"].get(key, {})
+    if previous.is_empty() or bool(previous.get("resolved", true)):
+        world["narrative_chains"][key] = {"origin": year, "last_effect": after, "stage": "awaiting", "ready": year + 2, "resolved": false}
     return true
 
 static func tick(world: Dictionary) -> void:
