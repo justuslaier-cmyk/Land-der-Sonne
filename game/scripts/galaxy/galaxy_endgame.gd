@@ -19,6 +19,8 @@ static func prepare(world: Dictionary) -> void:
         world["galactic_crises_survived"] = 0
     if not world.has("galactic_crisis_resolved_ids"):
         world["galactic_crisis_resolved_ids"] = []
+    if not world.has("crisis_response_history"):
+        world["crisis_response_history"] = []
 
 static func start_project(world: Dictionary, id: String) -> bool:
     prepare(world)
@@ -46,7 +48,24 @@ static func defend_crisis(world: Dictionary) -> bool:
     world["credits"] = int(world["credits"]) - 25
     world["alloys"] = int(world["alloys"]) - 10
     crisis["threat"] = maxi(0, int(crisis["threat"]) - 22)
+    world["crisis_response_history"].append({"id": str(crisis["id"]), "year": int(world["tick"]), "kind": "fleet", "reduction": 22})
     world["history"].append("Galaktische Krisenabwehr: Bedrohung um 22 gesenkt.")
+    return true
+
+# Scientific alternative to fleet and alloy defence, with a research prerequisite.
+static func research_crisis(world: Dictionary) -> bool:
+    prepare(world)
+    var crisis: Dictionary = world["galactic_crisis"]
+    if str(crisis.get("state", "")) != "active" or int(world.get("research_level", 0)) < 3:
+        return false
+    if int(world.get("science", 0)) < 35 or int(world.get("credits", 0)) < 10:
+        return false
+    world["science"] = int(world["science"]) - 35
+    world["credits"] = int(world["credits"]) - 10
+    var reduction := 32 if str(crisis.get("id", "")) == "ancient" else 26
+    crisis["threat"] = maxi(0, int(crisis["threat"]) - reduction)
+    world["crisis_response_history"].append({"id": str(crisis["id"]), "year": int(world["tick"]), "kind": "research", "reduction": reduction})
+    world["history"].append("Forschungsbasierte Krisenabwehr: Bedrohung um %d gesenkt." % reduction)
     return true
 
 static func tick(world: Dictionary) -> void:
@@ -88,6 +107,7 @@ static func tick(world: Dictionary) -> void:
         crisis["state"] = "survived"
         world["galactic_crises_survived"] = int(world["galactic_crises_survived"]) + 1
         world["galactic_crisis_resolved_ids"].append(str(crisis["id"]))
+        world["crisis_response_history"].append({"id": str(crisis["id"]), "year": year, "kind": "resolved", "reduction": 0})
         world["history"].append("Galaktische Krise überwunden: %s." % str(crisis["title"]))
         return
     crisis["threat"] = mini(100, int(crisis["threat"]) + 2)
