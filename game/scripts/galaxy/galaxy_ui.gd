@@ -1,6 +1,8 @@
 extends Control
 
 const UiComponents = preload("res://scripts/galaxy/galaxy_ui_components.gd")
+const Comfort = preload("res://scripts/galaxy/galaxy_comfort.gd")
+const OPTIONS_ART = preload("res://assets/art/ui_comfort_panel.svg")
 
 const BG := GalaxyVisualTheme.BACKGROUND
 const PANEL := GalaxyVisualTheme.PANEL
@@ -30,9 +32,14 @@ var time_status: Label
 var forecast_status: Label
 var tutorial_step: int = 0
 var system_search: LineEdit
+var comfort: Dictionary = Comfort.defaults()
+var options_return: String = "menu"
+var onboarding_dismissed: bool = false
 
 func _ready() -> void:
     get_window().title = "Land der Sonne | Galaktische Chroniken"
+    comfort = Comfort.load_preferences()
+    _apply_comfort()
     _show_menu()
 
 # Keyboard shortcuts are ignored while text fields are being edited.
@@ -100,6 +107,20 @@ func _set_speed(speed: int) -> void:
 func _refresh_time_status() -> void:
     if is_instance_valid(time_status):
         time_status.text = ("PAUSE" if simulation_paused else "ZEIT LÄUFT") + "  •  %dx  •  %.1fs bis nächstes Jahr" % [simulation_speed, maxf(0.0, (4.0 - simulation_elapsed) / float(simulation_speed))]
+
+func _apply_comfort() -> void:
+    Comfort.apply(get_window(), comfort)
+
+func _set_comfort(key: String, value: Variant) -> void:
+    comfort[key] = value
+    _apply_comfort()
+    Comfort.save_preferences(comfort)
+
+func _back_from_options() -> void:
+    if options_return == "galaxy" and not world.is_empty():
+        _show_galaxy()
+    else:
+        _show_menu()
 
 func _clear() -> void:
     for child in get_children():
@@ -179,7 +200,7 @@ func _show_menu() -> void:
     _button("SPIELSTÄNDE 1–4", _show_save_slots)
     _button("SPIELANLEITUNG", _show_help)
     _button("INTERAKTIVER EINSTIEG", _start_tutorial)
-    _button("EINSTELLUNGEN", _show_options)
+    _button("EINSTELLUNGEN", func(): _open_options("menu"))
     _button("BEENDEN", func(): get_tree().quit())
     _label("Früher Prototyp • Galaxien können zufällig oder mit festem Seed erzeugt werden.")
 
@@ -197,7 +218,7 @@ func _show_help() -> void:
     _label("6. EREIGNISSE: Offene Entscheidungen unterbrechen die Zeit. Eine Auswahl setzt die Simulation fort.")
     _label("7. SPIELSTÄNDE: Vier manuelle Slots im Menü SPIELSTÄNDE; der automatische Spielstand wird alle zehn Jahre erneuert.")
     _label("8. CHRONIK UND ZIELE: Langfristigen Fortschritt über die Berichte nachvollziehen.")
-    _label("Tastatur: F1 öffnet diese Hilfe, Esc schließt sie, Leertaste pausiert oder startet die Galaxie.")
+    _label("Tastatur: F1 = Hilfe, Esc = zurück, Leertaste = Pause, Strg+F = Systemsuche. Im Textfeld werden Kartenkürzel ignoriert.")
     _label("Hinweis: Dies ist eine Anleitung zum experimentellen Prototyp, kein vollständiges interaktives Tutorial.")
     _button("ZUR GALAXIE" if from_game else "ZUM MENÜ", _show_galaxy if from_game else _show_menu)
 
@@ -232,16 +253,58 @@ func _show_tutorial() -> void:
         _button("JETZT SPIEL STARTEN", _begin_new_game)
     _button("TUTORIAL BEENDEN", _show_menu)
 
+func _open_options(return_screen: String = "menu") -> void:
+    options_return = return_screen
+    _show_options()
+
 func _show_options() -> void:
     screen = "options"
     _clear()
     _title("EINSTELLUNGEN")
-    _label("Fenstermodus")
+    var art := TextureRect.new()
+    art.texture = OPTIONS_ART
+    art.custom_minimum_size = Vector2(0, 96)
+    art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+    art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    root.add_child(art)
+    _label("Darstellung, Ton und Bedienung werden unabhängig von Spielständen gespeichert.")
+    _label("UI-Skalierung")
+    var scale_slider := HSlider.new()
+    scale_slider.min_value = 80
+    scale_slider.max_value = 150
+    scale_slider.step = 10
+    scale_slider.value = int(comfort["ui_scale"])
+    scale_slider.custom_minimum_size = Vector2(260, 38)
+    scale_slider.tooltip_text = "Bedienelemente auf 80 bis 150 Prozent vergrößern."
+    scale_slider.value_changed.connect(func(value: float): _set_comfort("ui_scale", int(value)))
+    root.add_child(scale_slider)
+    _label("Master-Lautstärke")
+    var volume_slider := HSlider.new()
+    volume_slider.min_value = 0
+    volume_slider.max_value = 100
+    volume_slider.step = 5
+    volume_slider.value = int(comfort["volume"])
+    volume_slider.custom_minimum_size = Vector2(260, 38)
+    volume_slider.tooltip_text = "Gesamtlautstärke des Spiels in Prozent."
+    volume_slider.value_changed.connect(func(value: float): _set_comfort("volume", int(value)))
+    root.add_child(volume_slider)
+    var mute_button := CheckBox.new()
+    mute_button.text = "Ton stummschalten"
+    mute_button.button_pressed = bool(comfort["muted"])
+    mute_button.toggled.connect(func(value: bool): _set_comfort("muted", value))
+    root.add_child(mute_button)
     _button("Fenster / Vollbild umschalten", func():
-        var mode := get_window().mode
-        get_window().mode = Window.MODE_WINDOWED if mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN
+        var fullscreen := get_window().mode != Window.MODE_FULLSCREEN
+        _set_comfort("fullscreen", fullscreen)
     )
-    _button("ZURÜCK", _show_menu)
+    _button("STANDARDWERTE WIEDERHERSTELLEN", func():
+        comfort = Comfort.defaults()
+        _apply_comfort()
+        Comfort.save_preferences(comfort)
+        _show_options()
+    )
+    _button("ZURÜCK", _back_from_options)
 
 func _spin(label_text: String, key: String, minimum: int, maximum: int, step: int = 1) -> void:
     var row := HBoxContainer.new()
@@ -477,7 +540,8 @@ func _start_game() -> void:
     simulation_elapsed = 0.0
     simulation_speed = 1
     world["simulation_speed"] = 1
-    simulation_paused = false
+    simulation_paused = true
+    onboarding_dismissed = false
     _show_galaxy()
 
 func _show_save_slots() -> void:
@@ -487,8 +551,11 @@ func _show_save_slots() -> void:
     for slot in range(1, 5):
         var index: int = slot
         var stored := GalaxyModel.load_game(index)
-        var description := "LEER" if stored.is_empty() else "JAHR %d" % int(stored.get("tick", 0))
-        _button("SLOT %d — %s — LADEN" % [index, description], func(): _load_slot(index))
+        var description := "LEER" if stored.is_empty() else "%s | Jahr %d | Seed %d" % [str(stored.get("empire", {}).get("name", "Reich")), int(stored.get("tick", 0)) + 2200, int(stored.get("settings", {}).get("seed", 0))]
+        if stored.is_empty():
+            _label("SLOT %d — LEER (kein gültiger Spielstand)" % index)
+        else:
+            _button("SLOT %d — %s — LADEN" % [index, description], func(): _load_slot(index))
         if not world.is_empty():
             _button("SLOT %d — SPEICHERN" % index, func(): _save_slot(index))
     _button("ZURÜCK", _show_galaxy if not world.is_empty() else _show_menu)
@@ -567,7 +634,7 @@ func _show_galaxy() -> void:
     var bar := HBoxContainer.new()
     bar.add_theme_constant_override("separation", 6)
     toolbar_scroll.add_child(bar)
-    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["FLOTTENKOMMANDO", _fleet_command], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["ZIELE", _goals_report], ["GESELLSCHAFT", _society_report], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["SPIELSTÄNDE", _show_save_slots], ["HILFE", _show_help], ["MENÜ", _show_menu]]:
+    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["FLOTTENKOMMANDO", _fleet_command], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["ZIELE", _goals_report], ["GESELLSCHAFT", _society_report], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["SPIELSTÄNDE", _show_save_slots], ["HILFE", _show_help], ["EINSTELLUNGEN", func(): _open_options("galaxy")], ["MENÜ", _show_menu]]:
         var button: Button = UiComponents.action_button(str(spec[0]), spec[1], true)
         button.custom_minimum_size.y = 42
         bar.add_child(button)
@@ -606,6 +673,13 @@ func _show_galaxy() -> void:
     galaxy_details.add_theme_constant_override("separation", 9)
     side.add_child(galaxy_details)
     _show_selection()
+    if not onboarding_dismissed:
+        var tip := _label("ERSTER SCHRITT: Wähle ein bekanntes System, erkunde erreichbare Sterne und pausiere mit Leertaste. F1 öffnet die Anleitung.")
+        tip.name = "OnboardingHint"
+        _button("EINSTIEGSHINWEIS AUSBLENDEN", func():
+            onboarding_dismissed = true
+            tip.visible = false
+        )
     if str(world["pending_event"]) != "":
         simulation_paused = true
         _show_event()

@@ -2,7 +2,7 @@ extends SceneTree
 
 # Capture real Godot-rendered evidence for every principal game flow.
 const VIEWPORTS := [Vector2i(1280, 720), Vector2i(1920, 1080)]
-const SCREENS := ["menu", "settings", "empire", "review", "galaxy", "research", "economy", "diplomacy", "fleet_command"]
+const SCREENS := ["menu", "options", "tutorial", "save_slots", "settings", "empire", "review", "galaxy", "research", "economy", "diplomacy", "fleet_command"]
 
 func _initialize() -> void:
     call_deferred("_capture")
@@ -21,6 +21,12 @@ func _capture() -> void:
             match screen_name:
                 "menu":
                     instance._show_menu()
+                "options":
+                    instance._open_options("menu")
+                "tutorial":
+                    instance._start_tutorial()
+                "save_slots":
+                    instance._show_save_slots()
                 "settings":
                     instance._show_settings()
                 "empire":

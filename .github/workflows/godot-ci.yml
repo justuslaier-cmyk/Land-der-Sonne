@@ -34,6 +34,8 @@ jobs:
         run: godot --headless --path game --script res://tests/world_test.gd
       - name: Verify shared UI components, search and keyboard navigation
         run: timeout 90s godot --headless --path game --script res://tests/galaxy_ui_architecture_test.gd
+      - name: Verify onboarding, comfort settings and save navigation
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_comfort_flow_test.gd
       - name: Test player input and scene interaction
         run: godot --headless --path game --script res://tests/interaction_test.gd
       - name: Test galactic new game and persistence
