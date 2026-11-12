@@ -2,7 +2,7 @@ extends SceneTree
 
 # Capture real Godot-rendered evidence for every principal game flow.
 const VIEWPORTS := [Vector2i(1280, 720), Vector2i(1920, 1080)]
-const SCREENS := ["menu", "options", "tutorial", "save_slots", "settings", "empire", "review", "galaxy", "research", "economy", "diplomacy", "fleet_command"]
+const SCREENS := ["menu", "options", "tutorial", "save_slots", "settings", "empire", "review", "galaxy", "research", "economy", "diplomacy", "fleet_command", "ship_gallery", "star_system", "species_gallery"]
 
 func _initialize() -> void:
     call_deferred("_capture")
@@ -50,6 +50,12 @@ func _capture() -> void:
                     instance._diplomacy()
                 "fleet_command":
                     instance._fleet_command()
+                "ship_gallery":
+                    instance._show_empire()
+                "species_gallery":
+                    instance._show_empire()
+                "star_system":
+                    instance._show_star_system()
             for frame in range(5):
                 await process_frame
             await RenderingServer.frame_post_draw

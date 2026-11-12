@@ -772,14 +772,22 @@ func _draw_map() -> void:
         if rival_loc < 0 or rival_loc >= world["stars"].size() or not world["known"].has(rival_loc):
             continue
         var rp := _star_pos(world["stars"][rival_loc])
-        map_area.draw_colored_polygon(PackedVector2Array([rp + Vector2(0, 14), rp + Vector2(-6, 24), rp + Vector2(6, 24)]), Color("#e991b3"))
+        var hostile_icon: Texture2D = load("res://assets/art/ship_style_3.svg")
+        if hostile_icon != null:
+            map_area.draw_texture_rect(hostile_icon, Rect2(rp + Vector2(-12, 10), Vector2(24, 24)), false, Color("#e991b3"))
+        else:
+            map_area.draw_colored_polygon(PackedVector2Array([rp + Vector2(0, 14), rp + Vector2(-6, 24), rp + Vector2(6, 24)]), Color("#e991b3"))
         map_area.draw_line(rp + Vector2(-3, 20), rp + Vector2(3, 20), Color("#ffd4e0"), 1.0)
     for fleet in world["fleets"]:
         if int(fleet["owner"]) == 0:
             var loc := int(fleet["location"])
             if loc >= 0 and loc < world["stars"].size():
                 var p := _star_pos(world["stars"][loc])
-                map_area.draw_colored_polygon(PackedVector2Array([p + Vector2(0, -15), p + Vector2(-7, -26), p + Vector2(7, -26)]), Color("#7ce3cc"))
+                var friendly_icon: Texture2D = load("res://assets/art/ship_style_0.svg")
+                if friendly_icon != null:
+                    map_area.draw_texture_rect(friendly_icon, Rect2(p + Vector2(-12, -33), Vector2(24, 24)), false, Color("#7ce3cc"))
+                else:
+                    map_area.draw_colored_polygon(PackedVector2Array([p + Vector2(0, -15), p + Vector2(-7, -26), p + Vector2(7, -26)]), Color("#7ce3cc"))
 
 func _draw_pixel_star(pos: Vector2, radius: float, tint: Color, star_id: int) -> void:
     var star_strip: Texture2D = load("res://assets/art/star_sprite_strip.svg")
@@ -1790,7 +1798,11 @@ func _draw_star_system(canvas: Control, system: Dictionary) -> void:
         canvas.draw_rect(Rect2(p, Vector2.ONE * (1 if i % 3 else 2)), Color("#7088a7", 0.45))
     var star_colors := [Color("#e9c57d"), Color("#7acaff"), Color("#e36e59"), Color("#e4eaf2")]
     var origin := Vector2(76, h * 0.5)
-    canvas.draw_circle(origin, 36, star_colors[int(world["stars"][selected]["kind"]) % 4])
+    var star_strip: Texture2D = load("res://assets/art/star_sprite_strip.svg")
+    if star_strip != null:
+        canvas.draw_texture_rect_region(star_strip, Rect2(origin - Vector2(42, 42), Vector2(84, 84)), Rect2(float(posmod(int(world["stars"][selected]["kind"]), 4)) * 32.0, 0, 32, 32))
+    else:
+        canvas.draw_circle(origin, 36, star_colors[int(world["stars"][selected]["kind"]) % 4])
     canvas.draw_circle(origin, 44, Color(star_colors[int(world["stars"][selected]["kind"]) % 4], 0.13))
     var planets: Array = system["planets"]
     var step := (w - 180.0) / float(maxi(1, planets.size()))
@@ -1842,12 +1854,10 @@ func _species_gallery(readonly: bool = false) -> void:
 func _draw_species(canvas: Control, index: int) -> void:
     var w := canvas.size.x
     canvas.draw_rect(Rect2(0, 0, w, 170), Color("#13233a"))
-    # The SVG strip imports but its atlas regions render as white cards in
-    # Godot 4.3 CI screenshots. Use the existing original procedural portraits
-    # until the atlas is verified as a correctly sampled texture.
-    var portraits: Texture2D = null
+    # Draw a separately imported portrait to avoid white SVG atlas regions.
+    var portraits: Texture2D = load("res://assets/art/species_portrait_%d.svg" % posmod(index, 5))
     if portraits != null:
-        canvas.draw_texture_rect_region(portraits, Rect2((w - 112.0) * 0.5, 2, 112, 166), Rect2(float(index) * 64.0, 0, 64, 96))
+        canvas.draw_texture_rect(portraits, Rect2((w - 112.0) * 0.5, 2, 112, 166), false)
         if index == int(empire["portrait"]):
             canvas.draw_rect(Rect2(2, 2, w - 4, 166), GOLD, false, 2)
         return
@@ -1904,13 +1914,12 @@ func _draw_ship(canvas: Control, style: int, hull: int) -> void:
     var w := canvas.size.x
     var h := canvas.size.y
     canvas.draw_rect(Rect2(0, 0, w, h), Color("#102039"))
-    # Use the original procedural silhouettes: the SVG strip currently
-    # appears as white tiles in the captured Godot 4.3 gallery.
-    var ship_strip: Texture2D = null
+    # Individual imported sprites avoid the Godot 4.3 SVG atlas-region white-tile bug.
+    var ship_strip: Texture2D = load("res://assets/art/ship_style_%d.svg" % posmod(style, 4))
     if ship_strip != null:
         var diameter: float = minf(w * 0.76, h * 0.9)
         var dest := Rect2(Vector2((w - diameter) * 0.5, (h - diameter) * 0.5), Vector2.ONE * diameter)
-        canvas.draw_texture_rect_region(ship_strip, dest, Rect2(float(posmod(style, 4)) * 64.0, 0, 64, 64))
+        canvas.draw_texture_rect(ship_strip, dest, false)
         if style == int(empire["ship_style"]):
             canvas.draw_rect(Rect2(2, 2, w - 4, h - 4), GOLD, false, 2)
         return
