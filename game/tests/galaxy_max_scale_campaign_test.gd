@@ -72,7 +72,7 @@ func _initialize() -> void:
             "memory_peak_bytes": mem_peak, "save_bytes": save_bytes,
             "checkpoints": checkpoints})
         for suffix in ["", ".bak", ".previous", ".tmp"]:
-            var full := path + suffix
+            var full: String = path + str(suffix)
             if FileAccess.file_exists(full):
                 DirAccess.remove_absolute(ProjectSettings.globalize_path(full))
     print("GALAXY_MAX_SCALE_CAMPAIGN_PASS: " + JSON.stringify(results))
