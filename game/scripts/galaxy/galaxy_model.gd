@@ -132,6 +132,15 @@ static func save_game(world: Dictionary, slot: int = 0) -> bool:
             # Retain it until a new primary has been committed.
             pass
     var had_current := FileAccess.file_exists(path)
+    # A damaged primary must never replace the last valid backup.
+    if had_current and _read(path).is_empty():
+        if _read(path + ".bak").is_empty():
+            return false
+        if DirAccess.remove_absolute(full) != OK:
+            return false
+        if DirAccess.rename_absolute(backup, full) != OK:
+            return false
+    had_current = FileAccess.file_exists(path)
     if had_current:
         # Keep a second recovery copy while moving the current primary.
         # Never delete an existing valid .previous before promotion.
