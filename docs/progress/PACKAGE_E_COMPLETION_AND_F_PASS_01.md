@@ -17,4 +17,4 @@
 **F1** ist ein erster Schnitt, keine Abnahme P56–P64/P73–P79. Ein KI-Assessment ersetzt keine vollständige Kriegs-KI, Sensorik, Föderation oder Flottenlogistik.
 
 ## Nachweis
-CI-Ergebnis nach Abschluss ergänzen.
+**CI bestätigt:** Commit `62767042bdbfdfb0c9b066e4adb27ca0c5759427`, Run `43227579368`, SUCCESS, 17/17 Jobs einschließlich Godot-Smoke, Paket E1/E2/E3-F1, Render- und Windows-Export-Checks. https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43227579368. Das ist eine technische Integrationsbestätigung, **keine** Vollabnahme aller E- und F-Pflichten.
