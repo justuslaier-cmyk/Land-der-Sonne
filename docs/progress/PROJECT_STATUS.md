@@ -28,5 +28,32 @@
 5. Windows-Export **nativ** starten und vollständige Spielpartien testen.
 6. Für jeden der 98 Pflichtpunkte getrennte Integration, Tests, Artefakte und Abnahmebelege führen.
 
+
+## Verifizierter CI-Stand und Gesamtaudit — 2026-11-12
+
+- Aktueller geprüfter Prototyp: CI-Lauf [43214501265](https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43214501265), **17/17 Jobs erfolgreich**: Godot-Smoke, 13 Regressionen, Render-Check, Windows-Export, Windows-2022-Headless-Start und Integration mit Marker `GALAXY_INTEGRATION_PASS`.
+- Diese Evidenz ersetzt die oben genannten historischen CI-Blocker, **aber nicht** die unabhängigen 98 Vollabnahmen. Die 0/98 bleiben ohne individuelle Nachweise bestehen.
+- Verifiziert: automatisierte Integrationspfade und Windows-Headless-Lauf. Nicht verifiziert: sichtbare Windows-10/11-Bedienung, reale vollständige Spielpartien, Langzeitbalance, größere Galaxien unter Performancebudget, vollständige Anforderungserfüllung.
+- Korrigierte README im Audit-Commit: die ursprüngliche Fantasy-RPG-Beschreibung war überholt.
+
+### Priorisierte Restarbeit nach Pflichtkatalog
+
+1. **P87–P98 / Release und Stabilität:** individuelle Nachweise, Save-Slot/Backup/Migration, Performancebudgets, reproduzierbare lange Spielpartien, tatsächliche Benutzerabnahme. Headless-Start allein reicht nicht.
+2. **P01–P10, P80–P86 / Bedienung und Präsentation:** durchgängige Navigation, skalierbare Informationsdichte, Tooltips, Tutorials, konsistente Originalgrafik, Audio und reale Interaktionsprüfung.
+3. **P25–P50 / Gesellschaft, Wirtschaft, Politik:** kohärente Bilanzierung, autonome Reaktionen, Regierungssysteme, Markt- und Logistikketten, historische Auswirkungen. Existierende Teilmodule sind nicht mit vollständiger Integration gleichzusetzen.
+4. **P51–P64 / Forschung, Diplomatie, Militär:** echte Spezialisierungen, Technologieverbreitung, Spionage, Versorgung, Kriegsziele, Friedensfolgen und balancierte KI.
+5. **P11–P24, P65–P79 / Galaxis, Identität, Geschichte, KI:** systemische Tiefe, Erkundungsrisiken, Krisen, dynamische Geschichte, KI-Transparenz und großskalige Reproduzierbarkeit.
+
+### Durchlaufplanung und Zeitrisiko
+
+Ein einziger Entwicklungsdurchlauf ist für 98 voneinander abhängige Pflichtabnahmen nicht seriös als ausreichend belegbar. Die im Pflichtkatalog genannte Zahl **48** ist eine Organisationsannahme, keine verifizierte Fertigstellungsprognose. Die minimale Zahl hängt von messbaren Durchlaufzeiten, den noch fehlenden vertikalen Integrationen und der tatsächlichen Testabdeckung ab. Keine Zusage einer fixen Dauer oder vollständigen Erledigung ohne diese Messungen.
+
+### Vergleichsmaßstäbe (Recherche, 2026-11-12)
+
+- Godot Windows-Export und CI: https://docs.godotengine.org/en/latest/tutorials/export/exporting_for_windows.html ; https://github.com/abarichello/godot-ci/blob/master/.github/workflows/godot-ci.yml
+- Galactic Civilizations IV: Schiffsentwurf, mehrere Siegespfade, Kultur, KI, Diplomatie: https://archive.stardock.com/galciv4/press/gc4-documents/galciv4_reviewguide.pdf
+- Distant Worlds 2: Automatisierung, private Wirtschaft, Logistik, kontextuelle Hilfe, Galaxiegröße: https://store.steampowered.com/app/1531540/Distant_Worlds_2/
+- Vergleich ist eine Design-Gap-Analyse, **kein** Beleg, dass jedes Referenzspielsystem unverändert übernommen werden soll. Die verbindlichen P01–P98 entscheiden den Umfang.
+
 ## Prozess
 Keine ungeprüften Merges nach `main`; das andere Projekt `grenzmark` bleibt unangetastet. Die 48 Planungsdurchläufe sind **kein** Fertigstellungsversprechen.
