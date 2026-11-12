@@ -39,9 +39,22 @@ static func prepare(world: Dictionary) -> void:
         if not world["ai_intentions"].has(key):
             world["ai_intentions"][key] = {"stance": "expansion", "last_action": 0}
 
+# Difficulty changes decision cadence, never grants free resources, technology or combat power.
+# 0: relaxed, 1: established baseline, 2: aggressive resource-constrained rival.
+static func action_interval(difficulty: int, action: String) -> int:
+    var level := clampi(difficulty, 0, 2)
+    if action == "expansion":
+        return [9, 6, 4][level]
+    if action == "recruitment":
+        return [5, 3, 2][level]
+    return 1
+
 static func tick(world: Dictionary) -> void:
     prepare(world)
     var year := int(world["tick"])
+    var difficulty := clampi(int(world.get("settings", {}).get("difficulty", 1)), 0, 2)
+    var expansion_interval := action_interval(difficulty, "expansion")
+    var recruitment_interval := action_interval(difficulty, "recruitment")
     # One ownership scan per year rather than one full-galaxy scan per rival.
     var ownership: Dictionary = GalaxyAISpatialIndex.build(world)
     for rival in world["ai"]:
@@ -113,11 +126,11 @@ static func tick(world: Dictionary) -> void:
         # reinforcement; otherwise 28-credit recruitment consumes every
         # 45-credit colonisation reserve in the same turn.
         treasury = int(world["ai_treasury"].get(key, 0))
-        if year % 6 == id % 6 and treasury >= 45 and str(world["ai_intentions"][key]["stance"]) != "reformen":
+        if year % expansion_interval == id % expansion_interval and treasury >= 45 and str(world["ai_intentions"][key]["stance"]) != "reformen":
             _expand(world, rival, fleet)
         # Each action reads the live treasury after the previous transaction.
         treasury = int(world["ai_treasury"].get(key, 0))
-        if year % 3 == id % 3 and treasury >= 28:
+        if year % recruitment_interval == id % recruitment_interval and treasury >= 28:
             var strength := 2 + temperament
             fleet["strength"] = int(fleet["strength"]) + strength
             world["ai_treasury"][key] = treasury - 28
