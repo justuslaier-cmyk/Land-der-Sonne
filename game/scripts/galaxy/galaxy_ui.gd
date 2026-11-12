@@ -1,5 +1,7 @@
 extends Control
 
+const UiComponents = preload("res://scripts/galaxy/galaxy_ui_components.gd")
+
 const BG := GalaxyVisualTheme.BACKGROUND
 const PANEL := GalaxyVisualTheme.PANEL
 const GOLD := GalaxyVisualTheme.GOLD
@@ -27,6 +29,7 @@ var simulation_elapsed: float = 0.0
 var time_status: Label
 var forecast_status: Label
 var tutorial_step: int = 0
+var system_search: LineEdit
 
 func _ready() -> void:
     get_window().title = "Land der Sonne | Galaktische Chroniken"
@@ -47,6 +50,12 @@ func _unhandled_key_input(event: InputEvent) -> void:
             _show_menu()
         else:
             _show_galaxy()
+        get_viewport().set_input_as_handled()
+    elif event.keycode == KEY_ESCAPE and screen != "galaxy" and screen != "menu" and not world.is_empty() and screen != "event":
+        _show_galaxy()
+        get_viewport().set_input_as_handled()
+    elif event.keycode == KEY_F and event.ctrl_pressed and screen == "galaxy" and is_instance_valid(system_search):
+        system_search.grab_focus()
         get_viewport().set_input_as_handled()
     elif event.keycode == KEY_SPACE and screen == "galaxy" and not world.is_empty():
         _toggle_pause()
@@ -136,50 +145,10 @@ func _label(value: String) -> Label:
 
 # One original 32x32 pixel icon per major gameplay domain.
 func _apply_action_icon(button: Button) -> void:
-    var title: String = button.text.to_upper()
-    var domain := -1
-    if title.contains("FORSCH") or title.contains("TECHNO"):
-        domain = 0
-    elif title.contains("FLOTTE") or title.contains("SCHIFF") or title.contains("FLUG"):
-        domain = 1
-    elif title.contains("KOLON") or title.contains("BAU") or title.contains("GEBÄUDE"):
-        domain = 2
-    elif title.contains("DIPLOM") or title.contains("VERHAND"):
-        domain = 3
-    elif title.contains("POLIT") or title.contains("GESELL"):
-        domain = 4
-    elif title.contains("WIRTSCHAFT") or title.contains("MARKT") or title.contains("CREDIT"):
-        domain = 5
-    elif title.contains("CHRONIK") or title.contains("EREIGNIS"):
-        domain = 6
-    elif title.contains("ERKUND") or title.contains("SYSTEM"):
-        domain = 7
-    if domain < 0:
-        return
-    var texture: Texture2D = load("res://assets/art/function_icon_atlas.svg")
-    if texture == null:
-        return
-    var icon_texture := AtlasTexture.new()
-    icon_texture.atlas = texture
-    icon_texture.region = Rect2(domain * 32, 0, 32, 32)
-    button.icon = icon_texture
-    button.expand_icon = true
-    button.add_theme_constant_override("icon_max_width", 24)
-    button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+    UiComponents.apply_icon(button)
 
 func _button(value: String, callback: Callable) -> void:
-    var button := Button.new()
-    button.text = value
-    # In a VBoxContainer, SHRINK_BEGIN with a zero minimum width can collapse
-    # action buttons into tiny icon-only rectangles, hiding their labels.
-    button.custom_minimum_size = Vector2(280, 44)
-    button.add_theme_font_size_override("font_size", 16)
-    button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-    button.clip_text = false
-    GalaxyVisualTheme.apply_button(button)
-    _apply_action_icon(button)
-    button.pressed.connect(callback)
-    root.add_child(button)
+    root.add_child(UiComponents.action_button(value, callback))
 
 func _begin_new_game() -> void:
     # A fresh wizard must not inherit settings or identity from a previous game.
@@ -599,13 +568,21 @@ func _show_galaxy() -> void:
     bar.add_theme_constant_override("separation", 6)
     toolbar_scroll.add_child(bar)
     for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["FLOTTENKOMMANDO", _fleet_command], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["ZIELE", _goals_report], ["GESELLSCHAFT", _society_report], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["SPIELSTÄNDE", _show_save_slots], ["HILFE", _show_help], ["MENÜ", _show_menu]]:
-        var button := Button.new()
-        button.text = spec[0]
+        var button: Button = UiComponents.action_button(str(spec[0]), spec[1], true)
         button.custom_minimum_size.y = 42
-        GalaxyVisualTheme.apply_button(button)
-        _apply_action_icon(button)
-        button.pressed.connect(spec[1])
         bar.add_child(button)
+    var search_row := HBoxContainer.new()
+    root.add_child(search_row)
+    var search_caption := Label.new()
+    search_caption.text = "BEKANNTE SYSTEME"
+    search_row.add_child(search_caption)
+    system_search = LineEdit.new()
+    system_search.placeholder_text = "System suchen (Strg+F, Enter)"
+    system_search.custom_minimum_size.x = 280
+    system_search.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    system_search.tooltip_text = "Nur bereits kartografierte Systeme werden gefunden. Enter wählt das erste passende System."
+    system_search.text_submitted.connect(_search_system)
+    search_row.add_child(system_search)
     if notice != "":
         _label(notice)
     var info := _label("Linksklick: System wählen   •   Rechte Maustaste ziehen: Kamera   •   Mausrad: Zoom zum Cursor")
@@ -632,6 +609,20 @@ func _show_galaxy() -> void:
     if str(world["pending_event"]) != "":
         simulation_paused = true
         _show_event()
+
+func _search_system(query: String) -> void:
+    var match_id: int = UiComponents.find_known_system(world, query)
+    if match_id < 0:
+        notice = "Kein bekanntes System gefunden: " + query.strip_edges()
+        if is_instance_valid(system_search):
+            system_search.tooltip_text = notice
+        return
+    selected = match_id
+    world["selected"] = selected
+    notice = "System ausgewählt: " + str(world["stars"][selected]["name"])
+    _show_selection()
+    if is_instance_valid(map_area):
+        map_area.queue_redraw()
 
 func _refresh_status() -> void:
     status.text = "◷ Jahr %d  •  ◆ Credits %d  •  ✧ Forschung %d  •  ⬡ Legierungen %d  •  ❖ Stabilität %d%%  •  %d Systeme  •  %d KI-Reiche" % [int(world["tick"]) + 2200, int(world["credits"]), int(world["science"]), int(world["alloys"]), int(world["stability"]), world["stars"].size(), world["ai"].size()]
@@ -849,11 +840,7 @@ func _side_label(value: String, heading: bool = false) -> void:
     galaxy_details.add_child(label)
 
 func _side_button(value: String, callback: Callable) -> void:
-    var button := Button.new()
-    button.text = value
-    button.custom_minimum_size.y = 40
-    button.pressed.connect(callback)
-    galaxy_details.add_child(button)
+    galaxy_details.add_child(UiComponents.action_button(value, callback, true))
 
 func _move_fleet() -> void:
     var preview: Dictionary = GalaxySystems.route_preview(world, selected)
