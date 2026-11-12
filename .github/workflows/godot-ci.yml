@@ -96,6 +96,8 @@ jobs:
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_navigation_test.gd
       - name: Verify seeded galaxy starts and rival capital spacing
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_start_spacing_test.gd
+      - name: Verify quick-start help and navigation
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_help_navigation_test.gd
       - name: Test new-game wizard navigation and seed persistence
         run: timeout 60s godot --headless --path game --script res://tests/galaxy_wizard_test.gd
       - name: Test strategic simulation systems
