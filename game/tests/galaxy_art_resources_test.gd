@@ -13,6 +13,7 @@ func _initialize() -> void:
         "res://assets/art/scene_fleet.svg",
         "res://assets/art/scene_diplomacy.svg",
         "res://assets/art/war_objective.svg",
+        "res://assets/art/chronicle_aftermath.svg",
         "res://assets/art/scene_research.svg",
         "res://assets/art/galaxy_nebula.svg",
         "res://assets/art/planet_sprite_strip.svg",
@@ -26,6 +27,8 @@ func _initialize() -> void:
         assert(ResourceLoader.exists(path), "Missing art resource: " + path)
         var texture: Texture2D = load(path)
         assert(texture != null, "Unimportable art resource: " + path)
+    var aftermath: Texture2D = load("res://assets/art/chronicle_aftermath.svg")
+    assert(aftermath.get_size() == Vector2(48, 48), "Aftermath icon dimensions")
     var objective: Texture2D = load("res://assets/art/war_objective.svg")
     assert(objective.get_size() == Vector2(48, 48), "War objective icon size incorrect")
     var planets: Texture2D = load("res://assets/art/planet_sprite_strip.svg")
