@@ -13,7 +13,7 @@ func _initialize() -> void:
     for seed_value in [11027, 812741, 99001]:
         var settings := GalaxyModel.defaults()
         settings["seed"] = seed_value
-        settings["events"] = 0
+        settings["events"] = 1
         var world := GalaxyModel.generate(settings, GalaxyModel.empire_defaults())
         GalaxyStrategy.prepare(world)
         GalaxyStrategy.set_welfare(world, 2)
