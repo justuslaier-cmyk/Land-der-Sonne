@@ -146,6 +146,7 @@ jobs:
           - galaxy_art_resources_test.gd
           - galaxy_art_ui_smoke_test.gd
           - galaxy_full_integration_test.gd
+          - galaxy_map_interaction_test.gd
           - galaxy_ui_interaction_regression_test.gd
     steps:
       - uses: actions/checkout@v4
