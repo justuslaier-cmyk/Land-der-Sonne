@@ -307,6 +307,18 @@ func _show_options() -> void:
     mute_button.button_pressed = bool(comfort["muted"])
     mute_button.toggled.connect(func(value: bool): _set_comfort("muted", value))
     root.add_child(mute_button)
+    for audio_spec in [["Musik-Lautstärke", "music_volume", "Music"], ["Effekt-Lautstärke", "sfx_volume", "SFX"]]:
+        _label(str(audio_spec[0]))
+        var channel_slider := HSlider.new()
+        channel_slider.min_value = 0
+        channel_slider.max_value = 100
+        channel_slider.step = 5
+        channel_slider.value = int(comfort[audio_spec[1]])
+        channel_slider.custom_minimum_size = Vector2(260, 38)
+        channel_slider.tooltip_text = "Lautstärke des Audiokanals " + str(audio_spec[2])
+        var setting_key: String = str(audio_spec[1])
+        channel_slider.value_changed.connect(func(value: float): _set_comfort(setting_key, int(value)))
+        root.add_child(channel_slider)
     _button("Fenster / Vollbild umschalten", func():
         var fullscreen := get_window().mode != Window.MODE_FULLSCREEN
         _set_comfort("fullscreen", fullscreen)
@@ -673,6 +685,14 @@ func _show_galaxy() -> void:
     map_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     map_area.draw.connect(_draw_map)
     map_area.gui_input.connect(_map_input)
+    var map_animation := Timer.new()
+    map_animation.wait_time = 0.12
+    map_animation.autostart = true
+    map_animation.timeout.connect(func():
+        if is_instance_valid(map_area) and screen == "galaxy":
+            map_area.queue_redraw()
+    )
+    map_area.add_child(map_animation)
     var workspace := HBoxContainer.new()
     workspace.add_theme_constant_override("separation", 12)
     workspace.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -779,7 +799,8 @@ func _draw_map() -> void:
                     map_area.draw_arc(pos, 20.0, 0.0, TAU, 20, Color("#7bd2c9", 0.9), 1.5)
                     break
         if id == selected:
-            map_area.draw_arc(pos, 19, 0, TAU, 32, Color.WHITE, 1.4)
+            var pulse_radius := 19.0 + 2.0 * sin(float(Time.get_ticks_msec()) * 0.004)
+            map_area.draw_arc(pos, pulse_radius, 0, TAU, 32, Color.WHITE, 1.4)
             map_area.draw_string(ThemeDB.fallback_font, pos + Vector2(12, -15), str(star["name"]) if known else "Unkartiert", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, WHITE)
     for rival_fleet in world.get("ai_fleets", []):
         var rival_loc := int(rival_fleet["location"])

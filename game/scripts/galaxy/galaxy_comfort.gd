@@ -3,7 +3,7 @@ extends RefCounted
 const PATH := "user://galaxy_preferences.cfg"
 
 static func defaults() -> Dictionary:
-    return {"ui_scale": 100, "volume": 80, "muted": false, "fullscreen": false}
+    return {"ui_scale": 100, "volume": 80, "muted": false, "fullscreen": false, "music_volume": 65, "sfx_volume": 85}
 
 static func normalize(source: Dictionary) -> Dictionary:
     var result := defaults()
@@ -11,6 +11,8 @@ static func normalize(source: Dictionary) -> Dictionary:
     result["volume"] = clampi(int(source.get("volume", 80)), 0, 100)
     result["muted"] = bool(source.get("muted", false))
     result["fullscreen"] = bool(source.get("fullscreen", false))
+    result["music_volume"] = clampi(int(source.get("music_volume", 65)), 0, 100)
+    result["sfx_volume"] = clampi(int(source.get("sfx_volume", 85)), 0, 100)
     return result
 
 static func save_preferences(source: Dictionary) -> bool:
@@ -36,3 +38,7 @@ static func apply(window: Window, source: Dictionary) -> void:
     if master >= 0:
         AudioServer.set_bus_volume_db(master, linear_to_db(float(values["volume"]) / 100.0))
         AudioServer.set_bus_mute(master, bool(values["muted"]))
+    for channel in [["Music", "music_volume"], ["SFX", "sfx_volume"]]:
+        var bus := AudioServer.get_bus_index(str(channel[0]))
+        if bus >= 0:
+            AudioServer.set_bus_volume_db(bus, linear_to_db(float(values[channel[1]]) / 100.0))

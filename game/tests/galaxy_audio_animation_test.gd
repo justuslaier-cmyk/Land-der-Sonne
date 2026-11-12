@@ -37,6 +37,14 @@ func _run() -> void:
     if not is_instance_valid(ui.audio_director):
         _fail("Navigation destroyed audio director")
         return
+    ui._set_comfort("music_volume", 35)
+    ui._set_comfort("sfx_volume", 60)
+    if absf(db_to_linear(AudioServer.get_bus_volume_db(AudioServer.get_bus_index("Music"))) - 0.35) > 0.02:
+        _fail("Music bus setting not applied")
+        return
+    if absf(db_to_linear(AudioServer.get_bus_volume_db(AudioServer.get_bus_index("SFX"))) - 0.60) > 0.02:
+        _fail("SFX bus setting not applied")
+        return
     ui._set_comfort("volume", 25)
     ui._set_comfort("muted", true)
     var master := AudioServer.get_bus_index("Master")
