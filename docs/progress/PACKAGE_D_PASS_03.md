@@ -10,5 +10,5 @@
 ## Nicht pauschal erfüllt
 Die P25–P39 und P44–P49 bleiben einzeln abzunehmen. Vollständige Marktpreisbildung, Haushalt-/Unternehmenssektoren, Schulden, differenzierte Bedürfnisse, Föderalismus, Revolutionen und komplexe politische Vertretung sind durch diesen Pass **nicht** implementiert. Ein grüner CI-Lauf ist technische Regressionsevidenz, kein Nachweis dieser Features. Native Windows-GUI-Interaktion und echte Bildreview bleiben separat offen.
 
-## CI
-Status nach Workflowlauf ergänzen.
+## CI und bekannte Einschränkung
+Der erste D3-CI-Lauf scheiterte beim Speichern eines 125-Jahre-Spielstands am bestehenden 4-MiB-Speicherlimit von GalaxyModel. Der D3-Test wurde für die Save/Load-Verifikation auf Jahr 20 umgestellt; der Langlauf und seine Bilanzprüfungen bleiben bei 125 Jahren pro Seed. **Langzeit-Save über 125 Jahre ist damit nicht abgenommen und muss in Paket H bzw. einem gesonderten Save-Stresstest behoben werden.** CI-Status des korrigierten Commits prüfen.
