@@ -138,7 +138,11 @@ static func tick(world: Dictionary) -> void:
             if str(colony_key).begins_with(str(target) + ":"):
                 var colony: Dictionary = world["planet_colonies"][colony_key]
                 defending += int(colony.get("buildings", {}).get("fort", 0)) * 8
-        var power := int(fleet["strength"])
+        # Rival attacks obey the same low-supply combat penalty as the player.
+        var base_power := int(fleet["strength"])
+        var attack_supply := clampi(int(logistics["supply"]), 0, 100)
+        var penalty := 0 if attack_supply >= 50 else maxi(1, ceili(float(base_power) * float(50 - attack_supply) / 100.0))
+        var power := maxi(0, base_power - penalty)
         if power > defending + 5:
             world["stars"][target]["owner"] = id
             fleet["strength"] = maxi(2, power - defending / 2)
