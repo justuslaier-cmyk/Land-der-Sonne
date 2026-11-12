@@ -17,6 +17,8 @@ const MILESTONES := [
 static func prepare(world: Dictionary) -> void:
     if not world.has("milestones"):
         world["milestones"] = []
+    if not world.has("victory_paths"):
+        world["victory_paths"] = []
 
 static func measures(world: Dictionary) -> Dictionary:
     var owned := 0
@@ -47,3 +49,22 @@ static func tick(world: Dictionary) -> void:
             continue
         world["milestones"].append(id)
         world["history"].append("Meilenstein erreicht: " + str(milestone["name"]) + ".")
+    evaluate_victories(world)
+
+# Existing exploration, prosperity and crisis systems supply distinct endgame routes.
+# All victories remain compatible with indefinite sandbox continuation.
+static func evaluate_victories(world: Dictionary) -> void:
+    prepare(world)
+    var owned := 0
+    for star in world["stars"]:
+        if int(star["owner"]) == 0:
+            owned += 1
+    var routes := {
+        "exploration": world.get("known", []).size() >= 20 and int(world.get("research_level", 0)) >= 4,
+        "prosperity": owned >= 4 and int(world.get("civilian_approval", 0)) >= 70 and world.get("megaproject_completed", []).has("unity_beacon"),
+        "resilience": int(world.get("galactic_crises_survived", 0)) >= 2 and world.get("megaproject_completed", []).size() >= 1
+    }
+    for key in routes.keys():
+        if bool(routes[key]) and not world["victory_paths"].has(key):
+            world["victory_paths"].append(key)
+            world["history"].append("Langzeitziel erreicht: %s. Die Sandbox bleibt spielbar." % key)
