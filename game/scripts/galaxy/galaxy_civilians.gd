@@ -163,6 +163,7 @@ static func freight_capacity(market: Dictionary) -> int:
 static func settle_freight(world: Dictionary) -> Array:
     var remaining: Array = []
     var arrivals: Array = []
+    var returned := 0
     var markets: Dictionary = world["civilian_worlds"]
     for shipment in world.get("civilian_freight_transit", []):
         var origin := str(shipment["from"])
@@ -177,10 +178,12 @@ static func settle_freight(world: Dictionary) -> Array:
             arrivals.append(shipment)
         elif markets.has(origin):
             markets[origin]["goods"] = int(markets[origin]["goods"]) + quantity
+            returned += quantity
         else:
             # Keep goods in transit if the origin no longer exists.
             remaining.append(shipment)
     world["civilian_freight_transit"] = remaining
+    world["civilian_freight_returned"] = returned
     return arrivals
 
 static func transit_goods(world: Dictionary) -> int:
@@ -347,7 +350,7 @@ static func tick(world: Dictionary) -> void:
         "consumed": consumption_total, "opening_stock": opening_stock, "ending_stock": ending_stock,
         "freight_cost": freight_cost_total, "reserve_target": freight_reserve_total,
         "dispatched": dispatched_total,
-        "arrived": arrival_total, "transit_before": transit_before,
+        "arrived": arrival_total, "returned": int(world.get("civilian_freight_returned", 0)), "transit_before": transit_before,
         "transit_after": transit_goods(world), "shipments": trade.duplicate(true),
         "arrivals": arrivals.duplicate(true)}
     world["civilian_approval"] = satisfaction_total / maxi(1, population_total)

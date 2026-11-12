@@ -52,17 +52,38 @@ static func inspect(world: Dictionary) -> Dictionary:
         var ending := int(ledger.get("ending_stock", 0))
         if mini(opening, mini(produced, mini(consumed, dispatched))) < 0:
             errors.append("Negative goods ledger flow")
-        if opening + produced - consumed - dispatched != ending:
+        if opening + produced - consumed - dispatched + int(ledger.get("arrived", 0)) + int(ledger.get("returned", 0)) != ending:
             errors.append("Goods ledger conservation violated")
         if household_goods != ending:
             errors.append("Household goods differ from ledger closing stock")
-        if int(ledger.get("transit_before", 0)) + dispatched - int(ledger.get("arrived", 0)) != int(ledger.get("transit_after", 0)):
-            # Returned shipments also change transit stock; account for them separately.
-            var returned := int(ledger.get("transit_before", 0)) + dispatched - int(ledger.get("arrived", 0)) - int(ledger.get("transit_after", 0))
-            if returned < 0:
-                errors.append("Freight transit balance created goods")
+        var returned := int(ledger.get("returned", 0))
+        var arrivals := int(ledger.get("arrived", 0))
+        if returned < 0 or arrivals < 0 or int(ledger.get("transit_after", 0)) < 0:
+            errors.append("Negative freight settlement flow")
+        if int(ledger.get("transit_before", 0)) + dispatched - arrivals - returned != int(ledger.get("transit_after", 0)):
+            errors.append("Freight transit conservation violated")
+        # Returned cargo is credited to local stock before production.
+        if opening + produced - consumed - dispatched + arrivals + returned != ending:
+            errors.append("Combined household and freight goods balance violated")
     if not ledger.is_empty() and int(world.get("civilian_taxes", 0)) != taxes:
         errors.append("Civilian tax totals differ from market assessments")
+    var budget: Dictionary = world.get("public_budget_ledger", {})
+    if not budget.is_empty() and int(budget.get("year", -1)) == int(world.get("tick", 0)):
+        var receipts := int(budget.get("tax_receipts", -1))
+        var spending := int(budget.get("welfare_spending", -1))
+        var opening_credits := int(budget.get("opening", -1))
+        var closing_credits := int(budget.get("closing", -1))
+        var allocated := 0
+        for recipient in budget.get("recipients", []):
+            allocated += int(recipient.get("cost", 0))
+            if int(recipient.get("cost", 0)) < 0:
+                errors.append("Negative public service allocation")
+        if mini(receipts, mini(spending, mini(opening_credits, closing_credits))) < 0:
+            errors.append("Negative public budget balance")
+        if opening_credits + receipts - spending != closing_credits or allocated != spending:
+            errors.append("Public budget conservation violated")
+        if receipts != taxes:
+            errors.append("Public tax transfer differs from civilian assessment")
     return {"year": int(world.get("tick", 0)), "valid": errors.is_empty(), "errors": errors,
         "population": population, "working_age": workers, "employed": employed,
         "household_goods": household_goods, "freight_goods": GalaxyCivilians.transit_goods(world),

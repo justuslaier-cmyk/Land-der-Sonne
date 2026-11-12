@@ -1023,6 +1023,11 @@ func _society_report() -> void:
         _label("    Beschäftigte %d  •  Erwerbslose %d  •  Geburten %d  •  Todesfälle %d" % [int(cohorts["employed"]), int(cohorts["unemployed"]), int(cohorts["births"]), int(cohorts["deaths"])])
         _label("    Gesundheitsindex: %d/100  •  Geburten und Sterbefälle beeinflussen die Einwohnerzahl" % int(cohorts.get("health", 50)))
     _label("BEVÖLKERUNG GESAMT: %d  •  ZIVILE STEUERN: %d  •  WANDERUNGEN: %d" % [population, int(world.get("civilian_taxes", 0)), int(world.get("civilian_migration", 0))])
+    var audit: Dictionary = world.get("society_audit", {})
+    if not audit.is_empty():
+        _label("JAHRESPRÜFUNG: %s  •  %d Befunde  •  %d Jahre archiviert" % ["OK" if bool(audit.get("valid", false)) else "FEHLER", audit.get("errors", []).size(), world.get("society_audit_history", []).size()])
+        for issue in audit.get("errors", []).slice(0, 4):
+            _label("    ! " + str(issue))
     var public_budget: Dictionary = world.get("public_budget_ledger", {})
     if not public_budget.is_empty():
         _label("ÖFFENTLICHER HAUSHALT: Steuereingang %d  •  Sozialausgaben %d  •  Begünstigte Kolonien %d" % [int(public_budget["tax_receipts"]), int(public_budget["welfare_spending"]), public_budget["recipients"].size()])
