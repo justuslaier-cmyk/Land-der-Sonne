@@ -206,4 +206,8 @@ static func _read(path: String) -> Dictionary:
         return {}
     if data["stars"].is_empty() or validate(data["settings"], data["empire"]) != "":
         return {}
+    # Reject structurally corrupt but parseable saves before they can crash
+    # strategic simulation or silently propagate impossible ownership.
+    if not GalaxyContracts.errors(data).is_empty():
+        return {}
     return data

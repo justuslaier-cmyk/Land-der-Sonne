@@ -88,6 +88,8 @@ jobs:
         run: timeout 120s godot --headless --path game --script res://tests/galaxy_package_d1_test.gd
       - name: Verify package H1 long campaigns, deterministic replay and strategy diversity
         run: timeout 420s godot --headless --path game --script res://tests/galaxy_package_h1_test.gd
+      - name: Reject structurally corrupt saves and recover valid backups
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_save_integrity_regression_test.gd
       - name: Verify sequential crises resolve independently without retriggers
         run: timeout 90s godot --headless --path game --script res://tests/galaxy_crisis_chain_regression_test.gd
       - name: Verify package G2 crisis and megaproject state machine
