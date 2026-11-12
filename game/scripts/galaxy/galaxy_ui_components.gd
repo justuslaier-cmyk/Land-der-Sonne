@@ -58,3 +58,19 @@ static func find_known_system(world: Dictionary, query: String) -> int:
         if known.has(id) and str(star.get("name", "")).to_lower().contains(needle):
             return id
     return -1
+
+static func install_report_filter(container: VBoxContainer) -> LineEdit:
+    var field := LineEdit.new()
+    field.placeholder_text = "Bericht filtern (Text eingeben)"
+    field.tooltip_text = "Filtert die sichtbaren Textzeilen dieses Berichts; Aktionen bleiben erreichbar."
+    field.custom_minimum_size = Vector2(280, 40)
+    field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    container.add_child(field)
+    container.move_child(field, 1)
+    field.text_changed.connect(func(query: String):
+        var needle := query.strip_edges().to_lower()
+        for child in container.get_children():
+            if child is Label and child != container.get_child(0):
+                child.visible = needle.is_empty() or child.text.to_lower().contains(needle)
+    )
+    return field

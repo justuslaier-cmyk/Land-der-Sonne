@@ -44,6 +44,24 @@ func _run() -> void:
         _fail("Ctrl+F did not focus system search")
         return
     ui.system_search.release_focus()
+    ui._economy_report()
+    var report_filter: LineEdit = null
+    for child in ui.root.get_children():
+        if child is LineEdit:
+            report_filter = child
+            break
+    if report_filter == null:
+        _fail("Economy report filter missing")
+        return
+    report_filter.text = "unwahrscheinlicher-suchbegriff"
+    report_filter.text_changed.emit(report_filter.text)
+    var hidden := 0
+    for child in ui.root.get_children():
+        if child is Label and not child.visible:
+            hidden += 1
+    if hidden == 0:
+        _fail("Report filter did not hide nonmatching text")
+        return
     ui._research()
     var escape := InputEventKey.new()
     escape.keycode = KEY_ESCAPE

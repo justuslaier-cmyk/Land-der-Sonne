@@ -1053,6 +1053,7 @@ func _society_report() -> void:
         var society: Dictionary = world.get("ai_societies", {}).get(str(id), {})
         _label("⬡ %s  •  %s" % [rival["name"], GalaxyIdentity.GOVERNMENTS[int(rival.get("government", 0))]])
         _label("    Bevölkerung %d  •  Wohlstand %d  •  Legitimität %d" % [int(society.get("population", 0)), int(society.get("prosperity", 0)), int(society.get("legitimacy", 0))])
+    UiComponents.install_report_filter(root)
     _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
 
 func _economy_report() -> void:
@@ -1107,6 +1108,7 @@ func _economy_report() -> void:
             var balance: Dictionary = entry["balance"]
             _label("%d  •  Credits %+d  •  Forschung %+d  •  Legierungen %+d  •  Stabilität %+d" % [int(entry["year"]), int(delta["credits"]), int(delta["science"]), int(delta["alloys"]), int(delta["stability"])])
             _label("    Bestand: %d Credits  /  %d Forschung  /  %d Legierungen  /  %d%% Stabilität" % [int(balance["credits"]), int(balance["science"]), int(balance["alloys"]), int(balance["stability"])])
+    UiComponents.install_report_filter(root)
     _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
 
 func _chronicle() -> void:
@@ -1190,6 +1192,7 @@ func _chronicle() -> void:
     var history: Array = world["history"]
     for i in range(maxi(0, history.size() - 35), history.size()):
         _label("• " + str(history[i]))
+    UiComponents.install_report_filter(root)
     _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
 
 func _diplomacy(rival_id: int = -1) -> void:
