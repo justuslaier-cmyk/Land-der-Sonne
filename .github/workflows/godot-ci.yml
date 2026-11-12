@@ -223,3 +223,61 @@ jobs:
           path: dist/LandDerSonne-Windows-x64.zip
           if-no-files-found: error
           retention-days: 14
+
+  windows-runtime-smoke:
+    needs: [windows-export]
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download exported Windows package
+        uses: actions/download-artifact@v4
+        with:
+          name: LandDerSonne-Windows-experimental
+          path: windows-package
+      - name: Extract and verify Windows game files
+        shell: pwsh
+        run: |
+          Expand-Archive -Path "windows-package/LandDerSonne-Windows-x64.zip" -DestinationPath "windows-game" -Force
+          if (-not (Test-Path "windows-game/LandDerSonne.exe")) { throw "Missing Windows executable" }
+          if (-not (Test-Path "windows-game/LandDerSonne.pck")) { throw "Missing Windows PCK" }
+          $expected = Get-Content "windows-game/SHA256SUMS.txt"
+          foreach ($line in $expected) {
+            if ($line -notmatch '^([0-9a-fA-F]{64})\s+(.+)$') { throw "Invalid SHA256SUMS entry: $line" }
+            $hash = $Matches[1]
+            $file = $Matches[2].Trim()
+            $actual = (Get-FileHash "windows-game/$file" -Algorithm SHA256).Hash
+            if ($actual -ne $hash) { throw "Checksum mismatch: $file" }
+          }
+      - name: Run exported Windows executable and gameplay integration
+        shell: pwsh
+        run: |
+          $exe = (Resolve-Path "windows-game/LandDerSonne.exe").Path
+          $project = (Resolve-Path "game").Path
+          $checks = @(
+            @{ Name = "startup"; Args = @("--headless", "--quit-after", "30") },
+            @{ Name = "gameplay-integration"; Args = @("--headless", "--path", $project, "--script", "res://tests/galaxy_full_integration_test.gd") }
+          )
+          foreach ($check in $checks) {
+            $stdout = Join-Path $env:RUNNER_TEMP ($check.Name + ".stdout.log")
+            $stderr = Join-Path $env:RUNNER_TEMP ($check.Name + ".stderr.log")
+            $process = Start-Process -FilePath $exe -ArgumentList $check.Args -PassThru -Wait:$false -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+            if (-not $process.WaitForExit(120000)) {
+              $process.Kill()
+              throw "$($check.Name) timed out after 120 seconds"
+            }
+            Get-Content $stdout -ErrorAction SilentlyContinue
+            Get-Content $stderr -ErrorAction SilentlyContinue
+            if ($process.ExitCode -ne 0) { throw "$($check.Name) exited with $($process.ExitCode)" }
+            if ($check.Name -eq "gameplay-integration" -and -not (Select-String -Path $stdout -Pattern "GALAXY_INTEGRATION_PASS" -Quiet)) {
+              throw "Windows integration test did not emit its success marker"
+            }
+          }
+      - name: Upload Windows runtime logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-runtime-evidence
+          path: ${{ runner.temp }}/*.log
+          if-no-files-found: warn
+          retention-days: 14
