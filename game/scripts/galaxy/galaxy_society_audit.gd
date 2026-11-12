@@ -52,7 +52,7 @@ static func inspect(world: Dictionary) -> Dictionary:
         var ending := int(ledger.get("ending_stock", 0))
         if mini(opening, mini(produced, mini(consumed, dispatched))) < 0:
             errors.append("Negative goods ledger flow")
-        if opening + produced - consumed - dispatched + int(ledger.get("arrived", 0)) + int(ledger.get("returned", 0)) != ending:
+        if opening + produced - consumed - dispatched != ending:
             errors.append("Goods ledger conservation violated")
         if household_goods != ending:
             errors.append("Household goods differ from ledger closing stock")
@@ -62,8 +62,10 @@ static func inspect(world: Dictionary) -> Dictionary:
             errors.append("Negative freight settlement flow")
         if int(ledger.get("transit_before", 0)) + dispatched - arrivals - returned != int(ledger.get("transit_after", 0)):
             errors.append("Freight transit conservation violated")
-        # Returned cargo is credited to local stock before production.
-        if opening + produced - consumed - dispatched + arrivals + returned != ending:
+        # Opening household stock is sampled AFTER arrivals and returns.
+        # Check the combined pre-settlement stock without counting cargo twice.
+        var pre_settlement := opening - arrivals - returned
+        if pre_settlement < 0 or pre_settlement + arrivals + returned + produced - consumed - dispatched != ending:
             errors.append("Combined household and freight goods balance violated")
     if not ledger.is_empty() and int(world.get("civilian_taxes", 0)) != taxes:
         errors.append("Civilian tax totals differ from market assessments")
