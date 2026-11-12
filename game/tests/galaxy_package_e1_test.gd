@@ -13,6 +13,7 @@ func _initialize() -> void:
         return
     var markets: Dictionary = world["civilian_worlds"]
     var home: Dictionary = markets["0"]
+    var original_demographics: Dictionary = home.get("demographics", {}).duplicate(true)
     home["demographics"] = {"employed": 8}
     if GalaxyCivilians.freight_capacity(home) != 4:
         _fail("Employment capacity not applied")
@@ -25,6 +26,7 @@ func _initialize() -> void:
     if GalaxyCivilians.freight_capacity(home) != 0:
         _fail("Unemployed freight capacity nonzero")
         return
+    home["demographics"] = original_demographics
     var replay := world.duplicate(true)
     for year in range(75):
         world["tick"] = year
