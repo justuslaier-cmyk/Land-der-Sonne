@@ -540,7 +540,7 @@ func _start_game() -> void:
     simulation_elapsed = 0.0
     simulation_speed = 1
     world["simulation_speed"] = 1
-    simulation_paused = true
+    simulation_paused = false
     onboarding_dismissed = false
     _show_galaxy()
 

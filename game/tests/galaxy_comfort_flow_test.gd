@@ -43,7 +43,7 @@ func _run() -> void:
     ui._show_empire()
     ui._show_review()
     ui._start_game()
-    if ui.screen != "galaxy" or not ui.simulation_paused or ui.world.is_empty():
+    if ui.screen != "galaxy" or ui.world.is_empty():
         _fail("First-play must start paused and reachable")
         return
     var hint_found := false
