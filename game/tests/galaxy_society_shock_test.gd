@@ -49,6 +49,10 @@ func _initialize() -> void:
         GalaxyStrategy.tick(world)
         if str(world.get("pending_event", "")) != "":
             GalaxySystems.resolve_event(world, 0)
+        var audit: Dictionary = GalaxySocietyAudit.inspect(world)
+        if not bool(audit["valid"]):
+            _fail("Society audit at year %d: %s" % [year, str(audit["errors"])])
+            return
         var ledger: Dictionary = world["civilian_goods_ledger"]
         if int(ledger["opening_stock"]) + int(ledger["produced"]) - int(ledger["consumed"]) - int(ledger["dispatched"]) != int(ledger["ending_stock"]):
             _fail("Annual household goods ledger unbalanced at year %d" % year)
