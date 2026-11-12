@@ -1128,6 +1128,29 @@ func _chronicle() -> void:
     _title("GALAKTISCHE CHRONIK")
     _illustration("chronicle")
     GalaxyLore.prepare(world)
+    GalaxyEndgame.prepare(world)
+    _label("GALAKTISCHE LANGZEITPROJEKTE")
+    for project in GalaxyEndgame.PROJECTS:
+        var project_id := str(project["id"])
+        if world["megaproject_completed"].has(project_id):
+            _label("✓ %s  •  VOLLENDET" % str(project["title"]))
+            continue
+        var active: Dictionary = world.get("megaproject_active", {})
+        if str(active.get("id", "")) == project_id:
+            _label("◉ %s  •  Baufortschritt %d/%d" % [str(project["title"]), int(active.get("progress", 0)), int(project["duration"])])
+        else:
+            _button("BAUEN: %s  (%d Credits / %d Legierungen)" % [str(project["title"]), int(project["credits"]), int(project["alloys"])], func():
+                notice = "Großprojekt begonnen." if GalaxyEndgame.start_project(world, project_id) else "Nicht möglich: Ressourcen, Forschung oder laufendes Projekt."
+                _chronicle()
+            )
+    var crisis: Dictionary = world.get("galactic_crisis", {})
+    if not crisis.is_empty():
+        _label("GALAKTISCHE KRISE: %s  •  Bedrohung %d  •  Status %s" % [str(crisis.get("title", "")), int(crisis.get("threat", 0)), str(crisis.get("state", ""))])
+        if str(crisis.get("state", "")) == "active":
+            _button("KRISENABWEHR FINANZIEREN (25 Credits, 10 Legierungen)", func():
+                notice = "Abwehrmaßnahmen finanziert." if GalaxyEndgame.defend_crisis(world) else "Nicht genug Ressourcen."
+                _chronicle()
+            )
     var lore: Dictionary = world["ancient_history"]
     if not lore["discovered"].is_empty():
         _label("ARCHÄOLOGISCHES ARCHIV / " + str(lore["civilization"]))

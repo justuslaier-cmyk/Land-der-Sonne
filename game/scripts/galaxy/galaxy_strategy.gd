@@ -1119,6 +1119,7 @@ static func tick(world: Dictionary) -> void:
     GalaxyAI.tick(world)
     GalaxyProgress.tick(world)
     GalaxyNarrative.tick(world)
+    GalaxyEndgame.tick(world)
     # Bounded economic history, persisted in ordinary saves.
     if not world.has("economy_history"):
         world["economy_history"] = []

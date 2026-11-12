@@ -9,7 +9,9 @@ const MILESTONES := [
     {"id": "colonies", "icon": "⬡", "name": "Neue Horizonte", "description": "Beherrsche 4 Sternensysteme."},
     {"id": "research", "icon": "✦", "name": "Zeitalter der Entdeckungen", "description": "Erreiche Forschungsstufe 4."},
     {"id": "culture", "icon": "❖", "name": "Bewahrer der Vergangenheit", "description": "Analysiere 2 archäologische Relikte."},
-    {"id": "prosperity", "icon": "◆", "name": "Blühende Zivilgesellschaft", "description": "Erreiche 100 zivile Bevölkerungseinheiten bei mindestens 60 % Zustimmung."}
+    {"id": "prosperity", "icon": "◆", "name": "Blühende Zivilgesellschaft", "description": "Erreiche 100 zivile Bevölkerungseinheiten bei mindestens 60 % Zustimmung."},
+    {"id": "megaproject", "icon": "✺", "name": "Architekten der Sterne", "description": "Vollende ein galaktisches Großprojekt."},
+    {"id": "crisis", "icon": "⚑", "name": "Durch die Dunkelheit", "description": "Überstehe eine galaktische Krise."}
 ]
 
 static func prepare(world: Dictionary) -> void:
@@ -30,10 +32,10 @@ static func measures(world: Dictionary) -> Dictionary:
     for artifact in world.get("artifacts", []):
         if bool(artifact.get("analyzed", false)):
             artifacts += 1
-    return {"cartographer": world.get("known", []).size(), "first_contact": world.get("contacts", []).size(), "colonies": owned, "research": int(world.get("research_level", 0)), "culture": artifacts, "prosperity": population if int(world.get("civilian_approval", 0)) >= 60 else 0}
+    return {"cartographer": world.get("known", []).size(), "first_contact": world.get("contacts", []).size(), "colonies": owned, "research": int(world.get("research_level", 0)), "culture": artifacts, "prosperity": population if int(world.get("civilian_approval", 0)) >= 60 else 0, "megaproject": world.get("megaproject_completed", []).size(), "crisis": int(world.get("galactic_crises_survived", 0))}
 
 static func targets() -> Dictionary:
-    return {"cartographer": 10, "first_contact": 3, "colonies": 4, "research": 4, "culture": 2, "prosperity": 100}
+    return {"cartographer": 10, "first_contact": 3, "colonies": 4, "research": 4, "culture": 2, "prosperity": 100, "megaproject": 1, "crisis": 1}
 
 static func tick(world: Dictionary) -> void:
     prepare(world)
