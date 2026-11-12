@@ -13,6 +13,9 @@ func _initialize() -> void:
     if not GalaxyNarrative.apply(world, event):
         _fail("Incident did not start")
         return
+    if not GalaxyNarrative.pending_followups(world).is_empty():
+        _fail("Incident followup fired without two-year delay")
+        return
     world["tick"] = 12
     if not GalaxyNarrative.pending_followups(world).has("border_incident"):
         _fail("Delayed followup missing")
@@ -36,6 +39,12 @@ func _initialize() -> void:
     if str(loaded["galactic_crisis"].get("id", "")) != "fracture":
         _fail("Fracture crisis absent")
         return
+    var science_before := int(loaded["science"])
+    loaded["research_level"] = 2
+    if GalaxyEndgame.research_crisis(loaded) or int(loaded["science"]) != science_before:
+        _fail("Scientific countermeasure bypassed technology prerequisite")
+        return
+    loaded["research_level"] = 4
     for i in range(3):
         if not GalaxyEndgame.research_crisis(loaded):
             _fail("Research response unavailable")
