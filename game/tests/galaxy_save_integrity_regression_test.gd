@@ -2,9 +2,9 @@ extends SceneTree
 
 func _initialize() -> void:
     var slot := 4
-    var path := GalaxyModel.slot_path(slot)
+    var path: String = GalaxyModel.slot_path(slot)
     for suffix in ["", ".bak", ".previous", ".tmp"]:
-        var target := path + suffix
+        var target: String = path + str(suffix)
         if FileAccess.file_exists(target):
             DirAccess.remove_absolute(ProjectSettings.globalize_path(target))
     var settings := GalaxyModel.defaults()
@@ -46,7 +46,7 @@ func _initialize() -> void:
             _fail("Recovery did not use valid backup: " + corruption)
             return
     for suffix in ["", ".bak", ".previous", ".tmp"]:
-        var target := path + suffix
+        var target: String = path + str(suffix)
         if FileAccess.file_exists(target):
             DirAccess.remove_absolute(ProjectSettings.globalize_path(target))
     print("GALAXY_SAVE_INTEGRITY_PASS: corrupt ownership, empire IDs and tick rejected with backup recovery")
