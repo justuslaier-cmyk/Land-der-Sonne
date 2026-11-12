@@ -31,6 +31,26 @@ func _ready() -> void:
     get_window().title = "Land der Sonne | Galaktische Chroniken"
     _show_menu()
 
+# Keyboard shortcuts are ignored while text fields are being edited.
+func _unhandled_key_input(event: InputEvent) -> void:
+    if not event is InputEventKey or not event.pressed or event.echo:
+        return
+    if get_viewport().gui_get_focus_owner() is LineEdit or get_viewport().gui_get_focus_owner() is TextEdit:
+        return
+    if event.keycode == KEY_F1:
+        if screen != "help":
+            _show_help()
+        get_viewport().set_input_as_handled()
+    elif event.keycode == KEY_ESCAPE and screen == "help":
+        if world.is_empty():
+            _show_menu()
+        else:
+            _show_galaxy()
+        get_viewport().set_input_as_handled()
+    elif event.keycode == KEY_SPACE and screen == "galaxy" and not world.is_empty():
+        _toggle_pause()
+        get_viewport().set_input_as_handled()
+
 func _process(delta: float) -> void:
     if world.is_empty() or simulation_paused or screen != "galaxy":
         return
@@ -206,6 +226,7 @@ func _show_help() -> void:
     _label("6. EREIGNISSE: Offene Entscheidungen unterbrechen die Zeit. Eine Auswahl setzt die Simulation fort.")
     _label("7. SPIELSTÄNDE: Vier manuelle Slots im Menü SPIELSTÄNDE; der automatische Spielstand wird alle zehn Jahre erneuert.")
     _label("8. CHRONIK UND ZIELE: Langfristigen Fortschritt über die Berichte nachvollziehen.")
+    _label("Tastatur: F1 öffnet diese Hilfe, Esc schließt sie, Leertaste pausiert oder startet die Galaxie.")
     _label("Hinweis: Dies ist eine Anleitung zum experimentellen Prototyp, kein vollständiges interaktives Tutorial.")
     _button("ZUR GALAXIE" if from_game else "ZUM MENÜ", _show_galaxy if from_game else _show_menu)
 
