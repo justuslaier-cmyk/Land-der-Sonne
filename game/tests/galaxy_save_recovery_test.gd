@@ -67,6 +67,22 @@ func _initialize() -> void:
     for path in [primary, backup, previous, temp]:
         if FileAccess.file_exists(path):
             DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+    # Independent manual slots must not overwrite the autosave.
+    for slot in range(1, 5):
+        if not GalaxyModel.save_game(world, slot):
+            _fail("manual slot %d failed" % slot)
+            return
+        if int(GalaxyModel.load_game(slot).get("tick", -1)) != int(world["tick"]):
+            _fail("manual slot %d roundtrip failed" % slot)
+            return
+    if GalaxyModel.save_game(world, 5) or not GalaxyModel.load_game(5).is_empty():
+        _fail("invalid slot accepted")
+        return
+    for slot in range(1, 5):
+        for suffix in ["", ".bak", ".previous", ".tmp"]:
+            var slot_file := GalaxyModel.slot_path(slot) + suffix
+            if FileAccess.file_exists(slot_file):
+                DirAccess.remove_absolute(ProjectSettings.globalize_path(slot_file))
     print("GALAXY_SAVE_RECOVERY_PASS: backup rotation, corrupt primary, interrupted promotion")
     quit(0)
 
