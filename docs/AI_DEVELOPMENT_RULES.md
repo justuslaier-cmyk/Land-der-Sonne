@@ -1,5 +1,20 @@
 # Binding AI development rules
 
+## Verbindliche Arbeitsdisziplin: ein Durchlauf ist eine vollständige Arbeitseinheit
+
+**Ausdrückliche Nutzerkorrektur vom 12.11.2026. Diese Regel hat Vorrang vor der bisherigen Gewohnheit, nach jedem Commit einen Zwischenbericht abzugeben.** Für Land der Sonne gilt der genehmigte Plan `docs/progress/FINAL_GAME_EXECUTION_PLAN.md` mit **sechs Paketen und zwölf Durchläufen**.
+
+1. **Keine Mikrodurchläufe:** Ein Durchlauf ist der gesamte im Plan benannte Umfang, nicht ein einzelner Test, Commit, Bugfix oder Teilaspekt. Unteraufgaben dürfen intern existieren, aber werden nicht als Nutzerabgabe ausgegeben oder als weitere Durchläufe gezählt.
+2. **Zusammenhängende Umsetzung:** Innerhalb eines Durchlaufs Bestandsaufnahme, fachliche Implementierung/Integration, Fehlerkorrektur, Tests, CI-Überprüfung und Dokumentation soweit technisch möglich erledigen. Tests allein ersetzen keine erforderlichen Spielmechanik-Verbesserungen.
+3. **Keine Zwischenabgaben als Endergebnis:** Nicht nach jeder kleinen Codeänderung anhalten und auf \"weiter\" warten. Erst bei einem tatsächlich konsolidierten Durchlauf-Ergebnis berichten. Bei technisch begrenzter Ausführungszeit den Rest als offenen Arbeitsstand dokumentieren, ohne ihn als erledigten Durchlauf auszugeben.
+4. **Keine endlose Blockade durch nicht verfügbare Abnahmen:** Nicht selbst durchführbare manuelle Windows- oder visuelle Abnahmen **einmal** konkret als offen dokumentieren; anschließend unabhängige geplante Pakete bearbeiten, statt denselben Vorbehalt in jeder Antwort zu wiederholen. Eine fehlende Abnahme bleibt ehrlich offen.
+5. **Prüfstatus präzise:** `CI ausstehend` ist keine Abnahme. Bei fehlerhafter CI zuerst Fehler beheben; bei laufender CI die Prüfung später nachholen, ohne eine zusätzliche Durchlaufnummer zu erzeugen.
+6. **Keine widersprüchlichen Versprechen:** Ein bloßes Bekenntnis zu zwölf Durchläufen genügt nicht. Das Verhalten muss der gebündelten Abarbeitung entsprechen. Vor einer Nutzerantwort prüfen: \"Liefere ich ein zusammenhängendes Paketresultat oder bloß einen einzelnen Arbeitsschritt?\" Im zweiten Fall möglichst weiterarbeiten.
+7. **Planstabilität:** Die genehmigten zwölf Durchläufe nicht stillschweigend umnummerieren, ausweiten oder durch neue Forschungsphasen ersetzen. Abweichungen nur mit ausdrücklicher Nutzerzustimmung.
+
+Diese Regeln sind eine dauerhafte Repository-Vorgabe für künftige Entwicklungs-Chats und werden bei jedem Arbeitsbeginn zusammen mit dem Ausführungsplan gelesen.
+
+
 ## Binding independent completion checklist
 
 The user-approved mandatory acceptance register is [BINDING_GAME_REQUIREMENTS_CHECKLIST.md](vision/BINDING_GAME_REQUIREMENTS_CHECKLIST.md). Read it at the start of each game-development session alongside the vision and status documents. Its 98 independently tracked requirements are **mandatory** and may not be silently removed, reclassified or checked off based on implementation claims alone. Mark `[x]` only after integrated implementation and documented successful acceptance evidence (commit, executed tests, observed outcome, visual/native evidence where applicable); uncheck regressions. Cite affected requirement IDs in progress reports. The tentative 36-pass framework is not a promise or verified completion estimate.
