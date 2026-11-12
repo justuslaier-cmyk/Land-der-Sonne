@@ -35,6 +35,29 @@ func _run() -> void:
     if ui.screen != "galaxy":
         _fail("return from help did not restore galaxy")
         return
+    # Keyboard navigation: Space toggles time, F1 opens help, Esc returns.
+    var was_paused: bool = ui.simulation_paused
+    var space := InputEventKey.new()
+    space.keycode = KEY_SPACE
+    space.pressed = true
+    ui._unhandled_key_input(space)
+    if ui.simulation_paused == was_paused:
+        _fail("space shortcut did not toggle pause")
+        return
+    var f1 := InputEventKey.new()
+    f1.keycode = KEY_F1
+    f1.pressed = true
+    ui._unhandled_key_input(f1)
+    if ui.screen != "help":
+        _fail("F1 shortcut did not open help")
+        return
+    var escape := InputEventKey.new()
+    escape.keycode = KEY_ESCAPE
+    escape.pressed = true
+    ui._unhandled_key_input(escape)
+    if ui.screen != "galaxy":
+        _fail("Escape shortcut did not return to galaxy")
+        return
     print("GALAXY_HELP_PASS: menu, content, in-game navigation and world preservation")
     ui.queue_free()
     quit(0)
