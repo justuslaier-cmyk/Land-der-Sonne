@@ -46,18 +46,27 @@ def inspect(root=ROOT):
     missing = [x for x in ids if x not in accepted]
     evidence_path = root / "docs/quality/RELEASE_6_1_NATIVE_EVIDENCE.json"
     evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    if not isinstance(evidence, dict) or evidence.get("schema") != 1:
+        problems.append("Unsupported release evidence schema")
+        return problems, missing
+    if not isinstance(evidence.get("requirements"), dict) or not isinstance(evidence.get("gates"), dict):
+        problems.append("Invalid release evidence structure")
+        return problems, missing
     if sorted(evidence.get("requirements", {}).keys()) != sorted(accepted):
         problems.append("Individual acceptance records do not match checklist")
     for key in accepted:
-        record = evidence["requirements"][key]
+        record = evidence["requirements"].get(key)
         if not isinstance(record, dict) or not SHA.fullmatch(str(record.get("commit", ""))):
             problems.append("Missing full commit SHA for " + key)
             continue
         for field in ("test", "result", "integration", "reviewer"):
             if not isinstance(record.get(field), str) or not record[field].strip():
                 problems.append("Missing " + field + " for " + key)
+    unknown_gates = set(evidence["gates"]) - set(REQUIRED)
+    if unknown_gates:
+        problems.append("Unknown release gates: " + ", ".join(sorted(unknown_gates)))
     for key in REQUIRED:
-        record = evidence.get("gates", {}).get(key, {})
+        record = evidence["gates"].get(key, {})
         if not isinstance(record, dict) or record.get("status") != "verified":
             missing.append(key)
             continue
