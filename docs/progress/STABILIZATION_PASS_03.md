@@ -16,3 +16,8 @@ Stand: 2026-11-11. Branch: `design/galactic-grand-strategy-pivot`.
 2. Screenshots aller 18 Ansichten visuell auf Überlauf, abgeschnittene Bedienelemente, Kontrast und Grafikimport prüfen.
 3. Inputtest und 120-Jahre-KI-Test müssen grün sein; bei Fehlern Ursache korrigieren und erneut ausführen.
 4. Erst danach Durchlauf 4 Windows-Build und Freigabe.
+
+## Ergänzung 2026-11-12
+- Zusätzlicher UI-Regressionstest `game/tests/galaxy_map_interaction_test.gd` committed (`31c83429`), in CI-Matrix eingebunden (`886fdbef`). Er ergänzt die bestehende UI-Regression um Sternauswahl und Forschungsnavigation.
+- `game/tests/render_capture.gd` validiert nun exakt die Bilddimensionen und dass 18 Screenshots aufgenommen werden (`74576b03`).
+- Diese Änderungen sind noch nicht mit einer erfolgreichen Godot-Ausführung belegt; CI-Queue/Runner weiterhin Abnahmeblocker.
