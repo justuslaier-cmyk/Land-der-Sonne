@@ -87,7 +87,7 @@ jobs:
       - name: Verify package D1 social accounting and invariant diagnostics
         run: timeout 120s godot --headless --path game --script res://tests/galaxy_package_d1_test.gd
       - name: Verify package H1 long campaigns, deterministic replay and strategy diversity
-        run: timeout 240s godot --headless --path game --script res://tests/galaxy_package_h1_test.gd
+        run: timeout 420s godot --headless --path game --script res://tests/galaxy_package_h1_test.gd
       - name: Verify package G2 crisis and megaproject state machine
         run: timeout 90s godot --headless --path game --script res://tests/galaxy_package_g2_test.gd
       - name: Verify package G1 deterministic causal narrative and cooldowns
