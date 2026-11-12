@@ -181,6 +181,7 @@ func _show_menu() -> void:
     _illustration("menu")
     _button("NEUES SPIEL", _begin_new_game)
     _button("SPIEL LADEN", _load_game)
+    _button("SPIELSTÄNDE 1–4", _show_save_slots)
     _button("EINSTELLUNGEN", _show_options)
     _button("BEENDEN", func(): get_tree().quit())
     _label("Früher Prototyp • Galaxien können zufällig oder mit festem Seed erzeugt werden.")
@@ -433,6 +434,40 @@ func _start_game() -> void:
     simulation_paused = false
     _show_galaxy()
 
+func _show_save_slots() -> void:
+    screen = "save_slots"
+    _clear()
+    _title("SPIELSTÄNDE")
+    for slot in range(1, 5):
+        var index: int = slot
+        var stored := GalaxyModel.load_game(index)
+        var description := "LEER" if stored.is_empty() else "JAHR %d" % int(stored.get("tick", 0))
+        _button("SLOT %d — %s — LADEN" % [index, description], func(): _load_slot(index))
+        if not world.is_empty():
+            _button("SLOT %d — SPEICHERN" % index, func(): _save_slot(index))
+    _button("ZURÜCK", _show_galaxy if not world.is_empty() else _show_menu)
+
+func _load_slot(slot: int) -> void:
+    var loaded := GalaxyModel.load_game(slot)
+    if loaded.is_empty():
+        _label("Slot %d enthält keinen gültigen Spielstand." % slot)
+        return
+    world = loaded
+    GalaxyStrategy.prepare(world)
+    _ensure_home_colony()
+    settings = world["settings"].duplicate(true)
+    empire = world["empire"].duplicate(true)
+    selected = clampi(int(world.get("selected", 0)), 0, world["stars"].size() - 1)
+    simulation_elapsed = 0.0
+    simulation_speed = clampi(int(world.get("simulation_speed", 1)), 1, 8)
+    simulation_paused = true
+    _show_galaxy()
+
+func _save_slot(slot: int) -> void:
+    world["selected"] = selected
+    var ok := GalaxyModel.save_game(world, slot)
+    _label("Slot %d gespeichert." % slot if ok else "Speichern in Slot %d fehlgeschlagen." % slot)
+
 func _load_game() -> void:
     var loaded := GalaxyModel.load_game()
     if loaded.is_empty():
@@ -486,7 +521,7 @@ func _show_galaxy() -> void:
     var bar := HBoxContainer.new()
     bar.add_theme_constant_override("separation", 6)
     toolbar_scroll.add_child(bar)
-    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["FLOTTENKOMMANDO", _fleet_command], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["ZIELE", _goals_report], ["GESELLSCHAFT", _society_report], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["MENÜ", _show_menu]]:
+    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["FLOTTENKOMMANDO", _fleet_command], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["ZIELE", _goals_report], ["GESELLSCHAFT", _society_report], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["SPIELSTÄNDE", _show_save_slots], ["MENÜ", _show_menu]]:
         var button := Button.new()
         button.text = spec[0]
         button.custom_minimum_size.y = 42
