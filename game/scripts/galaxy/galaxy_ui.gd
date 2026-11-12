@@ -410,6 +410,7 @@ func _show_settings() -> void:
     _spin("Rohstoffhäufigkeit (%)", "resources", 1, 100)
     _spin("Ereignishäufigkeit (%)", "events", 1, 100)
     _choice("Schwierigkeit", ["Entspannt", "Normal", "Herausfordernd"], settings, "difficulty")
+    _label("Schwierigkeit steuert die Häufigkeit bezahlter KI-Expansion und Flottenverstärkung; keine Gratisressourcen oder versteckten Kampfboni.")
     _button("WEITER: REICH ERSTELLEN", func():
         var error := GalaxyModel.validate(settings, empire)
         if error != "":
