@@ -23,7 +23,7 @@ func _initialize() -> void:
         if int(star["owner"]) == 0:
             player_count += 1
             player_resources += int(star["resource"])
-    var rival_before := int(world["ai_treasury"][key])
+    var rival_before := int(world["ai_treasury"].get(key, 50))
     var player_before := int(world["credits"])
     GalaxySystems.tick(world)
     var expected_rival := rival_count * 2 + int(rival_resources / 3)
