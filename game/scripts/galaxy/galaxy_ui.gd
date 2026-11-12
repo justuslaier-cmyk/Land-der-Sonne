@@ -775,9 +775,9 @@ func _research() -> void:
     _label("Entschlüsselte wissenschaftliche Durchbrüche: %d" % world.get("research_breakthroughs", []).size())
     _label("Technologieeffekte: Flottenreichweite +%d  •  Legierungen/Jahr +%d  •  Stabilität/Jahr +%d" % [int(technology["fleet_range"]), int(technology["industry_alloys"]), int(technology["society_stability"])])
     for field in ["propulsion", "industry", "society"]:
-        var field_id := field
+        var field_id: String = str(field)
         var preview: Dictionary = GalaxySystems.research_preview(world, field)
-        var label_name := {"propulsion": "Antrieb", "industry": "Industrie", "society": "Gesellschaft"}[field]
+        var label_name: String = str({"propulsion": "Antrieb", "industry": "Industrie", "society": "Gesellschaft"}[field])
         _label("%s  •  Stufe %d  •  Kosten %d  •  %s" % [label_name, int(preview["level"]), int(preview["cost"]), "Forschbar" if bool(preview["allowed"]) else str(preview["reason"])])
         _button("ERFORSCHEN: " + label_name.to_upper(), func(): _research_field(field_id))
     _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
@@ -807,10 +807,10 @@ func _fleet_command() -> void:
         _label("Jahr %d • %s • Angriff %d / Verteidigung %d • Verluste %d" % [int(report["year"]), "Sieg" if bool(report["victory"]) else "Niederlage", int(report["attack"]), int(report["defense"]), int(report["losses"])])
     _label("Die bestehende Simulation verwaltet weiterhin eine gemeinsame Spielerflotte.")
     for order in ["hold", "patrol", "assault"]:
-        var selected_order := order
+        var selected_order: String = str(order)
         _button("BEFEHL: " + order.to_upper(), func(): _set_fleet_order(selected_order))
     for admiral in ["none", "tactician", "navigator", "quartermaster"]:
-        var selected_admiral := admiral
+        var selected_admiral: String = str(admiral)
         _button("ADMIRAL: " + admiral.to_upper(), func(): _set_admiral(selected_admiral))
     _label("Bisherige Kommandowechsel: %d" % world["fleet_command_history"].size())
     _button("ZURÜCK ZUR GALAXIE", _show_galaxy)
@@ -1334,7 +1334,7 @@ func _shipyard() -> void:
     _label("Baukosten: %d Credits / %d Legierungen  •  Antriebsforschung %d erforderlich" % [int(blueprint["credits"]), int(blueprint["alloys"]), int(blueprint["required_propulsion"])])
     _label("Baufreigabe: %s  •  Registrierte Schiffe: %d" % ["Ja" if bool(blueprint["allowed"]) else "Antrieb noch nicht erforscht", world["ship_registry"].size()])
     for role in ["escort", "interceptor", "artillery"]:
-        var chosen_role := role
+        var chosen_role: String = str(role)
         _button("ROLLE: " + role.to_upper(), func(): _set_ship_role(chosen_role))
     _ship_preview()
     for i in range(3):
