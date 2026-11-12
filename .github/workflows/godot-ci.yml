@@ -104,6 +104,8 @@ jobs:
         run: timeout 90s godot --headless --path game --script res://tests/galaxy_production_freight_test.gd
       - name: Verify package 2.1 budget conservation and welfare shortage shocks
         run: timeout 90s godot --headless --path game --script res://tests/galaxy_budget_shock_test.gd
+      - name: Verify package 2.3 delayed narrative, alternate crisis paths and persistent victories
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_package_2_3_test.gd
       - name: Verify long campaign endgame, megaprojects, crises and save continuation
         run: timeout 120s godot --headless --path game --script res://tests/galaxy_campaign_endgame_test.gd
       - name: Verify uninterrupted and saved-resumed campaigns remain deterministic
