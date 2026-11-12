@@ -1068,6 +1068,10 @@ func _economy_report() -> void:
     var public_budget: Dictionary = world.get("public_budget_ledger", {})
     if not public_budget.is_empty():
         _label("STAATSHAUSHALT LETZTES JAHR: Anfang %d + Steuern %d − Sozialausgaben %d = %d" % [int(public_budget["opening"]), int(public_budget["tax_receipts"]), int(public_budget["welfare_spending"]), int(public_budget["closing"])])
+    _label("INTERNATIONALER HANDEL / ZOLL UND ABHÄNGIGKEIT")
+    _illustration("trade_policy")
+    var market: Dictionary = world.get("trade_market_ledger", {})
+    _label("Aktive Partner: %d  •  Handelsumsatz: %d Credits  •  Zollertrag: %d Credits  •  Abhängigkeit: %d" % [int(market.get("partners", 0)), int(market.get("trade_revenue", 0)), int(market.get("tariff_revenue", 0)), int(market.get("dependency", 0))])
     _label("HANDELSWEGE / SICHERHEIT")
     _illustration("freight_security")
     _label("Konvoischutz: Stufe %d/3  •  Blockierte Zielsysteme: %d" % [int(world.get("trade_security", 0)), world.get("freight_blockades", []).size()])
@@ -1130,6 +1134,16 @@ func _diplomacy(rival_id: int = -1) -> void:
     _illustration("diplomacy")
     _label("Erkunde fremde Hauptwelten, um diplomatische Kontakte herzustellen.")
     _label("Gegenspionage: Stufe %d/3" % int(world.get("counterintelligence", 0)))
+    _label("Informationspolitik: Stufe %d/3; Kosten %d Credits/Jahr" % [int(world.get("propaganda_level", 0)), int(world.get("propaganda_level", 0)) * 3])
+    _illustration("information_policy")
+    _button("INFORMATIONSPOLITIK ERHÖHEN", func():
+        GalaxyStrategy.set_propaganda(world, mini(3, int(world.get("propaganda_level", 0)) + 1))
+        _diplomacy()
+    )
+    _button("INFORMATIONSPOLITIK REDUZIEREN", func():
+        GalaxyStrategy.set_propaganda(world, maxi(0, int(world.get("propaganda_level", 0)) - 1))
+        _diplomacy()
+    )
     _button("GEGENSPIONAGE AUSBAUEN (-25 Credits)", _counterintelligence)
     for rival in world["ai"]:
         var id := int(rival["id"])
@@ -1141,6 +1155,20 @@ func _diplomacy(rival_id: int = -1) -> void:
         var stance := str(world.get("ai_intentions", {}).get(str(id), {}).get("stance", "unbekannt")) if intel >= 2 else "unbekannt"
         _label("%s  •  Beziehung: %d  •  Vertrauen: %d/50  •  Strategie: %s" % [rival["name"], int(world["relations"].get(str(id), 0)), int(world.get("diplomatic_trust", {}).get(str(id), 0)), stance])
         _label("Geheimdienstinformationen: Stufe %d/3" % intel)
+        var tariff := int(world.get("trade_tariffs", {}).get(str(id), 0))
+        _label("Zollstufe %d/3  •  Embargo %s" % [tariff, "aktiv" if world.get("trade_embargoes", []).has(id) else "inaktiv"])
+        _button("ZOLL ERHÖHEN", func():
+            GalaxyStrategy.set_trade_tariff(world, id, mini(3, tariff + 1))
+            _diplomacy(id)
+        )
+        _button("ZOLL SENKEN", func():
+            GalaxyStrategy.set_trade_tariff(world, id, maxi(0, tariff - 1))
+            _diplomacy(id)
+        )
+        _button("EMBARGO UMSCHALTEN", func():
+            GalaxyStrategy.set_trade_embargo(world, id, not world.get("trade_embargoes", []).has(id))
+            _diplomacy(id)
+        )
         if intel >= 3:
             _label("Wirtschaftsspionage: gegnerische Staatskasse %d Credits" % int(world.get("ai_treasury", {}).get(str(id), 0)))
         for mission in world.get("spy_missions", []):
@@ -1292,6 +1320,10 @@ func _illustration(kind: String) -> void:
             asset = "res://assets/art/scene_research_exchange.svg"
         "freight_security":
             asset = "res://assets/art/scene_freight_security.svg"
+        "trade_policy":
+            asset = "res://assets/art/scene_trade_policy.svg"
+        "information_policy":
+            asset = "res://assets/art/scene_information_policy.svg"
         "fleet", "shipyard":
             asset = "res://assets/art/scene_fleet.svg"
         "diplomacy":

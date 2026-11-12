@@ -80,6 +80,10 @@ static func tick(world: Dictionary) -> void:
         world["ai_military_assessments"][key] = {"year": year, "at_war": world["wars"].has(id),
             "fleet_strength": int(fleet["strength"]), "stance": str(world["ai_intentions"][key]["stance"]),
             "reason": "Krieg: Grenzsysteme prüfen" if world["wars"].has(id) else "Frieden: keine Angriffe"}
+        # F2: bounded defensive response; explicit AI command remains traceable.
+        var assessment: Dictionary = world["ai_military_assessments"][key]
+        assessment["doctrine"] = "defend" if int(fleet["strength"]) < 12 else "patrol"
+        assessment["supply_estimate"] = maxi(0, 100 - int(world["wars"].has(id)) * 20)
         # Player systems are attacked only during a declared war.
         if not world["wars"].has(id) or year % 4 != id % 4:
             continue

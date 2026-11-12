@@ -250,7 +250,7 @@ static func settle_research_exchange(world: Dictionary) -> void:
     var labs := research_labs(world)
     var partners := 0
     for rival_id in world.get("trade_pacts", []):
-        if world.get("contacts", []).has(rival_id) and not world.get("wars", []).has(rival_id):
+        if world.get("contacts", []).has(rival_id) and not world.get("wars", []).has(rival_id) and not world.get("trade_embargoes", []).has(rival_id):
             partners += 1
     var grant := mini(12, labs * mini(3, partners))
     world["science"] = int(world["science"]) + grant

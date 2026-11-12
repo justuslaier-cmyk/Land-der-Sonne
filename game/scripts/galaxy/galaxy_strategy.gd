@@ -25,6 +25,16 @@ static func prepare(world: Dictionary) -> void:
         world["trade_pacts"] = []
     if not world.has("trade_security"):
         world["trade_security"] = 0
+    if not world.has("trade_embargoes"):
+        world["trade_embargoes"] = []
+    if not world.has("trade_tariffs"):
+        world["trade_tariffs"] = {}
+    if not world.has("trade_market_ledger"):
+        world["trade_market_ledger"] = {}
+    if not world.has("communications"):
+        world["communications"] = []
+    if not world.has("propaganda_level"):
+        world["propaganda_level"] = 0
     if not world.has("diplomatic_negotiations"):
         world["diplomatic_negotiations"] = []
     if not world.has("diplomatic_treaties"):
@@ -587,6 +597,46 @@ static func improve_trade_security(world: Dictionary) -> bool:
     world["history"].append("Zivile Handelskonvois werden stärker gesichert (Stufe %d)." % (level + 1))
     return true
 
+static func set_trade_embargo(world: Dictionary, rival_id: int, enabled: bool) -> bool:
+    prepare(world)
+    if not world["contacts"].has(rival_id):
+        return false
+    if enabled and not world["trade_embargoes"].has(rival_id):
+        world["trade_embargoes"].append(rival_id)
+    elif not enabled:
+        world["trade_embargoes"].erase(rival_id)
+    world["history"].append("Handelsembargo gegenüber %s: %s." % [GalaxySystems.empire_name(world, rival_id), "aktiv" if enabled else "aufgehoben"])
+    return true
+
+static func set_trade_tariff(world: Dictionary, rival_id: int, rate: int) -> bool:
+    prepare(world)
+    if not world["contacts"].has(rival_id) or rate < 0 or rate > 3:
+        return false
+    world["trade_tariffs"][str(rival_id)] = rate
+    return true
+
+static func settle_international_market(world: Dictionary) -> void:
+    prepare(world)
+    var income := 0
+    var partners := 0
+    var dependency := 0
+    for id in world["trade_pacts"]:
+        if world["contacts"].has(id) and not world["wars"].has(id) and not world["trade_embargoes"].has(id):
+            partners += 1
+            var tariff := clampi(int(world["trade_tariffs"].get(str(id), 0)), 0, 3)
+            income += 6 + tariff * 2
+            dependency += 1 + tariff
+    world["credits"] = int(world["credits"]) + income
+    world["trade_market_ledger"] = {"year": int(world["tick"]), "partners": partners,
+        "tariff_revenue": income - partners * 6, "trade_revenue": income, "dependency": dependency}
+
+static func set_propaganda(world: Dictionary, level: int) -> bool:
+    prepare(world)
+    if level < 0 or level > 3:
+        return false
+    world["propaganda_level"] = level
+    return true
+
 static func sign_trade(world: Dictionary, rival_id: int) -> bool:
     prepare(world)
     if not world["contacts"].has(rival_id) or world["wars"].has(rival_id) or world["trade_pacts"].has(rival_id):
@@ -816,7 +866,7 @@ static func income_forecast(world: Dictionary) -> Dictionary:
     alloys += int(GalaxySystems.technology_bonuses(world)["industry_alloys"])
     var focus := int(world["policies"]["focus"])
     var tax := int(world["policies"]["tax"])
-    credits += (tax - 1) * 5 + world["trade_pacts"].size() * 6 + dependency_income(world) + (4 if focus == 0 else 0) + GalaxyLore.artifact_bonus(world, "credits")
+    credits += (tax - 1) * 5 + dependency_income(world) + (4 if focus == 0 else 0) + GalaxyLore.artifact_bonus(world, "credits")
     science += (4 if focus == 1 else 0) + GalaxyLore.artifact_bonus(world, "science")
     alloys += (3 if focus == 2 else 0) + GalaxyLore.artifact_bonus(world, "alloys")
     var next_stability := clampi(int(world["stability"]) + (1 if tax == 0 else -1 if tax == 2 else 0) + int(world["governance"]["rights"]) - 1 + int(GalaxySystems.technology_bonuses(world)["society_stability"]), 0, 100)
@@ -889,6 +939,13 @@ static func tick(world: Dictionary) -> void:
     GalaxySocietyAudit.record(world)
     advance_diplomacy(world)
     advance_intelligence(world)
+    settle_international_market(world)
+    var propaganda_cost := int(world["propaganda_level"]) * 3
+    if int(world["credits"]) >= propaganda_cost:
+        world["credits"] = int(world["credits"]) - propaganda_cost
+        world["stability"] = mini(100, int(world["stability"]) + int(world["propaganda_level"]))
+    else:
+        world["propaganda_level"] = 0
     advance_governance(world)
     advance_institutions(world)
     GalaxyIdentity.culture_tick(world["culture"], world["empire"], clampi(int(world.get("credits", 0)) / 4, 0, 100), int(world.get("civilian_approval", 50)), int(world["tick"]))
