@@ -23,6 +23,14 @@ func _initialize() -> void:
             if int(world["credits"]) != int(replay["credits"]):
                 _fail("Treasury replay diverged")
                 return
+            if year == 20:
+                if not GalaxyModel.save_game(world, 4):
+                    _fail("Early-save failed")
+                    return
+                var early_loaded := GalaxyModel.load_game(4)
+                if not bool(GalaxySocietyAudit.inspect(early_loaded)["valid"]):
+                    _fail("Early-save broke audit invariants")
+                    return
             if world["society_audit_history"].size() > 60:
                 _fail("Audit history retention exceeded")
                 return
@@ -42,14 +50,8 @@ func _initialize() -> void:
         if GalaxySocietyAudit.inspect(broken)["valid"]:
             _fail("Forged freight ledger accepted")
             return
-        if not GalaxyModel.save_game(world, 4):
-            _fail("Save failed")
-            return
-        var loaded := GalaxyModel.load_game(4)
-        if not bool(GalaxySocietyAudit.inspect(loaded)["valid"]):
-            _fail("Save/load broke audit invariants")
-            return
-    print("GALAXY_PACKAGE_D3_PASS: 375 simulation years, replay, fiscal/freight corruption and save")
+
+    print("GALAXY_PACKAGE_D3_PASS: 375 simulation years, replay, fiscal/freight corruption and early save")
     quit(0)
 
 func _fail(message: String) -> void:
