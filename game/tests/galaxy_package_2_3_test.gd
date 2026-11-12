@@ -63,6 +63,22 @@ func _initialize() -> void:
     if not loaded["victory_paths"].has("resilience"):
         _fail("Resilience endgame not recognized")
         return
+    # All three victory paths must remain distinct and attainable.
+    loaded["known"] = range(20)
+    loaded["research_level"] = 4
+    var owned := 0
+    for star in loaded["stars"]:
+        if int(star["owner"]) == 0:
+            owned += 1
+        elif owned < 4:
+            star["owner"] = 0
+            owned += 1
+    loaded["civilian_approval"] = 75
+    GalaxyProgress.evaluate_victories(loaded)
+    for route in ["exploration", "prosperity", "resilience"]:
+        if not loaded["victory_paths"].has(route):
+            _fail("Missing distinct victory path: " + route)
+            return
     if not GalaxyModel.save_game(loaded, 3):
         _fail("Endgame save failed")
         return
