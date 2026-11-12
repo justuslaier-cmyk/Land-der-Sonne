@@ -46,7 +46,7 @@ static func action_interval(difficulty: int, action: String) -> int:
     if action == "expansion":
         return [9, 6, 4][level]
     if action == "recruitment":
-        return [5, 3, 2][level]
+        return [5, 3, 4][level]
     return 1
 
 static func tick(world: Dictionary) -> void:

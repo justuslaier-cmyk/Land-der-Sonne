@@ -15,7 +15,7 @@ func _run() -> void:
         if GalaxyAI.action_interval(difficulty, "expansion") != [9, 6, 4][difficulty]:
             _fail("Expansion difficulty cadence invalid")
             return
-        if GalaxyAI.action_interval(difficulty, "recruitment") != [5, 3, 2][difficulty]:
+        if GalaxyAI.action_interval(difficulty, "recruitment") != [5, 3, 4][difficulty]:
             _fail("Recruitment difficulty cadence invalid")
             return
     var matrix: Array = []
