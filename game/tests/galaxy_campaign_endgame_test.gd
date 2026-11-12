@@ -21,6 +21,49 @@ func _run() -> void:
     if ui.screen != "galaxy":
         _fail("Campaign could not start")
         return
+    # Perform real exploration, movement and colonization before late-game fixtures.
+    var expansion_target := -1
+    for star in ui.world["stars"]:
+        var sid := int(star["id"])
+        if sid == 0 or int(star["owner"]) != -1 or not bool(star["habitable"]):
+            continue
+        if bool(GalaxySystems.survey_preview(ui.world, sid)["allowed"]):
+            expansion_target = sid
+            break
+    if expansion_target < 0:
+        _fail("No reachable habitable neutral system for campaign expansion")
+        return
+    ui.selected = expansion_target
+    ui._explore()
+    if not ui.world["known"].has(expansion_target):
+        _fail("Exploration action did not reveal selected system")
+        return
+    ui._move_fleet()
+    if int(ui.world["fleets"][0]["destination"]) != expansion_target:
+        _fail("Fleet order did not reach expansion target")
+        return
+    for i in range(12):
+        if int(ui.world["fleets"][0]["location"]) == expansion_target and int(ui.world["fleets"][0]["destination"]) < 0:
+            break
+        GalaxyStrategy.tick(ui.world)
+        ui.world["pending_event"] = ""
+    if int(ui.world["fleets"][0]["location"]) != expansion_target or int(ui.world["fleets"][0]["destination"]) >= 0:
+        _fail("Fleet never arrived at expansion target")
+        return
+    ui.world["credits"] = maxi(100, int(ui.world["credits"]))
+    ui._colonize()
+    if int(ui.world["stars"][expansion_target]["owner"]) != 0:
+        _fail("Player colonization failed")
+        return
+    var rival_id := int(ui.world["ai"][0]["id"])
+    if not ui.world["contacts"].has(rival_id):
+        ui.world["contacts"].append(rival_id)
+    if not GalaxyStrategy.declare_war(ui.world, rival_id):
+        _fail("War declaration failed after first contact")
+        return
+    if not ui.world["wars"].has(rival_id):
+        _fail("War state not recorded")
+        return
     ui._economy_report()
     ui._research()
     ui._politics()
@@ -52,7 +95,12 @@ func _run() -> void:
     if not GalaxyEndgame.defend_crisis(ui.world):
         _fail("Crisis defense action not available")
         return
-    ui.world["galactic_crisis"]["threat"] = 0
+    for i in range(5):
+        if int(ui.world["galactic_crisis"]["threat"]) <= 0:
+            break
+        if not GalaxyEndgame.defend_crisis(ui.world):
+            _fail("Crisis defense failed before first crisis resolved")
+            return
     GalaxyEndgame.tick(ui.world)
     if int(ui.world["galactic_crises_survived"]) != 1:
         _fail("First crisis not resolved")
@@ -63,7 +111,12 @@ func _run() -> void:
     if str(ui.world["galactic_crisis"].get("id", "")) != "ancient":
         _fail("Second crisis not triggered")
         return
-    ui.world["galactic_crisis"]["threat"] = 0
+    for i in range(6):
+        if int(ui.world["galactic_crisis"]["threat"]) <= 0:
+            break
+        if not GalaxyEndgame.defend_crisis(ui.world):
+            _fail("Crisis defense failed before second crisis resolved")
+            return
     GalaxyEndgame.tick(ui.world)
     if int(ui.world["galactic_crises_survived"]) != 2:
         _fail("Second crisis not resolved")
