@@ -17,6 +17,25 @@ func _run() -> void:
     if ui.screen != "galaxy" or not is_instance_valid(ui.map_area):
         _fail("Map did not initialize")
         return
+    # A3 cockpit regression: fixed canvas, independently scrollable navigation
+    # and real inspector, rather than the old global scroll surface.
+    var global_scroll := false
+    var nav_scroll := false
+    var inspector_scroll := false
+    var command_emblem := false
+    for node in ui.find_children("*", "ScrollContainer", true, false):
+        if node.get_parent() == ui.root:
+            global_scroll = true
+        if node.get_parent() is HBoxContainer:
+            nav_scroll = true
+        if node.get_parent() is PanelContainer:
+            inspector_scroll = true
+    for node in ui.find_children("*", "TextureRect", true, false):
+        if node.texture != null and str(node.texture.resource_path).contains("command_emblem"):
+            command_emblem = true
+    if global_scroll or not nav_scroll or not inspector_scroll or not command_emblem:
+        _fail("A3 fixed cockpit, independent scroll surfaces or pixel crest missing")
+        return
     ui.simulation_paused = true
     var wheel := InputEventMouseButton.new()
     wheel.button_index = MOUSE_BUTTON_WHEEL_UP
