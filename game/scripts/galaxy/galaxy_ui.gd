@@ -1083,6 +1083,19 @@ func _show_selection() -> void:
             _side_button("SYSTEM ERKUNDEN", _explore)
     else:
         var system := GalaxyCelestials.generate(int(world["settings"]["seed"]), star)
+        # The colony vista provides the illustrated planet/landscape inspector
+        # from the approved reference, while all figures remain live simulation data.
+        var vista_frame := PanelContainer.new()
+        vista_frame.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(Color("#0b2037"), GOLD, 1))
+        galaxy_details.add_child(vista_frame)
+        var vista := TextureRect.new()
+        vista.texture = preload("res://assets/art/colony_landscape.svg")
+        vista.custom_minimum_size = Vector2(0, 116)
+        vista.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+        vista.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+        vista.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+        vista.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        vista_frame.add_child(vista)
         # Real system preview: cropped pixel planet atlas, not a decorative placeholder.
         var preview_frame := PanelContainer.new()
         preview_frame.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(Color("#0b2037"), GalaxyVisualTheme.FOCUS, 1))
