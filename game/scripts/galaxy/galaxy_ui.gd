@@ -448,8 +448,21 @@ func _seed_input() -> void:
 func _show_settings() -> void:
     screen = "settings"
     _clear()
-    _title("01 / GALAXIE KONFIGURIEREN")
-    _label("Seed 0 erzeugt eine Zufallsgalaxie; ein fester Seed erlaubt denselben Start.")
+    _title("01  /  GALAXIE ERSCHAFFEN", 32)
+    var content := HBoxContainer.new()
+    content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    content.add_theme_constant_override("separation", 14)
+    root.add_child(content)
+    var left := PanelContainer.new()
+    left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    left.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(Color("#10152e", 0.96), GOLD, 2))
+    content.add_child(left)
+    var controls := VBoxContainer.new()
+    controls.add_theme_constant_override("separation", 10)
+    left.add_child(controls)
+    var original_root := root
+    root = controls
+    _label("GALAXIE & STARTBEDINGUNGEN")
     _spin("Sternensysteme", "size", 20, 250, 10)
     _seed_input()
     _spin("KI-Reiche", "ai_count", 0, mini(20, int(settings["size"]) / 5))
@@ -458,8 +471,33 @@ func _show_settings() -> void:
     _spin("Rohstoffhäufigkeit (%)", "resources", 1, 100)
     _spin("Ereignishäufigkeit (%)", "events", 1, 100)
     _choice("Schwierigkeit", ["Entspannt", "Normal", "Herausfordernd"], settings, "difficulty")
-    _label("Schwierigkeit steuert die Häufigkeit bezahlter KI-Expansion und Flottenverstärkung; keine Gratisressourcen oder versteckten Kampfboni.")
-    _button("WEITER: REICH ERSTELLEN", func():
+    root = original_root
+    var right := PanelContainer.new()
+    right.custom_minimum_size.x = 310
+    right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    right.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(Color("#10152e", 0.96), GOLD, 2))
+    content.add_child(right)
+    var preview := VBoxContainer.new()
+    right.add_child(preview)
+    var image := TextureRect.new()
+    image.texture = preload("res://assets/art/galaxy_nebula.svg")
+    image.custom_minimum_size.y = 245
+    image.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+    image.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+    preview.add_child(image)
+    var summary := Label.new()
+    summary.text = "DEINE GALAXIE\\n\\n%d Sternensysteme\\n%d KI-Reiche\\n%d %% bewohnbare Welten" % [int(settings["size"]), int(settings["ai_count"]), int(settings["habitable"])]
+    summary.add_theme_color_override("font_color", GOLD)
+    preview.add_child(summary)
+    var actions := HBoxContainer.new()
+    actions.add_theme_constant_override("separation", 12)
+    root.add_child(actions)
+    root = actions
+    _button("←  ABBRECHEN", _cancel_new_game)
+    _button("↺  STANDARD", _reset_new_game)
+    _button("WEITER  /  REICH ERSTELLEN  →", func():
         var error := GalaxyModel.validate(settings, empire)
         if error != "":
             notice = error
@@ -468,10 +506,9 @@ func _show_settings() -> void:
             notice = ""
             _show_empire()
     )
+    root = original_root
     if notice != "":
         _label("Eingabe prüfen: " + notice)
-    _button("STANDARDWERTE WIEDERHERSTELLEN", _reset_new_game)
-    _button("ABBRECHEN", _cancel_new_game)
 
 func _apply_empire_template(index: int) -> void:
     empire = GalaxyModel.empire_defaults()
