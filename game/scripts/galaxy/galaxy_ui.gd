@@ -1271,29 +1271,30 @@ func _show_selection() -> void:
         var vista_frame := PanelContainer.new()
         vista_frame.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(Color("#0b2037"), GOLD, 1))
         galaxy_details.add_child(vista_frame)
+        var vista_row := HBoxContainer.new()
+        vista_row.add_theme_constant_override("separation", 4)
+        vista_frame.add_child(vista_row)
         var vista := TextureRect.new()
         vista.texture = preload("res://assets/art/colony_landscape.svg")
-        vista.custom_minimum_size = Vector2(0, 116)
+        vista.custom_minimum_size = Vector2(135, 112)
+        vista.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         vista.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
         vista.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
         vista.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
         vista.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        vista_frame.add_child(vista)
+        vista_row.add_child(vista)
         # Real system preview: cropped pixel planet atlas, not a decorative placeholder.
-        var preview_frame := PanelContainer.new()
-        preview_frame.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(Color("#0b2037"), GalaxyVisualTheme.FOCUS, 1))
-        galaxy_details.add_child(preview_frame)
         var preview := TextureRect.new()
         var planet_atlas := AtlasTexture.new()
         planet_atlas.atlas = preload("res://assets/art/planet_sprite_strip.svg")
         planet_atlas.region = Rect2(float(posmod(selected, 8) * 64), 0.0, 64.0, 64.0)
         preview.texture = planet_atlas
-        preview.custom_minimum_size = Vector2(0, 110)
+        preview.custom_minimum_size = Vector2(94, 112)
         preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
         preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
         preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
         preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        preview_frame.add_child(preview)
+        vista_row.add_child(preview)
         _side_label("%s  •  %d Planeten" % [system["star_class"], system["planets"].size()])
         _side_label("Rohstoffe %d  •  %s" % [int(star["resource"]), "Bewohnbar" if bool(star["habitable"]) else "Unbewohnbar"])
         _side_button("SYSTEMANSICHT", _show_star_system)
@@ -1325,13 +1326,13 @@ func _show_selection() -> void:
     _side_label("GALAKTISCHE AKTIVITÄT", true)
     var activity: Array = world.get("ai_activity", [])
     if not activity.is_empty():
-        _side_label(str(activity.back()["text"]))
+        _side_label(str(activity.back()["text"]).left(95))
     # Chronicle entries belong to the dedicated chronicle screen, not the
     # galactic map root. The sidebar stays focused on the selected system.
     var history: Array = world["history"]
     if not history.is_empty():
         _side_label("LETZTES EREIGNIS", true)
-        _side_label(str(history.back()))
+        _side_label(str(history.back()).left(95))
     _side_button("CHRONIK ÖFFNEN", _chronicle)
 
 func _side_label(value: String, heading: bool = false) -> void:
