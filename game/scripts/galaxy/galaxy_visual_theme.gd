@@ -39,8 +39,8 @@ static func apply_button(button: Button) -> void:
 
 # Scales margins down for smaller windows without sacrificing large-screen rhythm.
 static func gutters(viewport_size: Vector2) -> Vector2i:
-    var horizontal: int = clampi(int(viewport_size.x * 0.012), 8, 22)
-    var vertical: int = clampi(int(viewport_size.y * 0.014), 8, 18)
+    var horizontal: int = clampi(int(viewport_size.x * 0.01875), 12, 36)
+    var vertical: int = clampi(int(viewport_size.y * 0.03334), 12, 28)
     return Vector2i(horizontal, vertical)
 
 # WCAG-style relative luminance and contrast for opaque sRGB palette colors.
