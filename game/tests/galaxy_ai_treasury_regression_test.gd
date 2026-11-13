@@ -52,7 +52,7 @@ func _initialize() -> void:
         if opening == 29 and closing != 0:
             _fail("Recruitment did not charge both upkeep and construction")
             return
-        if opening == 50 and closing != 21:
+        if opening == 50 and closing != 49:
             _fail("Expansion used stale pre-recruitment balance")
             return
         if opening == 51 and (closing != 0 or int(world["stars"][target]["owner"]) != id):

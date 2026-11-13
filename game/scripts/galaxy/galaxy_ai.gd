@@ -130,7 +130,16 @@ static func tick(world: Dictionary) -> void:
             _expand(world, rival, fleet)
         # Each action reads the live treasury after the previous transaction.
         treasury = int(world["ai_treasury"].get(key, 0))
-        if year % recruitment_interval == id % recruitment_interval and treasury >= 28:
+        # Preserve the next affordable 50-credit colony instead of spending
+        # its reserve on 28-credit recruitment between expansion turns.
+        var has_nearby_colony := false
+        if treasury >= 50 and treasury < 78:
+            var origin: Dictionary = world["stars"][int(fleet["location"])]
+            for candidate in world["stars"]:
+                if int(candidate["owner"]) == -1 and bool(candidate["habitable"]) and GalaxySystems.distance(origin, candidate) < 160.0:
+                    has_nearby_colony = true
+                    break
+        if year % recruitment_interval == id % recruitment_interval and treasury >= 28 and not has_nearby_colony:
             var strength := 2 + temperament
             fleet["strength"] = int(fleet["strength"]) + strength
             world["ai_treasury"][key] = treasury - 28
