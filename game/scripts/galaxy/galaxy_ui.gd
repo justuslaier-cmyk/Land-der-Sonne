@@ -204,6 +204,7 @@ func _begin_new_game() -> void:
     settings = GalaxyModel.defaults()
     empire = GalaxyModel.empire_defaults()
     notice = ""
+    creation_tab = 0
     _show_settings()
 
 func _reset_new_game() -> void:
