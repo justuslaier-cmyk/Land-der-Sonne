@@ -650,6 +650,36 @@ func _show_galaxy() -> void:
     _clear()
     root.add_theme_constant_override("separation", 7)
     _title("✦ LAND DER SONNE  /  %s" % str(world["empire"]["name"]), 27)
+    # Persistent compact command header; the simulation data is never mocked.
+    var command_header := PanelContainer.new()
+    command_header.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(Color("#10152e"), GOLD, 2))
+    root.add_child(command_header)
+    var command_row := HBoxContainer.new()
+    command_row.add_theme_constant_override("separation", 12)
+    command_header.add_child(command_row)
+    var crest := Label.new()
+    crest.text = "✦"
+    crest.add_theme_font_size_override("font_size", 29)
+    crest.add_theme_color_override("font_color", GOLD)
+    command_row.add_child(crest)
+    var command_identity := Label.new()
+    command_identity.text = str(world["empire"]["name"]).to_upper()
+    command_identity.add_theme_font_size_override("font_size", 18)
+    command_identity.add_theme_color_override("font_color", GOLD)
+    command_row.add_child(command_identity)
+    var command_spacer := Control.new()
+    command_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    command_row.add_child(command_spacer)
+    var command_pause := UiComponents.action_button("⏸  PAUSE / WEITER", _toggle_pause, true)
+    command_row.add_child(command_pause)
+    for rate in [1, 2, 4, 8]:
+        var rate_value: int = rate
+        var rate_button := Button.new()
+        rate_button.text = "%d×" % rate
+        rate_button.tooltip_text = "Simulation mit %d-facher Geschwindigkeit fortsetzen" % rate
+        GalaxyVisualTheme.apply_button(rate_button)
+        rate_button.pressed.connect(func(): _set_speed(rate_value))
+        command_row.add_child(rate_button)
     # A single live, readable resource ribbon replaces stacked diagnostic text.
     status = _label("")
     status.add_theme_font_size_override("font_size", 16)
