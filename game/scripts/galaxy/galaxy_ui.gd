@@ -195,6 +195,12 @@ func _button(value: String, callback: Callable) -> void:
     button.pressed.connect(func(): _play_ui_sound("click"))
     root.add_child(button)
 
+func _action_in(container: BoxContainer, caption: String, callback: Callable) -> void:
+    var button := UiComponents.action_button(caption, callback)
+    button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    button.pressed.connect(func(): _play_ui_sound("click"))
+    container.add_child(button)
+
 func _play_ui_sound(kind: String = "click") -> void:
     if is_instance_valid(audio_director):
         audio_director.play_effect(kind)
@@ -495,10 +501,9 @@ func _show_settings() -> void:
     var actions := HBoxContainer.new()
     actions.add_theme_constant_override("separation", 12)
     root.add_child(actions)
-    root = actions
-    _button("←  ABBRECHEN", _cancel_new_game)
-    _button("↺  STANDARD", _reset_new_game)
-    _button("WEITER  /  REICH ERSTELLEN  →", func():
+    _action_in(actions, "←  ABBRECHEN", _cancel_new_game)
+    _action_in(actions, "↺  STANDARD", _reset_new_game)
+    _action_in(actions, "WEITER  /  REICH ERSTELLEN  →", func():
         var error := GalaxyModel.validate(settings, empire)
         if error != "":
             notice = error
@@ -540,11 +545,9 @@ func _show_empire() -> void:
     preset_bar.add_theme_constant_override("separation", 8)
     root.add_child(preset_bar)
     var original_root := root
-    root = preset_bar
-    _button("☀ SOLARE UNION", func(): _apply_empire_template(0))
-    _button("✧ STERNENKONKLAVE", func(): _apply_empire_template(1))
-    _button("⬡ GRENZBUND", func(): _apply_empire_template(2))
-    root = original_root
+    _action_in(preset_bar, "☀ SOLARE UNION", func(): _apply_empire_template(0))
+    _action_in(preset_bar, "✧ STERNENKONKLAVE", func(): _apply_empire_template(1))
+    _action_in(preset_bar, "⬡ GRENZBUND", func(): _apply_empire_template(2))
     var tabs := HBoxContainer.new()
     tabs.add_theme_constant_override("separation", 8)
     root.add_child(tabs)
@@ -657,10 +660,9 @@ func _show_empire() -> void:
     var actions := HBoxContainer.new()
     actions.add_theme_constant_override("separation", 10)
     root.add_child(actions)
-    root = actions
-    _button("←  ZUR GALAXIE", _show_settings)
-    _button("✕  ABBRECHEN", _cancel_new_game)
-    _button("WEITER  /  ZUSAMMENFASSUNG  →", func():
+    _action_in(actions, "←  ZUR GALAXIE", _show_settings)
+    _action_in(actions, "✕  ABBRECHEN", _cancel_new_game)
+    _action_in(actions, "WEITER  /  ZUSAMMENFASSUNG  →", func():
         var error := GalaxyModel.validate(settings, empire)
         if error != "":
             notice = error
@@ -721,14 +723,13 @@ func _show_review() -> void:
     var actions := HBoxContainer.new()
     actions.add_theme_constant_override("separation", 10)
     root.add_child(actions)
-    root = actions
-    _button("←  REICH BEARBEITEN", _show_empire)
-    _button("✕  ABBRECHEN", _cancel_new_game)
+    _action_in(actions, "←  REICH BEARBEITEN", _show_empire)
+    _action_in(actions, "✕  ABBRECHEN", _cancel_new_game)
     var error := GalaxyModel.validate(settings, empire)
     if error != "":
         _label("Ungültige Auswahl: " + error)
     else:
-        _button("✦  GALAXIE ERSCHAFFEN  →", _start_game)
+        _action_in(actions, "✦  GALAXIE ERSCHAFFEN  →", _start_game)
     root = original_root
 
 func _start_game() -> void:
