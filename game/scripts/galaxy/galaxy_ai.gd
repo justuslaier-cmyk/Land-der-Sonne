@@ -249,16 +249,21 @@ static func _society_tick(world: Dictionary, rival: Dictionary, treasury: int, y
 
 static func _expand(world: Dictionary, rival: Dictionary, fleet: Dictionary) -> void:
     var id := int(rival["id"])
-    var source: Dictionary = world["stars"][int(fleet["location"])]
+    # Expand from the established frontier, not only the periodically
+    # patrolling fleet. Otherwise all difficulties stall around the capital.
+    # Only a reachable, habitable, unclaimed neighbour can be purchased.
     var best := -1
     var distance := 160.0
     for star in world["stars"]:
         if int(star["owner"]) != -1 or not bool(star["habitable"]):
             continue
-        var d := GalaxySystems.distance(source, star)
-        if d < distance:
-            best = int(star["id"])
-            distance = d
+        for frontier in world["stars"]:
+            if int(frontier["owner"]) != id:
+                continue
+            var d := GalaxySystems.distance(frontier, star)
+            if d < distance:
+                best = int(star["id"])
+                distance = d
     if best < 0:
         return
     world["stars"][best]["owner"] = id
