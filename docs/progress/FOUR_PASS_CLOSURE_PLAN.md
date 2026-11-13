@@ -16,3 +16,14 @@ Alle 98 mit Commit, Test, Ergebnis, Integration und ggf. Screenshot/native Evide
 
 ## Ausführungsregeln
 Kein neuer Mechanik-Scope, keine Mikrodurchläufe, keine erfundenen CI-/Windows-/Hörbelege. Ein Abschlussbündel umfasst Prüfung, erforderliche Änderungen, Regression, CI und Bericht. Frühere `FINAL_PASS_*.md` bleiben erhalten. Der jeweils letzte Auditbericht ist für Restarbeit aktueller als historische Momentaufnahmen.
+
+## Nachgewiesener Arbeitsstand (13.11.2026)
+
+| Abschlussbündel | Stand | Nachweis |
+|---|---|---|
+| A1 | BESTANDEN (Audit/Plan) | `FINAL_CLOSURE_A1.md`, 98-Zeilen-Matrix, CI grün |
+| A2 | BESTANDEN (technischer Spielkern) | `FINAL_CLOSURE_A2.md`, drei aktive Siege, 18/18 CI auf `95d95208` |
+| A3 | OFFEN | Native Produktqualität, Zielhardware, manuelle Tests |
+| A4 | OFFEN | 98 Einzelabnahmen, acht Release-Gates, Archiv |
+
+**Hinweis:** A2 ist keine Freigabe der weiterhin offenen manuellen/visuellen Pflichten. Die dokumentierte nicht-monotone KI-Gebietsentwicklung ist ein ausdrücklich verbleibendes Balance-Risiko für A3.
