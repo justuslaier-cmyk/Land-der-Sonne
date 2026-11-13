@@ -796,7 +796,7 @@ func _show_galaxy() -> void:
     for entry in world["stars"]:
         if int(entry["owner"]) == 0:
             owned_systems += 1
-            if bool(entry["habitable"]):
+            if bool(entry.get("habitable", false)):
                 habitable_worlds += 1
     var player_fleets := 0
     for entry in world["fleets"]:
