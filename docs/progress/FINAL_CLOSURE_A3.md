@@ -32,3 +32,15 @@ Commit `9215c557eaf636efaec60dfe6e804e5f4515d84a` auf `design/galactic-grand-str
 - Vollständige menschliche Windows-10/11-Spielpartien inklusive Save/Resume dokumentieren und alle kritischen Befunde beseitigen.
 
 Keine P01–P98-Pflicht wurde allein durch diesen Code-Commit als abgenommen markiert. A3 bleibt offen; A4 ist nicht freigegeben.
+
+## A3 Grafik-Rebuild – tatsächlicher Repository-Stand (13.11.2026)
+
+Der neue verbindliche Art-Maßstab ist in `docs/design/A3_VISUAL_REBUILD_RESEARCH_AND_SPEC.md` festgelegt. Danach wurden die **25 explizit im Galaxie-UI referenzierten SVG-Art-Dateien** auf dem Arbeitsbranch durch neu erzeugte Originalmotive ersetzt:
+
+- **Szenen-/Ereignisillustrationen (14):** `menu_city`, `event_ruins`, `event_reactor`, `event_political`, `event_colonies`, `scene_society`, `event_market`, `scene_research`, `scene_research_exchange`, `scene_freight_security`, `scene_trade_policy`, `scene_information_policy`, `scene_fleet`, `scene_diplomacy`.
+- **Galaxie und Systeme (3):** `galaxy_nebula`, `star_sprite_strip`, `planet_sprite_strip`.
+- **Schiffe und Stationen (5):** `ship_style_0` bis `ship_style_3`, `orbital_station`.
+- **UI/Statussymbole (3):** `chronicle_aftermath`, `war_objective`, `ui_comfort_panel`.
+- **Prozedurale Grafiken:** fünf Speziesporträts im echten Godot-Zeichenpfad `galaxy_ui.gd::_draw_species` mit Pixel-Clustern und getrennten Silhouetten ersetzt; Commit `5c2ea1ff`.
+
+**Abgrenzung:** Diese 25 Dateien sind die aus dem UI-Code ermittelten SVG-Referenzen, nicht eine unabhängige rekursive Vollinventur des Repository-Baums. Andere Art-Dateien und weitere prozedurale Zeichenpfade könnten vorhanden sein. Die Prüfung des GitHub-Dateiinhalts bestätigt die Schreiboperationen, aber **kein** erfolgreicher Godot-Import, kein Windows-Build, kein nativer Render-/Spieltest und keine Abnahme der gestalterischen Qualität. Ein bereits vorher bestandener CI-Lauf darf nicht auf diesen Grafikstand übertragen werden. A3 bleibt bis zur tatsächlich bestandenen technischen und visuellen Prüfung **OFFEN**.
