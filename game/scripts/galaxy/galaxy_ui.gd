@@ -675,21 +675,60 @@ func _show_empire() -> void:
 func _show_review() -> void:
     screen = "review"
     _clear()
-    _title("03 / DEIN UNIVERSUM")
-    _label("Reich: %s  |  Spezies: %s" % [empire["name"], empire["species"]])
-    _label("Heimat: %s  |  Systeme: %s  |  KI-Reiche: %s" % [empire["homeworld"], settings["size"], settings["ai_count"]])
-    _label("Staatsprinzipien: " + ", ".join(empire.get("civics", [])))
-    _label("Speziesmerkmale: " + ", ".join(empire.get("traits", [])))
-    _label("Galaxie-Seed: " + ("zufällig" if int(settings["seed"]) == 0 else str(settings["seed"])))
-    _species_gallery(true)
-    _ship_gallery(true)
+    _title("03  /  DEIN UNIVERSUM", 32)
+    var overview := HBoxContainer.new()
+    overview.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    overview.add_theme_constant_override("separation", 14)
+    root.add_child(overview)
+    var identity_card := PanelContainer.new()
+    identity_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    identity_card.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(Color("#0d1733", 0.96), GOLD, 2))
+    overview.add_child(identity_card)
+    var identity_content := VBoxContainer.new()
+    identity_content.add_theme_constant_override("separation", 10)
+    identity_card.add_child(identity_content)
+    var original_root := root
+    root = identity_content
+    _label("✦  %s" % str(empire["name"]).to_upper())
+    _label("Spezies  /  %s" % str(empire["species"]))
+    _label("Heimatwelt  /  %s" % str(empire["homeworld"]))
+    _label("Sternensysteme  /  %d" % int(settings["size"]))
+    _label("KI-Reiche  /  %d" % int(settings["ai_count"]))
+    _label("Seed  /  %s" % ("Zufällig" if int(settings["seed"]) == 0 else str(settings["seed"])))
+    _label("Staatsprinzipien  /  " + ", ".join(empire.get("civics", [])))
+    _label("Speziesmerkmale  /  " + ", ".join(empire.get("traits", [])))
+    root = original_root
+    var visual_card := PanelContainer.new()
+    visual_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    visual_card.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(Color("#0d1733", 0.96), GOLD, 2))
+    overview.add_child(visual_card)
+    var preview := VBoxContainer.new()
+    preview.add_theme_constant_override("separation", 6)
+    visual_card.add_child(preview)
+    var preview_art := TextureRect.new()
+    preview_art.texture = preload("res://assets/art/galaxy_nebula.svg")
+    preview_art.custom_minimum_size.y = 190
+    preview_art.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    preview_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    preview_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+    preview_art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+    preview.add_child(preview_art)
+    var selected_design := Label.new()
+    selected_design.text = "PORTRÄT: %s     SCHIFFSSTIL: %s" % [["Humanoid", "Insektoid", "Aquatisch", "Kristallin", "Synthetisch"][int(empire["portrait"])], ["Solar", "Organisch", "Geometrisch", "Industriell"][int(empire["ship_style"])]]
+    selected_design.add_theme_color_override("font_color", GOLD)
+    preview.add_child(selected_design)
+    var actions := HBoxContainer.new()
+    actions.add_theme_constant_override("separation", 10)
+    root.add_child(actions)
+    root = actions
+    _button("←  REICH BEARBEITEN", _show_empire)
+    _button("✕  ABBRECHEN", _cancel_new_game)
     var error := GalaxyModel.validate(settings, empire)
     if error != "":
-        _label("Konfiguration ungültig: " + error)
+        _label("Ungültige Auswahl: " + error)
     else:
-        _button("GALAXIE ERSCHAFFEN", _start_game)
-    _button("ZURÜCK ZUR REICHSERSTELLUNG", _show_empire)
-    _button("ABBRECHEN", _cancel_new_game)
+        _button("✦  GALAXIE ERSCHAFFEN  →", _start_game)
+    root = original_root
 
 func _start_game() -> void:
     if GalaxyModel.validate(settings, empire) != "":
