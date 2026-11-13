@@ -159,9 +159,8 @@ func _clear() -> void:
     root.add_theme_constant_override("separation", 8 if screen == "galaxy" else 14)
     root.size_flags_vertical = Control.SIZE_EXPAND_FILL
     root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    if screen == "galaxy":
-        # The strategic screen must remain a fixed cockpit: only the right
-        # inspector scrolls. Scrolling the entire galaxy breaks map interaction.
+    if screen in ["galaxy", "menu", "settings", "empire", "review"]:
+        # Fixed cockpit and setup views: no page-length scrolling.
         margin.add_child(root)
     else:
         var scroll := ScrollContainer.new()
@@ -221,17 +220,50 @@ func _cancel_new_game() -> void:
 func _show_menu() -> void:
     screen = "menu"
     _clear()
-    _title("LAND DER SONNE", 52)
-    _label("GALAKTISCHE CHRONIKEN  •  Ein Universum. Unzählige Geschichten.")
-    _illustration("menu")
-    _button("NEUES SPIEL", _begin_new_game)
-    _button("SPIEL LADEN", _load_game)
-    _button("SPIELSTÄNDE 1–4", _show_save_slots)
-    _button("SPIELANLEITUNG", _show_help)
-    _button("INTERAKTIVER EINSTIEG", _start_tutorial)
-    _button("EINSTELLUNGEN", func(): _open_options("menu"))
-    _button("BEENDEN", func(): get_tree().quit())
-    _label("Früher Prototyp • Galaxien können zufällig oder mit festem Seed erzeugt werden.")
+    _title("✦  LAND DER SONNE", 42)
+    _label("GALAKTISCHE STRATEGIE  /  DEIN UNIVERSUM")
+    var cockpit := HBoxContainer.new()
+    cockpit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    cockpit.add_theme_constant_override("separation", 16)
+    root.add_child(cockpit)
+    var hero := PanelContainer.new()
+    hero.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    hero.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(Color("#0c1532", 0.94), GOLD, 2))
+    cockpit.add_child(hero)
+    var hero_stack := VBoxContainer.new()
+    hero_stack.add_theme_constant_override("separation", 8)
+    hero.add_child(hero_stack)
+    var hero_image := TextureRect.new()
+    hero_image.texture = preload("res://assets/art/menu_city.svg")
+    hero_image.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    hero_image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    hero_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    hero_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+    hero_image.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+    hero_stack.add_child(hero_image)
+    var hero_caption := Label.new()
+    hero_caption.text = "ERKUNDEN  •  FORSCHEN  •  REGIEREN  •  ENTDECKEN"
+    hero_caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    hero_caption.add_theme_color_override("font_color", GOLD)
+    hero_stack.add_child(hero_caption)
+    var menu_panel := PanelContainer.new()
+    menu_panel.custom_minimum_size.x = 325
+    menu_panel.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(Color("#10152e", 0.96), GOLD, 2))
+    cockpit.add_child(menu_panel)
+    var menu_content := VBoxContainer.new()
+    menu_content.add_theme_constant_override("separation", 9)
+    menu_panel.add_child(menu_content)
+    var original_root := root
+    root = menu_content
+    _label("HAUPTMENÜ")
+    _button("✦  NEUES SPIEL", _begin_new_game)
+    _button("▶  SPIEL LADEN", _load_game)
+    _button("▤  SPIELSTÄNDE", _show_save_slots)
+    _button("?  SPIELANLEITUNG", _show_help)
+    _button("◈  ERSTE SCHRITTE", _start_tutorial)
+    _button("⚙  EINSTELLUNGEN", func(): _open_options("menu"))
+    _button("✕  BEENDEN", func(): get_tree().quit())
+    root = original_root
 
 func _show_help() -> void:
     var from_game := not world.is_empty()
