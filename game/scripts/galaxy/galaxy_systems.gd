@@ -376,6 +376,12 @@ static func resolve_event(world: Dictionary, option: int) -> void:
         GalaxyLore.resolve(world, kind, option)
         world["event_counter"] = int(world["event_counter"]) + 1
         return
+    # Event choices must not create implicit debt. An unaffordable choice
+    # remains pending so the player can select its funded alternative.
+    var cost := 20 if kind == "colonies" else 40 if kind == "market" else 0
+    if option == 0 and cost > int(world.get("credits", 0)):
+        world["history"].append("Ereignisentscheidung benötigt %d Credits." % cost)
+        return
     if kind == "political_crisis":
         if option == 0:
             world["credits"] = maxi(0, int(world["credits"]) - 45)

@@ -73,7 +73,8 @@ func _resolve_pending(world: Dictionary) -> void:
         var event := str(world.get("pending_event", ""))
         if event.is_empty():
             return
-        GalaxySystems.resolve_event(world, 0)
+        var choice := 1 if (event == "colonies" and int(world["credits"]) < 20) or (event == "market" and int(world["credits"]) < 40) else 0
+        GalaxySystems.resolve_event(world, choice)
 
 func _take_actions(world: Dictionary, scenario: Dictionary, actions: Dictionary) -> void:
     var fleet: Dictionary = world["fleets"][0]
