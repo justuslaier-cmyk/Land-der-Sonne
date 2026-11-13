@@ -828,16 +828,29 @@ func _draw_map() -> void:
     # Illustrated nebula backdrop, behind all interactive map objects.
     var nebula: Texture2D = MAP_NEBULA
     if nebula != null:
-        map_area.draw_texture_rect(nebula, Rect2(0, 0, width, height), false, Color(1, 1, 1, 0.28))
+        map_area.draw_texture_rect(nebula, Rect2(0, 0, width, height), false, Color(1, 1, 1, 0.86))
     var seed := int(world["settings"]["seed"])
     for i in range(140):
         var x := float(posmod(i * 7919 + seed, 1009)) / 1009.0 * width
         var y := float(posmod(i * 4861 + seed, 997)) / 997.0 * height
         map_area.draw_circle(Vector2(x, y), 0.65 + float(i % 3) * 0.35, Color("#405575"))
-    for cloud in range(12):
-        var center := Vector2(float(posmod(seed + cloud * 373, 997)) / 997.0 * width, float(posmod(seed / 3 + cloud * 659, 991)) / 991.0 * height)
-        var tint := Color("#34447c") if cloud % 2 == 0 else Color("#31596d")
-        map_area.draw_circle(center, 38.0 + float(cloud % 4) * 16.0, Color(tint, 0.055))
+    # Territory tint follows surveyed ownership only: unknown systems remain hidden.
+    # Wide pixel-block influence fields make empire geography legible at overview zoom.
+    for territory_star in world["stars"]:
+        var territory_id := int(territory_star["id"])
+        if not world["known"].has(territory_id):
+            continue
+        var territory_owner := int(territory_star["owner"])
+        if territory_owner < 0:
+            continue
+        var territory_pos := _star_pos(territory_star)
+        if territory_pos.x < -90 or territory_pos.y < -90 or territory_pos.x > width + 90 or territory_pos.y > height + 90:
+            continue
+        var territory_color := Color("#329fd7") if territory_owner == 0 else Color("#d45b8d") if territory_owner % 2 == 1 else Color("#69cba4")
+        for ring in range(4, 0, -1):
+            var block_size := float(ring * 24)
+            map_area.draw_rect(Rect2(territory_pos - Vector2.ONE * block_size * 0.5, Vector2.ONE * block_size), Color(territory_color, 0.035), true)
+        map_area.draw_rect(Rect2(territory_pos - Vector2(15, 15), Vector2(30, 30)), Color(territory_color, 0.16), false, 2.0)
     # Draw only surveyed lane endpoints to preserve fog of war.
     for lane in world.get("lanes", []):
         var a := int(lane[0])
@@ -861,6 +874,8 @@ func _draw_map() -> void:
         _draw_pixel_star(pos, radius, palette[int(star["kind"]) % palette.size()] if known else Color("#63738c"), id)
         if owner == 0:
             map_area.draw_arc(pos, 13, 0, TAU, 24, GOLD, 2.0)
+            if known and zoom >= 0.7:
+                map_area.draw_string(ThemeDB.fallback_font, pos + Vector2(12, 25), str(star["name"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#d6f6f3"))
         elif known and owner > 0:
             map_area.draw_arc(pos, 11, 0, TAU, 24, Color("#d4748b"), 1.5)
         # Discovered archaeological sites remain visible on the strategic map.
