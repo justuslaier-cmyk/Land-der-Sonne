@@ -138,9 +138,13 @@ func _clear() -> void:
             continue
         remove_child(child)
         child.queue_free()
-    var backdrop := ColorRect.new()
-    backdrop.color = BG
+    var backdrop := TextureRect.new()
+    backdrop.texture = preload("res://assets/art/galactic_interface_backdrop.svg")
     backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    backdrop.stretch_mode = TextureRect.STRETCH_SCALE
+    backdrop.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+    backdrop.modulate = Color(0.58, 0.63, 0.81, 1.0) if screen != "menu" else Color(0.9, 0.9, 1.0, 1.0)
     backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(backdrop)
     var margin := MarginContainer.new()
@@ -164,6 +168,21 @@ func _clear() -> void:
         scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
         margin.add_child(scroll)
         scroll.add_child(root)
+    if screen != "galaxy":
+        var global_frame := StyleBoxFlat.new()
+        global_frame.bg_color = Color("#0b1430", 0.88)
+        global_frame.border_color = GOLD
+        global_frame.set_border_width_all(2)
+        global_frame.set_corner_radius_all(2)
+        global_frame.content_margin_left = 12.0
+        global_frame.content_margin_right = 12.0
+        global_frame.content_margin_top = 10.0
+        global_frame.content_margin_bottom = 10.0
+        var frame := PanelContainer.new()
+        frame.add_theme_stylebox_override("panel", global_frame)
+        frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        # Frame only the interactive document, not the decorative galaxy backdrop.
+        root.add_theme_constant_override("separation", 10)
 
 func _title(value: String, size: int = 36) -> void:
     var label := Label.new()
