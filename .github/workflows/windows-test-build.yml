@@ -1,0 +1,47 @@
+name: Windows playable test build
+on:
+  push:
+    branches:
+      - design/galactic-grand-strategy-pivot
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-playable:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot 4.3 and export templates
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.3.0
+          use-dotnet: false
+          include-templates: true
+      - name: Import Godot project and assets
+        working-directory: game
+        run: godot --headless --editor --path . --import --quit
+      - name: Verify art resources
+        working-directory: game
+        run: godot --headless --path . --script res://tests/galaxy_art_resources_test.gd
+      - name: Verify playable UI interactions
+        working-directory: game
+        run: godot --headless --path . --script res://tests/galaxy_ui_interaction_regression_test.gd
+      - name: Export Windows x64 game
+        working-directory: game
+        run: |
+          mkdir -p ../dist
+          godot --headless --path . --export-release "Windows Desktop" ../dist/LandDerSonne.exe
+          test -s ../dist/LandDerSonne.exe
+          test -s ../dist/LandDerSonne.pck || echo "Embedded PCK export"
+      - name: Prepare distribution
+        run: |
+          cp README.md dist/README-Quelle.md || true
+          printf 'LAND DER SONNE - Windows Testversion\nDoppelklick auf LandDerSonne.exe.\nEntwicklungsstand, kein fertiges Release.\n' > dist/START_HIER.txt
+      - name: Upload playable Windows test build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Land-der-Sonne-Windows-Testversion
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
