@@ -1121,8 +1121,8 @@ func _draw_map() -> void:
         if points.size() >= 3:
             var hull := Geometry2D.convex_hull(points)
             if hull.size() >= 3:
-                map_area.draw_colored_polygon(hull, Color(territory_color, 0.13))
-                map_area.draw_polyline(hull, Color(territory_color, 0.86), 2.0, false)
+                map_area.draw_colored_polygon(hull, Color(territory_color, 0.22))
+                map_area.draw_polyline(hull, Color(territory_color, 0.95), 3.0, false)
         elif points.size() == 2:
             map_area.draw_line(points[0], points[1], Color(territory_color, 0.65), 3.0)
         for point in points:
@@ -1133,7 +1133,7 @@ func _draw_map() -> void:
         var b := int(lane[1])
         if not world["known"].has(a) or not world["known"].has(b):
             continue
-        map_area.draw_line(_star_pos(world["stars"][a]), _star_pos(world["stars"][b]), Color("#4c829d", 0.48), 1.4)
+        map_area.draw_dashed_line(_star_pos(world["stars"][a]), _star_pos(world["stars"][b]), Color("#b8d4f3", 0.65), 1.5, 6.0)
     for star in world["stars"]:
         var pos := _star_pos(star)
         if pos.x < -35.0 or pos.y < -35.0 or pos.x > width + 35.0 or pos.y > height + 35.0:
