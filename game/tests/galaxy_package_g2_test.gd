@@ -7,6 +7,7 @@ func _initialize() -> void:
     world["credits"] = 300
     world["alloys"] = 200
     world["research_level"] = 4
+    world["research_fields"]["society"] = 1 # Existing project requires a societal discovery.
     if not GalaxyEndgame.start_project(world, "orbital_archive"):
         _fail("Project rejected with resources")
         return
