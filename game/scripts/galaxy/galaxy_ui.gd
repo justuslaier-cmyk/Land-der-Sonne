@@ -666,6 +666,7 @@ func _show_galaxy() -> void:
     # overflow horizontally. Every entry invokes the existing game systems.
     var navigation := VBoxContainer.new()
     navigation.custom_minimum_size.x = 174
+    navigation.size_flags_vertical = Control.SIZE_EXPAND_FILL
     navigation.add_theme_constant_override("separation", 5)
     workspace.add_child(navigation)
     var navigation_heading := Label.new()
@@ -709,10 +710,11 @@ func _show_galaxy() -> void:
     system_search.text_submitted.connect(_search_system)
     map_toolbar.add_child(system_search)
     map_area = Control.new()
-    map_area.custom_minimum_size = Vector2(340, 490)
+    map_area.custom_minimum_size = Vector2(340, 350)
     map_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     map_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
     map_area.clip_contents = true
+    map_area.mouse_default_cursor_shape = Control.CURSOR_CROSS
     map_area.draw.connect(_draw_map)
     map_area.gui_input.connect(_map_input)
     center.add_child(map_area)
@@ -731,10 +733,10 @@ func _show_galaxy() -> void:
     center.add_child(map_legend)
     var side := PanelContainer.new()
     side.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(PANEL, GalaxyVisualTheme.FOCUS, 2))
-    side.custom_minimum_size = Vector2(265, 490)
+    side.custom_minimum_size = Vector2(265, 350)
     workspace.add_child(side)
     var details_scroll := ScrollContainer.new()
-    details_scroll.custom_minimum_size = Vector2(265, 490)
+    details_scroll.custom_minimum_size = Vector2(265, 350)
     details_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
     side.add_child(details_scroll)
     galaxy_details = VBoxContainer.new()
@@ -759,13 +761,13 @@ func _show_galaxy() -> void:
         if int(entry.get("owner", -1)) == 0:
             player_fleets += 1
     var last_event := "Keine Einträge"
-    if not world["history"].is_empty():
-        last_event = str(world["history"].back())
+    if not world.get("history", []).is_empty():
+        last_event = str(world.get("history", []).back())
     var tiles := [
-        ["REICHSÜBERSICHT", "Eigene Systeme: %d\\nBewohnbare Systeme: %d\\nFlotten: %d" % [owned_systems, habitable_worlds, player_fleets], _society_report],
-        ["FORSCHUNG", "Forschungspunkte: %d\\nJährlicher Zuwachs: %+d" % [int(world["science"]), int(GalaxyStrategy.income_forecast(world)["science"])], _research],
+        ["REICHSÜBERSICHT", "Eigene Systeme: %d\nBewohnbare Systeme: %d\nFlotten: %d" % [owned_systems, habitable_worlds, player_fleets], _society_report],
+        ["FORSCHUNG", "Forschungspunkte: %d\nJährlicher Zuwachs: %+d" % [int(world["science"]), int(GalaxyStrategy.income_forecast(world)["science"])], _research],
         ["AKTUELLE EREIGNISSE", last_event, _chronicle],
-        ["FLOTTEN", "Eigene Verbände: %d\\nStrategische Befehle öffnen" % player_fleets, _fleet]
+        ["FLOTTEN", "Eigene Verbände: %d\nStrategische Befehle öffnen" % player_fleets, _fleet]
     ]
     for tile in tiles:
         var tile_panel := PanelContainer.new()
