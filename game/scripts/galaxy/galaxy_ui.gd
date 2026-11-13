@@ -569,85 +569,89 @@ func _show_empire() -> void:
     root = page
     match creation_tab:
         0:
-            _label("IDENTITÄT  /  NAME, HEIMAT UND PORTRÄT")
-    _entry("Reichsname", "name")
-    _entry("Speziesname", "species")
-    _entry("Heimatwelt", "homeworld")
-    _label("Speziesdesign – wähle ein Porträt")
-    _species_gallery()
-    _label("Ausgewählt: " + ["Humanoid", "Insektoid", "Aquatisch", "Kristallin", "Synthetisch"][int(empire["portrait"])])
+                    _label("IDENTITÄT  /  NAME, HEIMAT UND PORTRÄT")
+            _entry("Reichsname", "name")
+            _entry("Speziesname", "species")
+            _entry("Heimatwelt", "homeworld")
+            _label("Speziesdesign – wähle ein Porträt")
+            _species_gallery()
+            _label("Ausgewählt: " + ["Humanoid", "Insektoid", "Aquatisch", "Kristallin", "Synthetisch"][int(empire["portrait"])])
+
         1:
-            _label("POLITIK  /  REGIERUNG UND ZWEI STAATSPRINZIPIEN")
-    _choice("Herrschaftsform", ["Republik", "Monarchie", "Technokratie", "Kollektiv"], empire, "government")
-    _label("GESELLSCHAFTLICHE GRUNDHALTUNG")
-    var ethics: Array = []
-    for item in GalaxyIdentity.ETHICS:
-        ethics.append(str(item["icon"]) + " " + str(item["name"]))
-    var ethic_index := 0
-    for i in range(GalaxyIdentity.ETHICS.size()):
-        if str(GalaxyIdentity.ETHICS[i]["id"]) == str(empire.get("ethic", "pluralist")):
-            ethic_index = i
-    var ethic_option := OptionButton.new()
-    for value in ethics:
-        ethic_option.add_item(str(value))
-    ethic_option.selected = ethic_index
-    ethic_option.item_selected.connect(func(index: int):
-        empire["ethic"] = str(GalaxyIdentity.ETHICS[index]["id"])
-        _show_empire()
-    )
-    root.add_child(ethic_option)
-    _label("STAATSPRINZIPIEN  •  Genau zwei auswählen")
-    for item in GalaxyIdentity.CIVICS:
-        var civic_id := str(item["id"])
-        var selected_civic: bool = empire.get("civics", ["archives", "commons"]).has(civic_id)
-        var civic_button := Button.new()
-        civic_button.text = ("● " if selected_civic else "○ ") + str(item["icon"]) + " " + str(item["name"])
-        civic_button.tooltip_text = str(item["description"])
-        civic_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-        civic_button.pressed.connect(func():
-            var chosen: Array = empire.get("civics", ["archives", "commons"]).duplicate()
-            if chosen.has(civic_id):
-                chosen.erase(civic_id)
-            elif chosen.size() < 2:
-                chosen.append(civic_id)
-            else:
-                chosen.pop_front()
-                chosen.append(civic_id)
-            empire["civics"] = chosen
-            _show_empire()
-        )
-        root.add_child(civic_button)
+                    _label("POLITIK  /  REGIERUNG UND ZWEI STAATSPRINZIPIEN")
+            _choice("Herrschaftsform", ["Republik", "Monarchie", "Technokratie", "Kollektiv"], empire, "government")
+            _label("GESELLSCHAFTLICHE GRUNDHALTUNG")
+            var ethics: Array = []
+            for item in GalaxyIdentity.ETHICS:
+                ethics.append(str(item["icon"]) + " " + str(item["name"]))
+            var ethic_index := 0
+            for i in range(GalaxyIdentity.ETHICS.size()):
+                if str(GalaxyIdentity.ETHICS[i]["id"]) == str(empire.get("ethic", "pluralist")):
+                    ethic_index = i
+            var ethic_option := OptionButton.new()
+            for value in ethics:
+                ethic_option.add_item(str(value))
+            ethic_option.selected = ethic_index
+            ethic_option.item_selected.connect(func(index: int):
+                empire["ethic"] = str(GalaxyIdentity.ETHICS[index]["id"])
+                _show_empire()
+            )
+            root.add_child(ethic_option)
+            _label("STAATSPRINZIPIEN  •  Genau zwei auswählen")
+            for item in GalaxyIdentity.CIVICS:
+                var civic_id := str(item["id"])
+                var selected_civic: bool = empire.get("civics", ["archives", "commons"]).has(civic_id)
+                var civic_button := Button.new()
+                civic_button.text = ("● " if selected_civic else "○ ") + str(item["icon"]) + " " + str(item["name"])
+                civic_button.tooltip_text = str(item["description"])
+                civic_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+                civic_button.pressed.connect(func():
+                    var chosen: Array = empire.get("civics", ["archives", "commons"]).duplicate()
+                    if chosen.has(civic_id):
+                        chosen.erase(civic_id)
+                    elif chosen.size() < 2:
+                        chosen.append(civic_id)
+                    else:
+                        chosen.pop_front()
+                        chosen.append(civic_id)
+                    empire["civics"] = chosen
+                    _show_empire()
+                )
+                root.add_child(civic_button)
+
         2:
-            _label("BIOLOGIE  /  MERKMALE UND PUNKTEBUDGET")
-    _label("BIOLOGISCHE SPEZIESMERKMALE  •  Budget: höchstens 3 Punkte, maximal 4 Merkmale")
-    var trait_points := 0
-    for trait_id in empire.get("traits", ["curious"]):
-        trait_points += int(GalaxyIdentity.trait_info(str(trait_id)).get("cost", 0))
-    _label("Verwendete Punkte: %d / 3  •  Nachteile geben Punkte zurück." % trait_points)
-    for item in GalaxyIdentity.TRAITS:
-        var trait_id := str(item["id"])
-        var selected_trait: bool = empire.get("traits", ["curious"]).has(trait_id)
-        var trait_button := Button.new()
-        trait_button.text = ("● " if selected_trait else "○ ") + str(item["icon"]) + " " + str(item["name"]) + " (%+d)" % int(item["cost"])
-        trait_button.tooltip_text = str(item["description"])
-        trait_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-        trait_button.pressed.connect(func():
-            var chosen: Array = empire.get("traits", ["curious"]).duplicate()
-            if chosen.has(trait_id):
-                chosen.erase(trait_id)
-            else:
-                chosen.append(trait_id)
-            var candidate: Dictionary = empire.duplicate(true)
-            candidate["traits"] = chosen
-            if GalaxyIdentity.validate(candidate) == "":
-                empire["traits"] = chosen
-            _show_empire()
-        )
-        root.add_child(trait_button)
+                    _label("BIOLOGIE  /  MERKMALE UND PUNKTEBUDGET")
+            _label("BIOLOGISCHE SPEZIESMERKMALE  •  Budget: höchstens 3 Punkte, maximal 4 Merkmale")
+            var trait_points := 0
+            for trait_id in empire.get("traits", ["curious"]):
+                trait_points += int(GalaxyIdentity.trait_info(str(trait_id)).get("cost", 0))
+            _label("Verwendete Punkte: %d / 3  •  Nachteile geben Punkte zurück." % trait_points)
+            for item in GalaxyIdentity.TRAITS:
+                var trait_id := str(item["id"])
+                var selected_trait: bool = empire.get("traits", ["curious"]).has(trait_id)
+                var trait_button := Button.new()
+                trait_button.text = ("● " if selected_trait else "○ ") + str(item["icon"]) + " " + str(item["name"]) + " (%+d)" % int(item["cost"])
+                trait_button.tooltip_text = str(item["description"])
+                trait_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+                trait_button.pressed.connect(func():
+                    var chosen: Array = empire.get("traits", ["curious"]).duplicate()
+                    if chosen.has(trait_id):
+                        chosen.erase(trait_id)
+                    else:
+                        chosen.append(trait_id)
+                    var candidate: Dictionary = empire.duplicate(true)
+                    candidate["traits"] = chosen
+                    if GalaxyIdentity.validate(candidate) == "":
+                        empire["traits"] = chosen
+                    _show_empire()
+                )
+                root.add_child(trait_button)
+
         3:
-            _label("FLOTTE  /  SCHIFFSARCHITEKTUR")
-    _label("Schiffsarchitektur – Vorschau")
-    _ship_gallery()
+                    _label("FLOTTE  /  SCHIFFSARCHITEKTUR")
+            _label("Schiffsarchitektur – Vorschau")
+            _ship_gallery()
+
     root = original_root
     var actions := HBoxContainer.new()
     actions.add_theme_constant_override("separation", 10)
