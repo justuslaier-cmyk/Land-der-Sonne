@@ -569,7 +569,7 @@ func _show_empire() -> void:
     root = page
     match creation_tab:
         0:
-                    _label("IDENTITÄT  /  NAME, HEIMAT UND PORTRÄT")
+            _label("IDENTITÄT  /  NAME, HEIMAT UND PORTRÄT")
             _entry("Reichsname", "name")
             _entry("Speziesname", "species")
             _entry("Heimatwelt", "homeworld")
@@ -578,7 +578,7 @@ func _show_empire() -> void:
             _label("Ausgewählt: " + ["Humanoid", "Insektoid", "Aquatisch", "Kristallin", "Synthetisch"][int(empire["portrait"])])
 
         1:
-                    _label("POLITIK  /  REGIERUNG UND ZWEI STAATSPRINZIPIEN")
+            _label("POLITIK  /  REGIERUNG UND ZWEI STAATSPRINZIPIEN")
             _choice("Herrschaftsform", ["Republik", "Monarchie", "Technokratie", "Kollektiv"], empire, "government")
             _label("GESELLSCHAFTLICHE GRUNDHALTUNG")
             var ethics: Array = []
@@ -620,7 +620,7 @@ func _show_empire() -> void:
                 root.add_child(civic_button)
 
         2:
-                    _label("BIOLOGIE  /  MERKMALE UND PUNKTEBUDGET")
+            _label("BIOLOGIE  /  MERKMALE UND PUNKTEBUDGET")
             _label("BIOLOGISCHE SPEZIESMERKMALE  •  Budget: höchstens 3 Punkte, maximal 4 Merkmale")
             var trait_points := 0
             for trait_id in empire.get("traits", ["curious"]):
@@ -648,7 +648,7 @@ func _show_empire() -> void:
                 root.add_child(trait_button)
 
         3:
-                    _label("FLOTTE  /  SCHIFFSARCHITEKTUR")
+            _label("FLOTTE  /  SCHIFFSARCHITEKTUR")
             _label("Schiffsarchitektur – Vorschau")
             _ship_gallery()
 
