@@ -648,54 +648,74 @@ func _show_galaxy() -> void:
     screen = "galaxy"
     GalaxySystems.prepare(world)
     _clear()
-    _title("GALAXIE / %s" % world["empire"]["name"], 29)
+    root.add_theme_constant_override("separation", 7)
+    _title("✦ LAND DER SONNE  /  %s" % str(world["empire"]["name"]), 27)
+    # A single live, readable resource ribbon replaces stacked diagnostic text.
     status = _label("")
+    status.add_theme_font_size_override("font_size", 16)
     _refresh_status()
     forecast_status = _label("")
-    forecast_status.add_theme_font_size_override("font_size", 14)
+    forecast_status.add_theme_font_size_override("font_size", 13)
     _refresh_forecast()
-    time_status = _label("")
-    _refresh_time_status()
-    # Stable command groups replace the overflowing horizontal action strip.
-    var commands := HFlowContainer.new()
-    commands.add_theme_constant_override("h_separation", 8)
-    commands.add_theme_constant_override("v_separation", 6)
-    root.add_child(commands)
-    var pause_button := UiComponents.action_button("PAUSE / WEITER", _toggle_pause, true)
-    commands.add_child(pause_button)
-    var speed_choice := OptionButton.new()
-    speed_choice.tooltip_text = "Simulationsgeschwindigkeit. Das Spiel beginnt pausiert."
-    for rate in [1, 2, 4, 8]:
-        speed_choice.add_item("%d×" % rate, rate)
-    speed_choice.select([1, 2, 4, 8].find(simulation_speed))
-    speed_choice.item_selected.connect(func(index: int): _set_speed(speed_choice.get_item_id(index)))
-    commands.add_child(speed_choice)
-    _navigation_menu("ERKUNDUNG", [["Auto-Erkundung", _toggle_auto_survey], ["Flotte", _fleet], ["Flottenkommando", _fleet_command], ["Flottendoktrin", _fleet_doctrine]], commands)
-    _navigation_menu("REICH", [["Wirtschaft", _economy_report], ["Gesellschaft", _society_report], ["Politik", _politics], ["Forschung", _research], ["Schiffswerft", _shipyard]], commands)
-    _navigation_menu("AUSSENPOLITIK", [["Diplomatie", _diplomacy], ["Ziele", _goals_report]], commands)
-    _navigation_menu("CHRONIK", [["Chronik öffnen", _chronicle], ["Spielanleitung", _show_help]], commands)
-    _navigation_menu("SPIEL", [["Speichern", _save], ["Spielstände", _show_save_slots], ["Einstellungen", func(): _open_options("galaxy")], ["Hauptmenü", _show_menu]], commands)
-    var search_row := HBoxContainer.new()
-    root.add_child(search_row)
-    var search_caption := Label.new()
-    search_caption.text = "BEKANNTE SYSTEME"
-    search_row.add_child(search_caption)
+    var workspace := HBoxContainer.new()
+    workspace.add_theme_constant_override("separation", 9)
+    workspace.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    workspace.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    root.add_child(workspace)
+    # Permanent navigation is recognizable, keyboard-focusable and does not
+    # overflow horizontally. Every entry invokes the existing game systems.
+    var navigation := VBoxContainer.new()
+    navigation.custom_minimum_size.x = 174
+    navigation.add_theme_constant_override("separation", 5)
+    workspace.add_child(navigation)
+    var navigation_heading := Label.new()
+    navigation_heading.text = "STEUERZENTRALE"
+    navigation_heading.add_theme_color_override("font_color", GOLD)
+    navigation.add_child(navigation_heading)
+    for entry in [
+        ["✦  Galaxie", _show_galaxy],
+        ["♛  Reich", _society_report],
+        ["⚗  Forschung", _research],
+        ["▥  Wirtschaft", _economy_report],
+        ["◇  Diplomatie", _diplomacy],
+        ["➤  Flotte", _fleet],
+        ["!  Ereignisse", _chronicle]
+    ]:
+        var nav_button := UiComponents.action_button(str(entry[0]), entry[1], true)
+        nav_button.custom_minimum_size = Vector2(166, 39)
+        navigation.add_child(nav_button)
+    var nav_divider := HSeparator.new()
+    navigation.add_child(nav_divider)
+    _navigation_menu("ERKUNDUNG", [["Auto-Erkundung", _toggle_auto_survey], ["Flottenkommando", _fleet_command], ["Flottendoktrin", _fleet_doctrine]], navigation)
+    _navigation_menu("REICH", [["Politik", _politics], ["Schiffswerft", _shipyard], ["Ziele", _goals_report]], navigation)
+    _navigation_menu("SPIEL", [["Speichern", _save], ["Spielstände", _show_save_slots], ["Einstellungen", func(): _open_options("galaxy")], ["Hauptmenü", _show_menu]], navigation)
+    var center := VBoxContainer.new()
+    center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    center.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    center.add_theme_constant_override("separation", 5)
+    workspace.add_child(center)
+    var map_toolbar := HBoxContainer.new()
+    map_toolbar.add_theme_constant_override("separation", 8)
+    center.add_child(map_toolbar)
+    var map_heading := Label.new()
+    map_heading.text = "GALAXIE  /  BEKANNTER RAUM"
+    map_heading.add_theme_color_override("font_color", GOLD)
+    map_toolbar.add_child(map_heading)
     system_search = LineEdit.new()
-    system_search.placeholder_text = "System suchen (Strg+F, Enter)"
-    system_search.custom_minimum_size.x = 280
+    system_search.placeholder_text = "System suchen  (Strg+F)"
+    system_search.custom_minimum_size.x = 135
     system_search.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    system_search.tooltip_text = "Nur bereits kartografierte Systeme werden gefunden. Enter wählt das erste passende System."
+    system_search.tooltip_text = "Nur kartografierte Systeme. Eingabe bestätigt mit Enter."
     system_search.text_submitted.connect(_search_system)
-    search_row.add_child(system_search)
-    if notice != "":
-        _label(notice)
-    var info := _label("Linksklick: System wählen   •   Rechte Maustaste ziehen: Kamera   •   Mausrad: Zoom zum Cursor")
-    info.add_theme_font_size_override("font_size", 13)
+    map_toolbar.add_child(system_search)
     map_area = Control.new()
-    map_area.custom_minimum_size = Vector2(380, 450)
+    map_area.custom_minimum_size = Vector2(340, 490)
     map_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    map_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    map_area.clip_contents = true
     map_area.draw.connect(_draw_map)
     map_area.gui_input.connect(_map_input)
+    center.add_child(map_area)
     var map_animation := Timer.new()
     map_animation.wait_time = 0.12
     map_animation.autostart = true
@@ -704,27 +724,50 @@ func _show_galaxy() -> void:
             map_area.queue_redraw()
     )
     map_area.add_child(map_animation)
-    var workspace := HBoxContainer.new()
-    workspace.add_theme_constant_override("separation", 12)
-    workspace.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    root.add_child(workspace)
-    map_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    workspace.add_child(map_area)
+    var map_legend := Label.new()
+    map_legend.text = "◉ Eigene Systeme    ◇ Fremde Systeme    ✦ Auswahl    • Unkartiert"
+    map_legend.add_theme_font_size_override("font_size", 12)
+    map_legend.add_theme_color_override("font_color", WHITE)
+    center.add_child(map_legend)
     var side := PanelContainer.new()
     side.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(PANEL, GalaxyVisualTheme.FOCUS, 2))
-    side.custom_minimum_size = Vector2(275, 450)
+    side.custom_minimum_size = Vector2(265, 490)
     workspace.add_child(side)
     var details_scroll := ScrollContainer.new()
-    details_scroll.custom_minimum_size = Vector2(275, 450)
+    details_scroll.custom_minimum_size = Vector2(265, 490)
     details_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
     side.add_child(details_scroll)
     galaxy_details = VBoxContainer.new()
     galaxy_details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    galaxy_details.add_theme_constant_override("separation", 9)
+    galaxy_details.add_theme_constant_override("separation", 8)
     details_scroll.add_child(galaxy_details)
     _show_selection()
+    var footer := HBoxContainer.new()
+    footer.add_theme_constant_override("separation", 12)
+    root.add_child(footer)
+    time_status = Label.new()
+    time_status.add_theme_color_override("font_color", GOLD)
+    footer.add_child(time_status)
+    _refresh_time_status()
+    var pause_button := UiComponents.action_button("⏸  PAUSE / WEITER", _toggle_pause, true)
+    footer.add_child(pause_button)
+    var speed_choice := OptionButton.new()
+    speed_choice.tooltip_text = "Simulationsgeschwindigkeit. Das Spiel beginnt pausiert."
+    for rate in [1, 2, 4, 8]:
+        speed_choice.add_item("%d×" % rate, rate)
+    speed_choice.select([1, 2, 4, 8].find(simulation_speed))
+    speed_choice.item_selected.connect(func(index: int): _set_speed(speed_choice.get_item_id(index)))
+    footer.add_child(speed_choice)
+    var controls := Label.new()
+    controls.text = "Linksklick: wählen   •   Rechtsziehen: bewegen   •   Mausrad: Zoom   •   F1: Hilfe"
+    controls.add_theme_font_size_override("font_size", 12)
+    controls.add_theme_color_override("font_color", WHITE)
+    controls.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    footer.add_child(controls)
+    if notice != "":
+        _label(notice)
     if not onboarding_dismissed:
-        var tip := _label("ERSTER SCHRITT: Wähle ein bekanntes System, erkunde erreichbare Sterne und pausiere mit Leertaste. F1 öffnet die Anleitung.")
+        var tip := _label("ERSTER SCHRITT: System wählen → erkunden → Flotte entsenden. F1 öffnet die Anleitung.")
         tip.name = "OnboardingHint"
         _button("EINSTIEGSHINWEIS AUSBLENDEN", func():
             onboarding_dismissed = true
@@ -733,6 +776,7 @@ func _show_galaxy() -> void:
     if str(world["pending_event"]) != "":
         simulation_paused = true
         _show_event()
+
 
 func _navigation_menu(title_text: String, entries: Array, parent: Control) -> void:
     var menu := MenuButton.new()
