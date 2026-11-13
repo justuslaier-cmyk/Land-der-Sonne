@@ -990,6 +990,21 @@ func _show_selection() -> void:
             _side_button("SYSTEM ERKUNDEN", _explore)
     else:
         var system := GalaxyCelestials.generate(int(world["settings"]["seed"]), star)
+        # Real system preview: cropped pixel planet atlas, not a decorative placeholder.
+        var preview_frame := PanelContainer.new()
+        preview_frame.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(Color("#0b2037"), GalaxyVisualTheme.FOCUS, 1))
+        galaxy_details.add_child(preview_frame)
+        var preview := TextureRect.new()
+        var planet_atlas := AtlasTexture.new()
+        planet_atlas.atlas = preload("res://assets/art/planet_sprite_strip.svg")
+        planet_atlas.region = Rect2(float(posmod(selected, 8) * 64), 0.0, 64.0, 64.0)
+        preview.texture = planet_atlas
+        preview.custom_minimum_size = Vector2(0, 110)
+        preview.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+        preview.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+        preview.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+        preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        preview_frame.add_child(preview)
         _side_label("%s  •  %d Planeten" % [system["star_class"], system["planets"].size()])
         _side_label("Rohstoffe %d  •  %s" % [int(star["resource"]), "Bewohnbar" if bool(star["habitable"]) else "Unbewohnbar"])
         _side_button("SYSTEMANSICHT", _show_star_system)
