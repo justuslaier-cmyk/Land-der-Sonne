@@ -883,8 +883,10 @@ func _draw_map() -> void:
         var x := float(posmod(i * 7919 + seed, 1009)) / 1009.0 * width
         var y := float(posmod(i * 4861 + seed, 997)) / 997.0 * height
         map_area.draw_circle(Vector2(x, y), 0.65 + float(i % 3) * 0.35, Color("#405575"))
-    # Territory tint follows surveyed ownership only: unknown systems remain hidden.
-    # Wide pixel-block influence fields make empire geography legible at overview zoom.
+    # Territorial cartography uses the visible, surveyed star set only.
+    # A convex influence envelope is visually stronger than unrelated square tiles,
+    # while avoiding hidden information and preserving the simulation's ownership.
+    var owner_points: Dictionary = {}
     for territory_star in world["stars"]:
         var territory_id := int(territory_star["id"])
         if not world["known"].has(territory_id):
@@ -892,14 +894,23 @@ func _draw_map() -> void:
         var territory_owner := int(territory_star["owner"])
         if territory_owner < 0:
             continue
-        var territory_pos := _star_pos(territory_star)
-        if territory_pos.x < -90 or territory_pos.y < -90 or territory_pos.x > width + 90 or territory_pos.y > height + 90:
-            continue
-        var territory_color := Color("#329fd7") if territory_owner == 0 else Color("#d45b8d") if territory_owner % 2 == 1 else Color("#69cba4")
-        for ring in range(4, 0, -1):
-            var block_size := float(ring * 24)
-            map_area.draw_rect(Rect2(territory_pos - Vector2.ONE * block_size * 0.5, Vector2.ONE * block_size), Color(territory_color, 0.035), true)
-        map_area.draw_rect(Rect2(territory_pos - Vector2(15, 15), Vector2(30, 30)), Color(territory_color, 0.16), false, 2.0)
+        if not owner_points.has(territory_owner):
+            owner_points[territory_owner] = PackedVector2Array()
+        var points: PackedVector2Array = owner_points[territory_owner]
+        points.append(_star_pos(territory_star))
+        owner_points[territory_owner] = points
+    for territory_owner in owner_points.keys():
+        var points: PackedVector2Array = owner_points[territory_owner]
+        var territory_color := Color("#399fe8") if int(territory_owner) == 0 else Color("#e45d90") if int(territory_owner) % 2 == 1 else Color("#66d9a7")
+        if points.size() >= 3:
+            var hull := Geometry2D.convex_hull(points)
+            if hull.size() >= 3:
+                map_area.draw_colored_polygon(hull, Color(territory_color, 0.13))
+                map_area.draw_polyline(hull, Color(territory_color, 0.86), 2.0, false)
+        elif points.size() == 2:
+            map_area.draw_line(points[0], points[1], Color(territory_color, 0.65), 3.0)
+        for point in points:
+            map_area.draw_arc(point, 16.0, 0.0, TAU, 24, Color(territory_color, 0.6), 1.5)
     # Draw only surveyed lane endpoints to preserve fog of war.
     for lane in world.get("lanes", []):
         var a := int(lane[0])
