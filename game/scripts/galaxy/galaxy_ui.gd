@@ -529,20 +529,55 @@ func _apply_empire_template(index: int) -> void:
     notice = ""
     _show_empire()
 
+var creation_tab: int = 0
+
 func _show_empire() -> void:
     screen = "empire"
     _clear()
-    _title("02 / ZIVILISATION ERSCHAFFEN")
-    _label("VORLAGEN  •  Ausgangspunkt auswählen und anschließend anpassen")
-    _button("SOLARE UNION / REPUBLIK", func(): _apply_empire_template(0))
-    _button("STERNENKONKLAVE / TECHNOKRATIE", func(): _apply_empire_template(1))
-    _button("GRENZBUND / KOLLEKTIV", func(): _apply_empire_template(2))
+    _title("02  /  DEIN REICH GESTALTEN", 32)
+    var preset_bar := HBoxContainer.new()
+    preset_bar.add_theme_constant_override("separation", 8)
+    root.add_child(preset_bar)
+    var original_root := root
+    root = preset_bar
+    _button("☀ SOLARE UNION", func(): _apply_empire_template(0))
+    _button("✧ STERNENKONKLAVE", func(): _apply_empire_template(1))
+    _button("⬡ GRENZBUND", func(): _apply_empire_template(2))
+    root = original_root
+    var tabs := HBoxContainer.new()
+    tabs.add_theme_constant_override("separation", 8)
+    root.add_child(tabs)
+    for tab_index in range(4):
+        var current_index: int = tab_index
+        var tab := Button.new()
+        tab.text = ["1  SPEZIES", "2  REGIERUNG", "3  MERKMALE", "4  SCHIFFE"][tab_index]
+        tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        GalaxyVisualTheme.apply_button(tab)
+        tab.modulate = GOLD if creation_tab == tab_index else WHITE
+        tab.pressed.connect(func():
+            creation_tab = current_index
+            _show_empire()
+        )
+        tabs.add_child(tab)
+    var content := PanelContainer.new()
+    content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    content.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(Color("#0e1833", 0.96), GOLD, 2))
+    root.add_child(content)
+    var page := VBoxContainer.new()
+    page.add_theme_constant_override("separation", 8)
+    content.add_child(page)
+    root = page
+    match creation_tab:
+        0:
+            _label("IDENTITÄT  /  NAME, HEIMAT UND PORTRÄT")
     _entry("Reichsname", "name")
     _entry("Speziesname", "species")
     _entry("Heimatwelt", "homeworld")
     _label("Speziesdesign – wähle ein Porträt")
     _species_gallery()
     _label("Ausgewählt: " + ["Humanoid", "Insektoid", "Aquatisch", "Kristallin", "Synthetisch"][int(empire["portrait"])])
+        1:
+            _label("POLITIK  /  REGIERUNG UND ZWEI STAATSPRINZIPIEN")
     _choice("Herrschaftsform", ["Republik", "Monarchie", "Technokratie", "Kollektiv"], empire, "government")
     _label("GESELLSCHAFTLICHE GRUNDHALTUNG")
     var ethics: Array = []
@@ -566,7 +601,8 @@ func _show_empire() -> void:
         var civic_id := str(item["id"])
         var selected_civic: bool = empire.get("civics", ["archives", "commons"]).has(civic_id)
         var civic_button := Button.new()
-        civic_button.text = ("● " if selected_civic else "○ ") + str(item["icon"]) + " " + str(item["name"]) + "  —  " + str(item["description"])
+        civic_button.text = ("● " if selected_civic else "○ ") + str(item["icon"]) + " " + str(item["name"])
+        civic_button.tooltip_text = str(item["description"])
         civic_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
         civic_button.pressed.connect(func():
             var chosen: Array = empire.get("civics", ["archives", "commons"]).duplicate()
@@ -581,6 +617,8 @@ func _show_empire() -> void:
             _show_empire()
         )
         root.add_child(civic_button)
+        2:
+            _label("BIOLOGIE  /  MERKMALE UND PUNKTEBUDGET")
     _label("BIOLOGISCHE SPEZIESMERKMALE  •  Budget: höchstens 3 Punkte, maximal 4 Merkmale")
     var trait_points := 0
     for trait_id in empire.get("traits", ["curious"]):
@@ -590,7 +628,8 @@ func _show_empire() -> void:
         var trait_id := str(item["id"])
         var selected_trait: bool = empire.get("traits", ["curious"]).has(trait_id)
         var trait_button := Button.new()
-        trait_button.text = ("● " if selected_trait else "○ ") + str(item["icon"]) + " " + str(item["name"]) + " (%+d)  —  " % int(item["cost"]) + str(item["description"])
+        trait_button.text = ("● " if selected_trait else "○ ") + str(item["icon"]) + " " + str(item["name"]) + " (%+d)" % int(item["cost"])
+        trait_button.tooltip_text = str(item["description"])
         trait_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
         trait_button.pressed.connect(func():
             var chosen: Array = empire.get("traits", ["curious"]).duplicate()
@@ -605,9 +644,18 @@ func _show_empire() -> void:
             _show_empire()
         )
         root.add_child(trait_button)
+        3:
+            _label("FLOTTE  /  SCHIFFSARCHITEKTUR")
     _label("Schiffsarchitektur – Vorschau")
     _ship_gallery()
-    _button("WEITER: ZUSAMMENFASSUNG", func():
+    root = original_root
+    var actions := HBoxContainer.new()
+    actions.add_theme_constant_override("separation", 10)
+    root.add_child(actions)
+    root = actions
+    _button("←  ZUR GALAXIE", _show_settings)
+    _button("✕  ABBRECHEN", _cancel_new_game)
+    _button("WEITER  /  ZUSAMMENFASSUNG  →", func():
         var error := GalaxyModel.validate(settings, empire)
         if error != "":
             notice = error
@@ -616,10 +664,9 @@ func _show_empire() -> void:
             notice = ""
             _show_review()
     )
+    root = original_root
     if notice != "":
         _label("Eingabe prüfen: " + notice)
-    _button("ZURÜCK ZU GALAXIEEINSTELLUNGEN", _show_settings)
-    _button("ABBRECHEN", _cancel_new_game)
 
 func _show_review() -> void:
     screen = "review"
