@@ -21,7 +21,19 @@ func _initialize() -> void:
         return
     baseline["ai_fleets"][fleet_index]["strength"] = 1
     baseline["tick"] = id % 6
-    for opening in [28, 29, 45, 46]:
+    # Deterministic economic fixture: a genuinely habitable, unclaimed
+    # neighbour exists so 50-credit colonization can be exercised.
+    var source: Dictionary = baseline["stars"][int(baseline["ai_fleets"][fleet_index]["location"])]
+    var target := -1
+    for star in baseline["stars"]:
+        if int(star["owner"]) == -1 and GalaxySystems.distance(source, star) < 160.0:
+            target = int(star["id"])
+            star["habitable"] = true
+            break
+    if target < 0:
+        _fail("No reachable neutral system for deterministic fixture")
+        return
+    for opening in [28, 29, 50, 51]:
         var world := baseline.duplicate(true)
         world["ai_treasury"][key] = opening
         var strength_before := int(world["ai_fleets"][fleet_index]["strength"])
@@ -40,10 +52,10 @@ func _initialize() -> void:
         if opening == 29 and closing != 0:
             _fail("Recruitment did not charge both upkeep and construction")
             return
-        if opening == 45 and closing != 16:
+        if opening == 50 and closing != 21:
             _fail("Expansion used stale pre-recruitment balance")
             return
-        if opening == 46 and closing != 0:
+        if opening == 51 and (closing != 0 or int(world["stars"][target]["owner"]) != id):
             _fail("Affordable expansion did not take priority over recruitment")
             return
         if opening == 28 and int(world["ai_fleets"][fleet_index]["strength"]) != strength_before:
