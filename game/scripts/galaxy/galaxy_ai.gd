@@ -126,7 +126,7 @@ static func tick(world: Dictionary) -> void:
         # reinforcement; otherwise 28-credit recruitment consumes every
         # 45-credit colonisation reserve in the same turn.
         treasury = int(world["ai_treasury"].get(key, 0))
-        if year % expansion_interval == id % expansion_interval and treasury >= 50 and str(world["ai_intentions"][key]["stance"]) != "reformen":
+        if year % expansion_interval == id % expansion_interval and treasury >= 50 and (difficulty > 0 or str(world["ai_intentions"][key]["stance"]) != "reformen"):
             _expand(world, rival, fleet)
         # Each action reads the live treasury after the previous transaction.
         treasury = int(world["ai_treasury"].get(key, 0))
