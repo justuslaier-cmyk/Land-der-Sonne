@@ -831,15 +831,6 @@ func _show_galaxy() -> void:
     time_status.add_theme_color_override("font_color", GOLD)
     footer.add_child(time_status)
     _refresh_time_status()
-    var pause_button := UiComponents.action_button("⏸  PAUSE / WEITER", _toggle_pause, true)
-    footer.add_child(pause_button)
-    var speed_choice := OptionButton.new()
-    speed_choice.tooltip_text = "Simulationsgeschwindigkeit. Das Spiel beginnt pausiert."
-    for rate in [1, 2, 4, 8]:
-        speed_choice.add_item("%d×" % rate, rate)
-    speed_choice.select([1, 2, 4, 8].find(simulation_speed))
-    speed_choice.item_selected.connect(func(index: int): _set_speed(speed_choice.get_item_id(index)))
-    footer.add_child(speed_choice)
     var controls := Label.new()
     controls.text = "Linksklick: wählen   •   Rechtsziehen: bewegen   •   Mausrad: Zoom   •   F1: Hilfe"
     controls.add_theme_font_size_override("font_size", 12)
