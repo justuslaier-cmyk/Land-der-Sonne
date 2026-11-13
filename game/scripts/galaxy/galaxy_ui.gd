@@ -811,16 +811,32 @@ func _show_galaxy() -> void:
         ["AKTUELLE EREIGNISSE", last_event, _chronicle],
         ["FLOTTEN", "Eigene Verbände: %d\nStrategische Befehle öffnen" % player_fleets, _fleet]
     ]
-    for tile in tiles:
+    for tile_index in range(tiles.size()):
+        var tile: Array = tiles[tile_index]
         var tile_panel := PanelContainer.new()
         tile_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         tile_panel.size_flags_stretch_ratio = 1.0
         tile_panel.custom_minimum_size.y = 94
         tile_panel.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(PANEL, GalaxyVisualTheme.FOCUS, 1))
         dashboard.add_child(tile_panel)
+        var tile_content := HBoxContainer.new()
+        tile_content.add_theme_constant_override("separation", 5)
+        tile_panel.add_child(tile_content)
+        var tile_art := TextureRect.new()
+        var tile_atlas := AtlasTexture.new()
+        tile_atlas.atlas = preload("res://assets/art/strategic_dashboard_strip.svg")
+        tile_atlas.region = Rect2(float(tile_index * 128), 0.0, 128.0, 128.0)
+        tile_art.texture = tile_atlas
+        tile_art.custom_minimum_size = Vector2(58, 58)
+        tile_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+        tile_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+        tile_art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+        tile_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        tile_content.add_child(tile_art)
         var tile_column := VBoxContainer.new()
+        tile_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         tile_column.add_theme_constant_override("separation", 3)
-        tile_panel.add_child(tile_column)
+        tile_content.add_child(tile_column)
         var tile_button := Button.new()
         tile_button.text = str(tile[0])
         tile_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
