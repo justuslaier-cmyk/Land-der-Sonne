@@ -169,19 +169,6 @@ func _clear() -> void:
         margin.add_child(scroll)
         scroll.add_child(root)
     if screen != "galaxy":
-        var global_frame := StyleBoxFlat.new()
-        global_frame.bg_color = Color("#0b1430", 0.88)
-        global_frame.border_color = GOLD
-        global_frame.set_border_width_all(2)
-        global_frame.set_corner_radius_all(2)
-        global_frame.content_margin_left = 12.0
-        global_frame.content_margin_right = 12.0
-        global_frame.content_margin_top = 10.0
-        global_frame.content_margin_bottom = 10.0
-        var frame := PanelContainer.new()
-        frame.add_theme_stylebox_override("panel", global_frame)
-        frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        # Frame only the interactive document, not the decorative galaxy backdrop.
         root.add_theme_constant_override("separation", 10)
 
 func _title(value: String, size: int = 36) -> void:
