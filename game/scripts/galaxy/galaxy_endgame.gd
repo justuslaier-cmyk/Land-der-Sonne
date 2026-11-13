@@ -45,6 +45,12 @@ static func defend_crisis(world: Dictionary) -> bool:
     var crisis: Dictionary = world["galactic_crisis"]
     if str(crisis.get("state", "")) != "active" or int(world.get("credits", 0)) < 25 or int(world.get("alloys", 0)) < 10:
         return false
+    # A fleet operation requires a surviving, supplied fleet; spending alloys
+    # alone must never count as military crisis defence.
+    var fleet: Dictionary = world.get("fleets", [{}])[0]
+    if int(fleet.get("strength", 0)) < 5 or int(world.get("fleet_logistics", {}).get("supply", 100)) < 20:
+        return false
+    world["fleet_logistics"]["supply"] = maxi(0, int(world["fleet_logistics"].get("supply", 100)) - 5)
     world["credits"] = int(world["credits"]) - 25
     world["alloys"] = int(world["alloys"]) - 10
     crisis["threat"] = maxi(0, int(crisis["threat"]) - 22)
@@ -56,7 +62,7 @@ static func defend_crisis(world: Dictionary) -> bool:
 static func research_crisis(world: Dictionary) -> bool:
     prepare(world)
     var crisis: Dictionary = world["galactic_crisis"]
-    if str(crisis.get("state", "")) != "active" or int(world.get("research_level", 0)) < 3:
+    if str(crisis.get("state", "")) != "active" or int(world.get("research_level", 0)) < 3 or int(world.get("research_fields", {}).get("society", 0)) < 1:
         return false
     if int(world.get("science", 0)) < 35 or int(world.get("credits", 0)) < 10:
         return false

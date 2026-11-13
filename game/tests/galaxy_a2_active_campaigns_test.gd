@@ -58,7 +58,7 @@ func _run() -> void:
             if not GalaxyContracts.errors(world).is_empty():
                 _fail("Contract errors seed %d year %d: %s" % [int(scenario["seed"]), year, str(GalaxyContracts.errors(world).slice(0, 2))])
                 return
-        if not save_verified or real_actions["exploration"] < 20 or real_actions["movement"] < 2 or peak_colonies < 2 or real_actions["research"] < 3 or real_actions["project"] < 1:
+        if not save_verified or real_actions["exploration"] < 20 or real_actions["movement"] < 2 or peak_colonies < 2 or real_actions["research"] < 3 or real_actions["project"] < 1 or real_actions["diplomacy"] < 1:
             _fail("Incomplete active campaign: %s actions %s colonies %d" % [str(scenario["victory"]), str(real_actions), peak_colonies])
             return
         if not world["victory_paths"].has(str(scenario["victory"])):
@@ -125,6 +125,12 @@ func _take_actions(world: Dictionary, scenario: Dictionary, actions: Dictionary)
         GalaxyStrategy.set_welfare(world, 1)
     if actions["project"] == 0 and int(world["research_level"]) >= 3 and GalaxyEndgame.start_project(world, str(scenario["project"])):
         actions["project"] += 1
+    if actions["diplomacy"] == 0 and int(world["credits"]) >= 110:
+        for rival in world["ai"]:
+            var rival_id := int(rival["id"])
+            if world["contacts"].has(rival_id) and GalaxySystems.diplomatic_action(world, rival_id, "gift") == "Beziehungen verbessert.":
+                actions["diplomacy"] += 1
+                break
     if str(scenario["victory"]) == "resilience":
         for rival in world["ai"]:
             if actions["war"] >= 2:
@@ -134,7 +140,7 @@ func _take_actions(world: Dictionary, scenario: Dictionary, actions: Dictionary)
                 actions["war"] += 1
         var crisis: Dictionary = world.get("galactic_crisis", {})
         if str(crisis.get("state", "")) == "active" and int(crisis.get("threat", 0)) > 0:
-            if GalaxyEndgame.defend_crisis(world):
+            if GalaxyEndgame.defend_crisis(world) or GalaxyEndgame.research_crisis(world):
                 actions["crisis"] += 1
 
 func _fail(message: String) -> void:
