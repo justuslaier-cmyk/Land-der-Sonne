@@ -3,9 +3,9 @@ class_name GalaxyEndgame
 
 # Long projects compete for scarce resources and permanently change yields.
 const PROJECTS := [
-    {"id": "orbital_archive", "title": "Orbitalarchiv", "credits": 110, "alloys": 70, "duration": 8, "science": 3, "bonus": "science", "yield": 5},
-    {"id": "stellar_foundry", "title": "Sternenschmiede", "credits": 140, "alloys": 90, "duration": 10, "science": 2, "bonus": "alloys", "yield": 4},
-    {"id": "unity_beacon", "title": "Einheitsleuchtfeuer", "credits": 120, "alloys": 75, "duration": 9, "science": 2, "bonus": "stability", "yield": 2}
+    {"id": "orbital_archive", "title": "Orbitalarchiv", "credits": 110, "alloys": 70, "duration": 8, "science": 3, "field": "society", "bonus": "science", "yield": 5},
+    {"id": "stellar_foundry", "title": "Sternenschmiede", "credits": 140, "alloys": 90, "duration": 10, "science": 2, "field": "industry", "bonus": "alloys", "yield": 4},
+    {"id": "unity_beacon", "title": "Einheitsleuchtfeuer", "credits": 120, "alloys": 75, "duration": 9, "science": 2, "field": "society", "bonus": "stability", "yield": 2}
 ]
 
 static func prepare(world: Dictionary) -> void:
@@ -29,7 +29,7 @@ static func start_project(world: Dictionary, id: String) -> bool:
     for project in PROJECTS:
         if str(project["id"]) != id:
             continue
-        if int(world.get("research_level", 0)) < int(project["science"]):
+        if int(world.get("research_level", 0)) < int(project["science"]) or int(world.get("research_fields", {}).get(str(project["field"]), 0)) < 1:
             return false
         if int(world.get("credits", 0)) < int(project["credits"]) or int(world.get("alloys", 0)) < int(project["alloys"]):
             return false

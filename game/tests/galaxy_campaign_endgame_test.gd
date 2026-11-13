@@ -74,6 +74,8 @@ func _run() -> void:
         _fail("Core campaign screens not reachable")
         return
     ui.world["research_level"] = 4
+    # Legacy endgame fixture supplies the specialised research prerequisite.
+    ui.world["research_fields"]["society"] = 1
     ui.world["credits"] = 3000
     ui.world["alloys"] = 2000
     if not GalaxyEndgame.start_project(ui.world, "orbital_archive"):
