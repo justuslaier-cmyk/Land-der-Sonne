@@ -133,7 +133,7 @@ static func tick(world: Dictionary) -> void:
         # Preserve the next affordable 50-credit colony instead of spending
         # its reserve on 28-credit recruitment between expansion turns.
         var has_nearby_colony := false
-        if treasury >= 50 and treasury < 78:
+        if treasury >= 49 and treasury < 78:
             var origin: Dictionary = world["stars"][int(fleet["location"])]
             for candidate in world["stars"]:
                 if int(candidate["owner"]) == -1 and bool(candidate["habitable"]) and GalaxySystems.distance(origin, candidate) < 160.0:
