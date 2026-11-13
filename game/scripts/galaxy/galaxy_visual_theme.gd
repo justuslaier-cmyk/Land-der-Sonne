@@ -8,8 +8,8 @@ const GOLD := Color("#f3b879")
 const TEXT := Color("#e4f3f2")
 const MUTED := Color("#9cbfc7")
 const FOCUS := Color("#9ff8ef")
-const BUTTON_BG := Color("#12334a")
-const BUTTON_HOVER := Color("#1c5368")
+const BUTTON_BG := Color("#17284b")
+const BUTTON_HOVER := Color("#28477a")
 const BUTTON_PRESSED := Color("#0a2535")
 
 static func panel_style(background: Color, border: Color, width: int = 1) -> StyleBoxFlat:
@@ -17,7 +17,7 @@ static func panel_style(background: Color, border: Color, width: int = 1) -> Sty
     style.bg_color = background
     style.border_color = border
     style.set_border_width_all(width)
-    style.set_corner_radius_all(5)
+    style.set_corner_radius_all(2)
     style.content_margin_left = 16
     style.content_margin_right = 16
     style.content_margin_top = 10
@@ -39,8 +39,8 @@ static func apply_button(button: Button) -> void:
 
 # Scales margins down for smaller windows without sacrificing large-screen rhythm.
 static func gutters(viewport_size: Vector2) -> Vector2i:
-    var horizontal: int = clampi(int(viewport_size.x * 0.035), 12, 48)
-    var vertical: int = clampi(int(viewport_size.y * 0.042), 12, 30)
+    var horizontal: int = clampi(int(viewport_size.x * 0.012), 8, 22)
+    var vertical: int = clampi(int(viewport_size.y * 0.014), 8, 18)
     return Vector2i(horizontal, vertical)
 
 # WCAG-style relative luminance and contrast for opaque sRGB palette colors.
