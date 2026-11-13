@@ -22,7 +22,7 @@ func _run() -> void:
         settings["difficulty"] = 1
         var world := GalaxyModel.generate(settings, GalaxyModel.empire_defaults())
         GalaxyStrategy.prepare(world)
-        if not GalaxyStrategy.set_policy(world, int(scenario["focus"]), 0):
+        if not GalaxyStrategy.set_policy(world, int(scenario["focus"]), 2 if str(scenario["victory"]) == "prosperity" else 1):
             _fail("Policy failed")
             return
         if not GalaxyStrategy.construct(world, 0, "lab"):
@@ -111,10 +111,10 @@ func _take_actions(world: Dictionary, scenario: Dictionary, actions: Dictionary)
             if score < best:
                 best = score
                 target = sid
-        if target >= 0 and actions["movement"] < 16 and GalaxySystems.move_fleet(world, target):
+        if target >= 0 and actions["movement"] < 32 and GalaxySystems.move_fleet(world, target):
             actions["movement"] += 1
-    if int(world["credits"]) >= 110 and GalaxySystems.research_labs(world) < 3:
-        GalaxyStrategy.construct(world, 0, "lab")
+    if int(world["credits"]) >= 115 and int(world.get("buildings", {}).get("0", {}).get("mine", 0)) < 3:
+        GalaxyStrategy.construct(world, 0, "mine")
     for field in ["industry", "society", "propulsion"]:
         if int(world["research_level"]) >= 5:
             break
@@ -122,7 +122,7 @@ func _take_actions(world: Dictionary, scenario: Dictionary, actions: Dictionary)
             actions["research"] += 1
             break
     if str(scenario["victory"]) == "prosperity":
-        GalaxyStrategy.set_welfare(world, 2)
+        GalaxyStrategy.set_welfare(world, 1)
     if actions["project"] == 0 and int(world["research_level"]) >= 3 and GalaxyEndgame.start_project(world, str(scenario["project"])):
         actions["project"] += 1
     if str(scenario["victory"]) == "resilience":
