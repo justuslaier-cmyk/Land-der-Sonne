@@ -656,20 +656,25 @@ func _show_galaxy() -> void:
     _refresh_forecast()
     time_status = _label("")
     _refresh_time_status()
-    var toolbar_scroll := ScrollContainer.new()
-    toolbar_scroll.custom_minimum_size.y = 55
-    toolbar_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    toolbar_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-    toolbar_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-    root.add_child(toolbar_scroll)
-    var bar := HBoxContainer.new()
-    bar.add_theme_constant_override("separation", 6)
-    toolbar_scroll.add_child(bar)
-    for spec in [["PAUSE / WEITER", _toggle_pause], ["1×", func(): _set_speed(1)], ["2×", func(): _set_speed(2)], ["4×", func(): _set_speed(4)], ["8×", func(): _set_speed(8)], ["AUTO-ERKUNDUNG", _toggle_auto_survey], ["FORSCHUNG", _research], ["FLOTTE", _fleet], ["FLOTTENDOKTRIN", _fleet_doctrine], ["FLOTTENKOMMANDO", _fleet_command], ["SCHIFFSWERFT", _shipyard], ["POLITIK", _politics], ["DIPLOMATIE", _diplomacy], ["CHRONIK", _chronicle], ["ZIELE", _goals_report], ["GESELLSCHAFT", _society_report], ["WIRTSCHAFT", _economy_report], ["SPEICHERN", _save], ["SPIELSTÄNDE", _show_save_slots], ["HILFE", _show_help], ["EINSTELLUNGEN", func(): _open_options("galaxy")], ["MENÜ", _show_menu]]:
-        var button: Button = UiComponents.action_button(str(spec[0]), spec[1], true)
-        button.custom_minimum_size.y = 42
-        button.pressed.connect(func(): _play_ui_sound("click"))
-        bar.add_child(button)
+    # Stable command groups replace the overflowing horizontal action strip.
+    var commands := HFlowContainer.new()
+    commands.add_theme_constant_override("h_separation", 8)
+    commands.add_theme_constant_override("v_separation", 6)
+    root.add_child(commands)
+    var pause_button := UiComponents.action_button("PAUSE / WEITER", _toggle_pause, true)
+    commands.add_child(pause_button)
+    var speed_choice := OptionButton.new()
+    speed_choice.tooltip_text = "Simulationsgeschwindigkeit. Das Spiel beginnt pausiert."
+    for rate in [1, 2, 4, 8]:
+        speed_choice.add_item("%d×" % rate, rate)
+    speed_choice.select([1, 2, 4, 8].find(simulation_speed))
+    speed_choice.item_selected.connect(func(index: int): _set_speed(speed_choice.get_item_id(index)))
+    commands.add_child(speed_choice)
+    _navigation_menu("ERKUNDUNG", [["Auto-Erkundung", _toggle_auto_survey], ["Flotte", _fleet], ["Flottenkommando", _fleet_command], ["Flottendoktrin", _fleet_doctrine]], commands)
+    _navigation_menu("REICH", [["Wirtschaft", _economy_report], ["Gesellschaft", _society_report], ["Politik", _politics], ["Forschung", _research], ["Schiffswerft", _shipyard]], commands)
+    _navigation_menu("AUSSENPOLITIK", [["Diplomatie", _diplomacy], ["Ziele", _goals_report]], commands)
+    _navigation_menu("CHRONIK", [["Chronik öffnen", _chronicle], ["Spielanleitung", _show_help]], commands)
+    _navigation_menu("SPIEL", [["Speichern", _save], ["Spielstände", _show_save_slots], ["Einstellungen", func(): _open_options("galaxy")], ["Hauptmenü", _show_menu]], commands)
     var search_row := HBoxContainer.new()
     root.add_child(search_row)
     var search_caption := Label.new()
@@ -709,9 +714,14 @@ func _show_galaxy() -> void:
     side.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(PANEL, GalaxyVisualTheme.FOCUS, 2))
     side.custom_minimum_size = Vector2(275, 450)
     workspace.add_child(side)
+    var details_scroll := ScrollContainer.new()
+    details_scroll.custom_minimum_size = Vector2(275, 450)
+    details_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    side.add_child(details_scroll)
     galaxy_details = VBoxContainer.new()
+    galaxy_details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     galaxy_details.add_theme_constant_override("separation", 9)
-    side.add_child(galaxy_details)
+    details_scroll.add_child(galaxy_details)
     _show_selection()
     if not onboarding_dismissed:
         var tip := _label("ERSTER SCHRITT: Wähle ein bekanntes System, erkunde erreichbare Sterne und pausiere mit Leertaste. F1 öffnet die Anleitung.")
@@ -723,6 +733,22 @@ func _show_galaxy() -> void:
     if str(world["pending_event"]) != "":
         simulation_paused = true
         _show_event()
+
+func _navigation_menu(title_text: String, entries: Array, parent: Control) -> void:
+    var menu := MenuButton.new()
+    menu.text = title_text
+    menu.tooltip_text = "Öffnet die verfügbaren Aktionen für " + title_text.to_lower()
+    GalaxyVisualTheme.apply_button(menu)
+    var popup := menu.get_popup()
+    for index in range(entries.size()):
+        popup.add_item(str(entries[index][0]), index)
+    popup.id_pressed.connect(func(id: int):
+        if id >= 0 and id < entries.size():
+            _play_ui_sound("click")
+            var action: Callable = entries[id][1]
+            action.call()
+    )
+    parent.add_child(menu)
 
 func _search_system(query: String) -> void:
     var match_id: int = UiComponents.find_known_system(world, query)
@@ -937,23 +963,13 @@ func _show_selection() -> void:
     var activity: Array = world.get("ai_activity", [])
     if not activity.is_empty():
         _side_label(str(activity.back()["text"]))
-    _side_label("CHRONIK", true)
-    _label("GALAKTISCHES PROTOKOLL / LETZTE 35 EINTRÄGE")
-    var incidents: Array = world.get("ambient_event_log", [])
-    if not incidents.is_empty():
-        _label("KLEINE PHÄNOMENE / %d protokolliert" % incidents.size())
-        for i in range(maxi(0, incidents.size() - 5), incidents.size()):
-            var incident: Dictionary = incidents[i]
-            var amount := int(incident["effect"])
-            _label("Jahr %d  •  %s  (%s%d %s)" % [int(incident["year"]) + 2200, str(incident["text"]), "+" if amount >= 0 else "", amount, str(incident["resource"])])
-    GalaxyNarrative.prepare(world)
-    var narrative: Array = world.get("narrative_chronicle", [])
-    if not narrative.is_empty():
-        _label("KAUSALE EREIGNISCHRONIK")
-        for entry in narrative.slice(maxi(0, narrative.size() - 12)):
-            _label("Jahr %d  •  %s  •  Ursache: %s  •  Folge: %s" % [int(entry["year"]) + 2200, str(entry["title"]), str(entry["cause"]), str(entry["effect"])])
+    # Chronicle entries belong to the dedicated chronicle screen, not the
+    # galactic map root. The sidebar stays focused on the selected system.
     var history: Array = world["history"]
-    _side_label(str(history.back()) if not history.is_empty() else "Keine Einträge")
+    if not history.is_empty():
+        _side_label("LETZTES EREIGNIS", true)
+        _side_label(str(history.back()))
+    _side_button("CHRONIK ÖFFNEN", _chronicle)
 
 func _side_label(value: String, heading: bool = false) -> void:
     var label := Label.new()
@@ -1902,13 +1918,8 @@ func _species_gallery(readonly: bool = false) -> void:
 func _draw_species(canvas: Control, index: int) -> void:
     var w := canvas.size.x
     canvas.draw_rect(Rect2(0, 0, w, 170), Color("#13233a"))
-    # Draw a separately imported portrait to avoid white SVG atlas regions.
-    var portraits: Texture2D = load("res://assets/art/species_portrait_%d.svg" % posmod(index, 5))
-    if portraits != null:
-        canvas.draw_texture_rect(portraits, Rect2((w - 112.0) * 0.5, 2, 112, 166), false)
-        if index == int(empire["portrait"]):
-            canvas.draw_rect(Rect2(2, 2, w - 4, 166), GOLD, false, 2)
-        return
+    # Procedural portrait is guaranteed to render in Godot even when an SVG
+    # import is blank on a particular Windows graphics driver.
     var colors := [Color("#c9a17b"), Color("#91b97b"), Color("#6dc6c8"), Color("#ad8ed8"), Color("#9fb6c8")]
     var c: Color = colors[index]
     var center := Vector2(w * 0.5, 76)
