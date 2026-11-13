@@ -16,6 +16,9 @@ func _initialize() -> void:
         "res://assets/art/chronicle_aftermath.svg",
         "res://assets/art/scene_research.svg",
         "res://assets/art/galaxy_nebula.svg",
+        "res://assets/art/command_emblem.svg",
+        "res://assets/art/colony_landscape.svg",
+        "res://assets/art/strategic_dashboard_strip.svg",
         "res://assets/art/planet_sprite_strip.svg",
         "res://assets/art/ship_sprite_strip.svg",
         "res://assets/art/species_portrait_strip.svg",
@@ -31,6 +34,9 @@ func _initialize() -> void:
     assert(aftermath.get_size() == Vector2(48, 48), "Aftermath icon dimensions")
     var objective: Texture2D = load("res://assets/art/war_objective.svg")
     assert(objective.get_size() == Vector2(48, 48), "War objective icon size incorrect")
+    assert(load("res://assets/art/command_emblem.svg").get_size() == Vector2(64, 64), "Command crest dimensions")
+    assert(load("res://assets/art/colony_landscape.svg").get_size() == Vector2(384, 192), "Colony vista dimensions")
+    assert(load("res://assets/art/strategic_dashboard_strip.svg").get_size() == Vector2(512, 128), "Dashboard atlas must contain four 128x128 cells")
     var planets: Texture2D = load("res://assets/art/planet_sprite_strip.svg")
     var ships: Texture2D = load("res://assets/art/ship_sprite_strip.svg")
     assert(planets.get_width() == 512 and planets.get_height() == 64, "Planet strip must contain 8 cells of 64x64")
