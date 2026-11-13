@@ -742,6 +742,53 @@ func _show_galaxy() -> void:
     galaxy_details.add_theme_constant_override("separation", 8)
     details_scroll.add_child(galaxy_details)
     _show_selection()
+    # Compact strategic dashboard: data is sourced from the running world,
+    # never from the illustrative reference screenshot.
+    var dashboard := HBoxContainer.new()
+    dashboard.add_theme_constant_override("separation", 8)
+    root.add_child(dashboard)
+    var owned_systems := 0
+    var habitable_worlds := 0
+    for entry in world["stars"]:
+        if int(entry["owner"]) == 0:
+            owned_systems += 1
+            if bool(entry["habitable"]):
+                habitable_worlds += 1
+    var player_fleets := 0
+    for entry in world["fleets"]:
+        if int(entry.get("owner", -1)) == 0:
+            player_fleets += 1
+    var last_event := "Keine Einträge"
+    if not world["history"].is_empty():
+        last_event = str(world["history"].back())
+    var tiles := [
+        ["REICHSÜBERSICHT", "Eigene Systeme: %d\\nBewohnbare Systeme: %d\\nFlotten: %d" % [owned_systems, habitable_worlds, player_fleets], _society_report],
+        ["FORSCHUNG", "Forschungspunkte: %d\\nJährlicher Zuwachs: %+d" % [int(world["science"]), int(GalaxyStrategy.income_forecast(world)["science"])], _research],
+        ["AKTUELLE EREIGNISSE", last_event, _chronicle],
+        ["FLOTTEN", "Eigene Verbände: %d\\nStrategische Befehle öffnen" % player_fleets, _fleet]
+    ]
+    for tile in tiles:
+        var tile_panel := PanelContainer.new()
+        tile_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        tile_panel.size_flags_stretch_ratio = 1.0
+        tile_panel.custom_minimum_size.y = 94
+        tile_panel.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(PANEL, GalaxyVisualTheme.FOCUS, 1))
+        dashboard.add_child(tile_panel)
+        var tile_column := VBoxContainer.new()
+        tile_column.add_theme_constant_override("separation", 3)
+        tile_panel.add_child(tile_column)
+        var tile_button := Button.new()
+        tile_button.text = str(tile[0])
+        tile_button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+        tile_button.add_theme_color_override("font_color", GOLD)
+        tile_button.pressed.connect(tile[2])
+        tile_column.add_child(tile_button)
+        var tile_text := Label.new()
+        tile_text.text = str(tile[1])
+        tile_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        tile_text.add_theme_font_size_override("font_size", 12)
+        tile_text.add_theme_color_override("font_color", WHITE)
+        tile_column.add_child(tile_text)
     var footer := HBoxContainer.new()
     footer.add_theme_constant_override("separation", 12)
     root.add_child(footer)
