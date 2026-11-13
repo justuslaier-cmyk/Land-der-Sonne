@@ -1931,7 +1931,7 @@ func _illustration(kind: String) -> void:
     if texture != null:
         var image := TextureRect.new()
         image.texture = texture
-        image.custom_minimum_size = Vector2(0, 200)
+        image.custom_minimum_size = Vector2(0, 112)
         image.size_flags_horizontal = Control.SIZE_EXPAND_FILL
         image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
         image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
