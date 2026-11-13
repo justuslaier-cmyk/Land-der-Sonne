@@ -657,10 +657,13 @@ func _show_galaxy() -> void:
     var command_row := HBoxContainer.new()
     command_row.add_theme_constant_override("separation", 12)
     command_header.add_child(command_row)
-    var crest := Label.new()
-    crest.text = "✦"
-    crest.add_theme_font_size_override("font_size", 29)
-    crest.add_theme_color_override("font_color", GOLD)
+    var crest := TextureRect.new()
+    crest.texture = preload("res://assets/art/command_emblem.svg")
+    crest.custom_minimum_size = Vector2(42, 42)
+    crest.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    crest.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+    crest.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+    crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
     command_row.add_child(crest)
     var command_identity := Label.new()
     command_identity.text = str(world["empire"]["name"]).to_upper()
