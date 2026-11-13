@@ -36,7 +36,7 @@ jobs:
           test -s ../dist/LandDerSonne.pck || echo "Embedded PCK export"
       - name: Prepare distribution
         run: |
-          cp README.md dist/README-Quelle.md || true
+          if test -f README.md; then cp README.md dist/README-Quelle.md; fi
           printf 'LAND DER SONNE - Windows Testversion\nDoppelklick auf LandDerSonne.exe.\nEntwicklungsstand, kein fertiges Release.\n' > dist/START_HIER.txt
       - name: Upload playable Windows test build
         uses: actions/upload-artifact@v4
