@@ -1,3 +1,5 @@
+> **AKTUELLE AUSFÜHRUNGSREIHENFOLGE SEIT 13.11.2026:** Der Nutzer hat den [Vier-Durchläufe-Abschlussplan](FOUR_PASS_CLOSURE_PLAN.md) als operative Fortsetzung genehmigt. Die nachstehenden zwölf Durchläufe bleiben als historische Paketplanung und Nachweiskontext erhalten. P01–P98, Entwicklungsregeln, Feature-Freeze und Abnahmebedingungen bleiben unverändert.
+
 # Land der Sonne – verbindlicher Fertigstellungs- und Ausführungsplan
 
 **Beschluss:** 2026-11-12 · **Branch:** `design/galactic-grand-strategy-pivot` · **Ziel:** ein vollständig spielbares, qualitativ geprüftes Godot-4.3-Grand-Strategy-Spiel für Windows. Dieser Plan konkretisiert [den Gesamt-Audit](../quality/FINAL_GAME_SCOPE_AUDIT_2026_11_12.md) und die [verbindliche P01–P98-Checkliste](../vision/BINDING_GAME_REQUIREMENTS_CHECKLIST.md). Die Pflichtliste wird nicht durch diesen Plan ersetzt.
