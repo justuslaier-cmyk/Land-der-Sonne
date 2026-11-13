@@ -13,6 +13,8 @@ func _initialize() -> void:
     call_deferred("_run")
 
 func _run() -> void:
+    if not _verify_cost_and_technology_guards():
+        return
     var records: Array = []
     for scenario in CASES:
         var settings := GalaxyModel.defaults()
@@ -71,6 +73,43 @@ func _run() -> void:
         records.append({"seed": scenario["seed"], "victory": scenario["victory"], "actions": real_actions, "colonies": peak_colonies, "crises": world["galactic_crises_survived"], "completed": world["megaproject_completed"]})
     print("GALAXY_A2_ACTIVE_CAMPAIGNS_PASS: " + JSON.stringify(records))
     quit(0)
+
+func _verify_cost_and_technology_guards() -> bool:
+    # Isolated negative tests deliberately use fixtures; the three campaign
+    # paths above never mutate resources, years, technologies or crisis state.
+    var sample := GalaxyModel.generate(GalaxyModel.defaults(), GalaxyModel.empire_defaults())
+    GalaxyStrategy.prepare(sample)
+    for event in ["market", "colonies"]:
+        sample["credits"] = 0
+        sample["pending_event"] = event
+        GalaxySystems.resolve_event(sample, 0)
+        if int(sample["credits"]) != 0 or str(sample["pending_event"]) != event:
+            _fail("Unaffordable event decision charged or cleared pending event: " + event)
+            return false
+        GalaxySystems.resolve_event(sample, 1)
+        if str(sample["pending_event"]) != "" or int(sample["credits"]) <= 0:
+            _fail("Funded alternative unavailable: " + event)
+            return false
+    sample["research_level"] = 5
+    sample["credits"] = 1000
+    sample["alloys"] = 1000
+    if GalaxyEndgame.start_project(sample, "orbital_archive"):
+        _fail("Aggregate research level bypassed project discipline")
+        return false
+    sample["research_fields"]["society"] = 1
+    if not GalaxyEndgame.start_project(sample, "orbital_archive"):
+        _fail("Specialised research failed to unlock matching project")
+        return false
+    sample["galactic_crisis"] = {"id": "fracture", "state": "active", "threat": 75}
+    sample["fleets"][0]["strength"] = 0
+    if GalaxyEndgame.defend_crisis(sample):
+        _fail("Zero-strength fleet defended crisis")
+        return false
+    sample["research_fields"]["society"] = 0
+    if GalaxyEndgame.research_crisis(sample):
+        _fail("Unqualified scientific response bypassed discipline")
+        return false
+    return true
 
 func _resolve_pending(world: Dictionary) -> void:
     for attempt in range(3):
