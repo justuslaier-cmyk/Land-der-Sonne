@@ -126,7 +126,7 @@ static func tick(world: Dictionary) -> void:
         # reinforcement; otherwise 28-credit recruitment consumes every
         # 45-credit colonisation reserve in the same turn.
         treasury = int(world["ai_treasury"].get(key, 0))
-        if year % expansion_interval == id % expansion_interval and treasury >= 45 and str(world["ai_intentions"][key]["stance"]) != "reformen":
+        if year % expansion_interval == id % expansion_interval and treasury >= 50 and str(world["ai_intentions"][key]["stance"]) != "reformen":
             _expand(world, rival, fleet)
         # Each action reads the live treasury after the previous transaction.
         treasury = int(world["ai_treasury"].get(key, 0))
@@ -241,7 +241,7 @@ static func _expand(world: Dictionary, rival: Dictionary, fleet: Dictionary) -> 
     var best := -1
     var distance := 160.0
     for star in world["stars"]:
-        if int(star["owner"]) != -1:
+        if int(star["owner"]) != -1 or not bool(star["habitable"]):
             continue
         var d := GalaxySystems.distance(source, star)
         if d < distance:
@@ -250,7 +250,7 @@ static func _expand(world: Dictionary, rival: Dictionary, fleet: Dictionary) -> 
     if best < 0:
         return
     world["stars"][best]["owner"] = id
-    world["ai_treasury"][str(id)] = int(world["ai_treasury"].get(str(id), 0)) - 45
+    world["ai_treasury"][str(id)] = int(world["ai_treasury"].get(str(id), 0)) - 50
     fleet["location"] = best
     _record(world, "%s besiedelt %s." % [rival["name"], world["stars"][best]["name"]])
 

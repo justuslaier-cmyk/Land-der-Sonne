@@ -51,6 +51,10 @@ func _run() -> void:
                 if int(star["owner"]) == 0:
                     owned += 1
             peak_colonies = maxi(peak_colonies, owned)
+            for star in world["stars"]:
+                if int(star["owner"]) > 0 and not bool(star["habitable"]):
+                    _fail("AI colonized uninhabitable system without player-equivalent rules")
+                    return
             for field in ["credits", "science", "alloys", "stability"]:
                 if int(world.get(field, -1)) < 0:
                     _fail("Negative stock: %s %d %d" % [field, int(scenario["seed"]), year])
