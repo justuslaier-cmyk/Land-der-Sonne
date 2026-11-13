@@ -27,6 +27,9 @@ jobs:
       - name: Verify playable UI interactions
         working-directory: game
         run: godot --headless --path . --script res://tests/galaxy_ui_interaction_regression_test.gd
+      - name: Verify fixed menu and empire creation tabs
+        working-directory: game
+        run: godot --headless --path . --script res://tests/galaxy_fixed_setup_ui_test.gd
       - name: Export Windows x64 game
         working-directory: game
         run: |
