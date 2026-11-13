@@ -253,7 +253,10 @@ static func _expand(world: Dictionary, rival: Dictionary, fleet: Dictionary) -> 
     # patrolling fleet. Otherwise all difficulties stall around the capital.
     # Only a reachable, habitable, unclaimed neighbour can be purchased.
     var best := -1
-    var distance := 160.0
+    # Difficulty changes planning conservatism within the same 170-unit
+    # survey range available to the player; it grants no movement bonus.
+    var difficulty := clampi(int(world.get("settings", {}).get("difficulty", 1)), 0, 2)
+    var distance: float = float([145, 160, 170][difficulty])
     for star in world["stars"]:
         if int(star["owner"]) != -1 or not bool(star["habitable"]):
             continue
