@@ -1916,33 +1916,55 @@ func _species_gallery(readonly: bool = false) -> void:
         card.add_child(button)
 
 func _draw_species(canvas: Control, index: int) -> void:
+    # A3: five original pixel-cluster portraits, drawn directly in Godot.
+    # This deliberately avoids SVG import differences on Windows drivers.
     var w := canvas.size.x
-    canvas.draw_rect(Rect2(0, 0, w, 170), Color("#13233a"))
-    # Procedural portrait is guaranteed to render in Godot even when an SVG
-    # import is blank on a particular Windows graphics driver.
-    var colors := [Color("#c9a17b"), Color("#91b97b"), Color("#6dc6c8"), Color("#ad8ed8"), Color("#9fb6c8")]
-    var c: Color = colors[index]
-    var center := Vector2(w * 0.5, 76)
-    canvas.draw_circle(center + Vector2(0, 8), 52, Color(c, 0.08))
-    canvas.draw_colored_polygon(PackedVector2Array([Vector2(26, 165), Vector2(44, 116), Vector2(64, 107), Vector2(86, 107), Vector2(106, 116), Vector2(124, 165)]), c.darkened(0.48))
-    if index == 1:
-        for side in [-1, 1]:
-            canvas.draw_line(center + Vector2(side * 24, -28), center + Vector2(side * 39, -61), c, 4)
-            canvas.draw_circle(center + Vector2(side * 39, -61), 6, c)
-    if index == 2:
-        for side in [-1, 1]:
-            canvas.draw_colored_polygon(PackedVector2Array([center + Vector2(side * 31, -10), center + Vector2(side * 52, 12), center + Vector2(side * 30, 26)]), c)
+    canvas.draw_rect(Rect2(0, 0, w, 170), Color("#0b1b2d"))
+    var tones := [Color("#d5a57c"), Color("#8fbd85"), Color("#6dc6c8"), Color("#ad8ed8"), Color("#9fb6c8")]
+    var skin: Color = tones[index]
+    var shadow: Color = skin.darkened(0.45)
+    var light: Color = skin.lightened(0.24)
+    var cx := int(w * 0.5)
+    for stripe in range(7):
+        canvas.draw_rect(Rect2(cx - 56 + stripe * 16, 8, 8, 3), Color("#25465a"))
+    # Broad shoulder and uniform silhouettes.
+    for row in range(7):
+        var half_width := 28 + row * 7
+        canvas.draw_rect(Rect2(cx - half_width, 110 + row * 8, half_width * 2, 8), shadow)
+    canvas.draw_rect(Rect2(cx - 31, 114, 62, 8), light)
+    canvas.draw_rect(Rect2(cx - 19, 122, 38, 6), Color("#274a60"))
     if index == 3:
-        canvas.draw_colored_polygon(PackedVector2Array([center + Vector2(0, -64), center + Vector2(-34, -21), center + Vector2(0, 34), center + Vector2(34, -21)]), c)
+        # Faceted crystalline head.
+        for row in range(12):
+            var half_width := 6 + mini(row, 11 - row) * 5
+            canvas.draw_rect(Rect2(cx - half_width, 23 + row * 7, half_width * 2, 7), skin if row < 7 else shadow)
+        canvas.draw_rect(Rect2(cx - 8, 54, 16, 16), light)
+    elif index == 4:
+        # Synthetic: armored chassis and luminous visor.
+        canvas.draw_rect(Rect2(cx - 31, 34, 62, 69), shadow)
+        canvas.draw_rect(Rect2(cx - 24, 28, 48, 70), skin)
+        canvas.draw_rect(Rect2(cx - 25, 53, 50, 18), Color("#193449"))
+        canvas.draw_rect(Rect2(cx - 19, 57, 38, 9), Color("#79f1e2"))
+        canvas.draw_rect(Rect2(cx - 12, 79, 24, 5), Color("#e3f6ec"))
     else:
-        canvas.draw_circle(center + Vector2(0, -9), 37, c)
-    if index == 4:
-        canvas.draw_rect(Rect2(center + Vector2(-26, -23), Vector2(52, 19)), Color("#263e5a"))
-        canvas.draw_rect(Rect2(center + Vector2(-18, -18), Vector2(36, 8)), Color("#77e6df"))
-    else:
+        for row in range(11):
+            var half_width := 22 + mini(row, 10 - row) * 2
+            canvas.draw_rect(Rect2(cx - half_width, 29 + row * 7, half_width * 2, 7), skin if row < 7 else shadow)
+        if index == 1:
+            # Insectoid mandibles and antennae.
+            canvas.draw_rect(Rect2(cx - 25, 11, 5, 30), skin)
+            canvas.draw_rect(Rect2(cx + 20, 11, 5, 30), skin)
+            canvas.draw_rect(Rect2(cx - 38, 80, 14, 20), shadow)
+            canvas.draw_rect(Rect2(cx + 24, 80, 14, 20), shadow)
+        elif index == 2:
+            # Aquatic gill fins.
+            for side in [-1, 1]:
+                canvas.draw_rect(Rect2(cx + side * 35 - 5, 58, 10, 34), shadow)
+                canvas.draw_rect(Rect2(cx + side * 45 - 5, 66, 10, 18), light)
         for side in [-1, 1]:
-            canvas.draw_circle(center + Vector2(side * 15, -13), 6 if index == 1 else 4, Color("#182d47"))
-            canvas.draw_circle(center + Vector2(side * 15, -14), 2, Color("#e4eaf4"))
+            canvas.draw_rect(Rect2(cx + side * 15 - 5, 62, 10, 7), Color("#152b40"))
+            canvas.draw_rect(Rect2(cx + side * 15 - 2, 63, 4, 3), Color("#e5f4f2"))
+        canvas.draw_rect(Rect2(cx - 9, 89, 18, 4), shadow)
     if index == int(empire["portrait"]):
         canvas.draw_rect(Rect2(2, 2, w - 4, 166), GOLD, false, 2)
 
