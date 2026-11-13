@@ -45,6 +45,8 @@ func _initialize() -> void:
         _fail("Scientific countermeasure bypassed technology prerequisite")
         return
     loaded["research_level"] = 4
+    # The fixture must represent an actual specialised societal discovery.
+    loaded["research_fields"]["society"] = 1
     for i in range(3):
         if not GalaxyEndgame.research_crisis(loaded):
             _fail("Research response unavailable")
