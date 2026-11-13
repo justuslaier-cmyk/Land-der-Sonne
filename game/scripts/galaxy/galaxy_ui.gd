@@ -151,14 +151,19 @@ func _clear() -> void:
     margin.add_theme_constant_override("margin_top", gutters.y)
     margin.add_theme_constant_override("margin_bottom", gutters.y)
     add_child(margin)
-    var scroll := ScrollContainer.new()
-    scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    margin.add_child(scroll)
     root = VBoxContainer.new()
-    root.add_theme_constant_override("separation", 14)
+    root.add_theme_constant_override("separation", 8 if screen == "galaxy" else 14)
     root.size_flags_vertical = Control.SIZE_EXPAND_FILL
     root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    scroll.add_child(root)
+    if screen == "galaxy":
+        # The strategic screen must remain a fixed cockpit: only the right
+        # inspector scrolls. Scrolling the entire galaxy breaks map interaction.
+        margin.add_child(root)
+    else:
+        var scroll := ScrollContainer.new()
+        scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+        margin.add_child(scroll)
+        scroll.add_child(root)
 
 func _title(value: String, size: int = 36) -> void:
     var label := Label.new()
@@ -649,7 +654,6 @@ func _show_galaxy() -> void:
     GalaxySystems.prepare(world)
     _clear()
     root.add_theme_constant_override("separation", 7)
-    _title("✦ LAND DER SONNE  /  %s" % str(world["empire"]["name"]), 27)
     # Persistent compact command header; the simulation data is never mocked.
     var command_header := PanelContainer.new()
     command_header.add_theme_stylebox_override("panel", GalaxyVisualTheme.panel_style(Color("#10152e"), GOLD, 2))
@@ -752,7 +756,7 @@ func _show_galaxy() -> void:
     map_area.gui_input.connect(_map_input)
     center.add_child(map_area)
     var map_animation := Timer.new()
-    map_animation.wait_time = 0.12
+    map_animation.wait_time = 0.2
     map_animation.autostart = true
     map_animation.timeout.connect(func():
         if is_instance_valid(map_area) and screen == "galaxy":
@@ -795,7 +799,7 @@ func _show_galaxy() -> void:
             player_fleets += 1
     var last_event := "Keine Einträge"
     if not world.get("history", []).is_empty():
-        last_event = str(world.get("history", []).back())
+        last_event = str(world.get("history", []).back()).left(145)
     var tiles := [
         ["REICHSÜBERSICHT", "Eigene Systeme: %d\nBewohnbare Systeme: %d\nFlotten: %d" % [owned_systems, habitable_worlds, player_fleets], _society_report],
         ["FORSCHUNG", "Forschungspunkte: %d\nJährlicher Zuwachs: %+d" % [int(world["science"]), int(GalaxyStrategy.income_forecast(world)["science"])], _research],
