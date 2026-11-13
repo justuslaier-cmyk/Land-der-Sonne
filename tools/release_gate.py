@@ -59,15 +59,28 @@ def inspect(root=ROOT):
         if not isinstance(record, dict) or not SHA.fullmatch(str(record.get("commit", ""))):
             problems.append("Missing full commit SHA for " + key)
             continue
-        for field in ("test", "result", "integration", "reviewer"):
+        for field in ("test", "result", "integration", "reviewer", "artifact"):
             if not isinstance(record.get(field), str) or not record[field].strip():
                 problems.append("Missing " + field + " for " + key)
+        if record.get("status") != "verified":
+            problems.append("Requirement not verified: " + key)
     unknown_gates = set(evidence["gates"]) - set(REQUIRED)
+    absent_gates = set(REQUIRED) - set(evidence["gates"])
+    if absent_gates:
+        problems.append("Missing release gate definitions: " + ", ".join(sorted(absent_gates)))
     if unknown_gates:
         problems.append("Unknown release gates: " + ", ".join(sorted(unknown_gates)))
     for key in REQUIRED:
         record = evidence["gates"].get(key, {})
-        if not isinstance(record, dict) or record.get("status") != "verified":
+        if not isinstance(record, dict):
+            problems.append("Invalid gate record: " + key)
+            missing.append(key)
+            continue
+        if record.get("status") == "open":
+            missing.append(key)
+            continue
+        if record.get("status") != "verified":
+            problems.append("Unknown gate status: " + key)
             missing.append(key)
             continue
         for field in ("commit", "method", "result", "reviewer", "artifact"):

@@ -59,6 +59,29 @@ class ReleaseGateTests(unittest.TestCase):
             errors, missing = inspect(root)
             self.assertIn("Unsupported release evidence schema", errors)
 
+    def test_missing_gate_definition_is_invalid(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        from release_gate import inspect
+        with tempfile.TemporaryDirectory() as temp:
+            root = pathlib.Path(temp)
+            for relative in ("docs/vision/BINDING_GAME_REQUIREMENTS_CHECKLIST.md",
+                             "docs/quality/RELEASE_6_1_REQUIREMENTS_REGISTER.md",
+                             "docs/quality/RELEASE_6_1_NATIVE_EVIDENCE.json"):
+                target = root / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ROOT / relative, target)
+            path = root / "docs/quality/RELEASE_6_1_NATIVE_EVIDENCE.json"
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            del payload["gates"]["windows_11_gui"]
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            errors, missing = inspect(root)
+            self.assertTrue(any("Missing release gate definitions" in e for e in errors), errors)
+            self.assertIn("windows_11_gui", missing)
+            payload["gates"]["windows_11_gui"] = {"status": "unknown"}
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            errors, missing = inspect(root)
+            self.assertTrue(any("Unknown gate status" in e for e in errors), errors)
+
     def test_malformed_evidence_is_rejected_without_crash(self):
         sys.path.insert(0, str(ROOT / "tools"))
         from release_gate import inspect
