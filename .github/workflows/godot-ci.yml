@@ -130,6 +130,8 @@ jobs:
         run: timeout 120s godot --headless --path game --script res://tests/galaxy_package_2_3_test.gd
       - name: Verify long campaign endgame, megaprojects, crises and save continuation
         run: timeout 120s godot --headless --path game --script res://tests/galaxy_campaign_endgame_test.gd
+      - name: Verify A2 three active unfaked victory campaigns and save-resume
+        run: timeout 240s godot --headless --path game --script res://tests/galaxy_a2_active_campaigns_test.gd
       - name: Verify uninterrupted and saved-resumed campaigns remain deterministic
         run: timeout 120s godot --headless --path game --script res://tests/galaxy_save_resume_determinism_test.gd
       - name: Reject structurally corrupt saves and recover valid backups
