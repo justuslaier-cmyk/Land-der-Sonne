@@ -701,11 +701,16 @@ func _show_galaxy() -> void:
     root.add_child(workspace)
     # Permanent navigation is recognizable, keyboard-focusable and does not
     # overflow horizontally. Every entry invokes the existing game systems.
+    var nav_scroll := ScrollContainer.new()
+    nav_scroll.custom_minimum_size.x = 184
+    nav_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    nav_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    nav_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+    workspace.add_child(nav_scroll)
     var navigation := VBoxContainer.new()
     navigation.custom_minimum_size.x = 174
-    navigation.size_flags_vertical = Control.SIZE_EXPAND_FILL
     navigation.add_theme_constant_override("separation", 5)
-    workspace.add_child(navigation)
+    nav_scroll.add_child(navigation)
     var navigation_heading := Label.new()
     navigation_heading.text = "STEUERZENTRALE"
     navigation_heading.add_theme_color_override("font_color", GOLD)
