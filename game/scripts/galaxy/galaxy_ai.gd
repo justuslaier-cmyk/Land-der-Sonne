@@ -135,7 +135,7 @@ static func tick(world: Dictionary) -> void:
         var has_nearby_colony := false
         # Higher difficulties reserve more earned treasury for accelerated
         # expansion; no free resources, strength or technology are granted.
-        var reserve_limit := [78, 120, 160][difficulty]
+        var reserve_limit: int = int([78, 120, 160][difficulty])
         if treasury >= 49 and treasury < reserve_limit:
             var origin: Dictionary = world["stars"][int(fleet["location"])]
             for candidate in world["stars"]:
