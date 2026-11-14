@@ -46,6 +46,8 @@ jobs:
         run: godot --headless --path game --script res://tests/world_test.gd
       - name: Verify shared UI components, search and keyboard navigation
         run: timeout 90s godot --headless --path game --script res://tests/galaxy_ui_architecture_test.gd
+      - name: Verify fixed setup pages and empire creation tabs
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_fixed_setup_ui_test.gd
       - name: Verify onboarding, comfort settings and save navigation
         run: timeout 90s godot --headless --path game --script res://tests/galaxy_comfort_flow_test.gd
       - name: Verify individual original sprite imports and gallery integration
