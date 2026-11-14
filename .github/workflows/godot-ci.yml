@@ -2,18 +2,31 @@ name: Godot foundation checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, design/galactic-grand-strategy-pivot]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: godot-foundation-${{ github.ref }}
-  cancel-in-progress: true
+# No workflow-level concurrency group: GitHub permits only one pending run
+# per group and replaces older pending runs even with cancel-in-progress=false.
+# Preserve every validation run until runner allocation or a real failure.
 
 jobs:
+  release-evidence-audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate all 98 release evidence records and fail-closed release status
+        run: |
+          python3 -m unittest discover -s game/tests -p release_gate_test.py -v
+          python3 tools/release_gate.py --mode audit
+          if python3 tools/release_gate.py --mode release; then
+            echo "Unexpected release eligibility without manual evidence" >&2
+            exit 1
+          fi
   godot-smoke:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -31,10 +44,215 @@ jobs:
         run: godot --headless --path game --script res://tests/smoke_test.gd
       - name: Test world state and chunk coordinates
         run: godot --headless --path game --script res://tests/world_test.gd
+      - name: Verify shared UI components, search and keyboard navigation
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_ui_architecture_test.gd
+      - name: Verify fixed setup pages and empire creation tabs
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_fixed_setup_ui_test.gd
+      - name: Verify onboarding, comfort settings and save navigation
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_comfort_flow_test.gd
+      - name: Verify individual original sprite imports and gallery integration
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_art_production_test.gd
+      - name: Verify original procedural music, SFX, audio buses and volume/mute
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_audio_animation_test.gd
       - name: Test player input and scene interaction
         run: godot --headless --path game --script res://tests/interaction_test.gd
+      - name: Test galactic new game and persistence
+        run: timeout 100s godot --headless --path game --script res://tests/galaxy_test.gd
+      - name: Verify military supply, battle losses and repairs
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_military_logistics_test.gd
+      - name: Verify fleet orders, admiral effects and persistence
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_fleet_command_test.gd
+      - name: Verify ship blueprints, roles and propulsion research gates
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_ship_blueprints_test.gd
+      - name: Verify espionage, intelligence levels and counterintelligence
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_espionage_test.gd
+      - name: Verify alliances, dependencies and war protection
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_alliances_dependencies_test.gd
+      - name: Verify timed diplomatic negotiations and ratification
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_diplomatic_negotiations_test.gd
+      - name: Verify archaeological breakthroughs and one-time research insights
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_research_breakthroughs_test.gd
+      - name: Verify research laboratories and technology effects
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_research_effects_test.gd
+      - name: Verify specialised research prerequisites and persistence
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_research_branches_test.gd
+      - name: Verify government transitions, legitimacy crises and persistence
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_institutions_test.gd
+      - name: Verify political bloc support, opposition and reform resistance
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_political_blocs_test.gd
+      - name: Verify governance reform approval, delay and save persistence
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_governance_reforms_test.gd
+      - name: Verify freight reserves, in-transit commitments and stock balance
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_freight_reserves_test.gd
+      - name: Verify delayed freight delivery, blockades and persistence
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_freight_transit_test.gd
+      - name: Verify civilian freight paths, capacities and transport costs
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_freight_routes_test.gd
+      - name: Verify manufactured goods market and inventory conservation
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_manufactures_market_test.gd
+      - name: Verify multi-stage production chains and material conservation
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_production_chains_test.gd
+      - name: Verify civilian goods production, consumption and stock conservation
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_goods_ledger_test.gd
+      - name: Verify cohort migration and long-term population accounting
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_migration_cohorts_test.gd
+      - name: Verify fertility, mortality, ageing and labor accounting
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_demographic_flows_test.gd
+      - name: Verify civilian demographics, employment and save compatibility
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_demographics_test.gd
+      - name: Verify long-term cultural stability, generations and AI replay
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_culture_longrun_test.gd
+      - name: Verify cultural groups and economic simulation effects
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_culture_effects_test.gd
+      - name: Verify cultural development, generations and save persistence
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_culture_test.gd
+      - name: Verify package D1 social accounting and invariant diagnostics
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_package_d1_test.gd
+      - name: Verify P5.1 crossed balancing matrix and difficulty pacing
+        run: timeout 240s godot --headless --path game --script res://tests/galaxy_balance_matrix_test.gd
+      - name: Verify package H1 long campaigns, deterministic replay and strategy diversity
+        run: timeout 420s godot --headless --path game --script res://tests/galaxy_package_h1_test.gd
+      - name: Verify package 2.2 funded AI research and persistence
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_ai_research_parity_test.gd
+      - name: Verify package 2.2 symmetric territorial income
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_ai_income_parity_test.gd
+      - name: Verify package 2.2 war goals, peace concessions and persistence
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_war_goal_peace_test.gd
+      - name: Verify package 2.2 fleet upkeep parity and supply starvation
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_fleet_upkeep_parity_test.gd
+      - name: Verify package 2.2 conflict and negotiation scenario matrix
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_conflict_negotiation_matrix_test.gd
+      - name: Verify package 2.1 demographics, supply shocks and multi-year ledgers
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_society_shock_test.gd
+      - name: Verify package 2.1 production and physical freight conservation
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_production_freight_test.gd
+      - name: Verify package 2.1 budget conservation and welfare shortage shocks
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_budget_shock_test.gd
+      - name: Verify package 2.3 delayed narrative, alternate crisis paths and persistent victories
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_package_2_3_test.gd
+      - name: Verify long campaign endgame, megaprojects, crises and save continuation
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_campaign_endgame_test.gd
+      - name: Verify A2 three active unfaked victory campaigns and save-resume
+        run: timeout 240s godot --headless --path game --script res://tests/galaxy_a2_active_campaigns_test.gd
+      - name: Verify uninterrupted and saved-resumed campaigns remain deterministic
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_save_resume_determinism_test.gd
+      - name: Reject structurally corrupt saves and recover valid backups
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_save_integrity_regression_test.gd
+      - name: Verify sequential crises resolve independently without retriggers
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_crisis_chain_regression_test.gd
+      - name: Verify package G2 crisis and megaproject state machine
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_package_g2_test.gd
+      - name: Verify package G1 deterministic causal narrative and cooldowns
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_package_g1_test.gd
+      - name: Verify AI treasury never double-spends upkeep, recruitment or expansion
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_ai_treasury_regression_test.gd
+      - name: Verify package F3 rival supply, upkeep, attrition and exhaustion
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_package_f3_test.gd
+      - name: Verify package E6 finite foreign market, physical imports and scientific workforce
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_package_e6_test.gd
+      - name: Verify package E5 communication latency, market overrides and diffusion
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_package_e5_test.gd
+      - name: Verify package E4 trade policy and F2 defensive AI doctrine
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_package_e4_f2_test.gd
+      - name: Verify package E3 freight blockades, patrol investment and F1 AI military intent
+        run: timeout 90s godot --headless --path game --script res://tests/galaxy_package_e3_f1_test.gd
+      - name: Verify package E2 academic exchange, war suspension and save-compatible ledgers
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_package_e2_test.gd
+      - name: Verify package E1 freight route, delivery and research contracts
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_package_e1_test.gd
+      - name: Verify package D3 freight and fiscal invariants under long simulations
+        run: timeout 180s godot --headless --path game --script res://tests/galaxy_package_d3_test.gd
+      - name: Verify package D2 public budget, welfare and society UI integration
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_package_d2_test.gd
+      - name: Verify colony growth, environmental limits and forecast
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_colony_simulation_test.gd
+      - name: Verify planetary ecology, colony capacity and pollution
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_planet_colonization_test.gd
+      - name: Verify stellar classes and colonizable capital planets
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_planet_systems_test.gd
+      - name: Verify connected galaxy geography at minimum, default and maximum scale
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_geography_test.gd
+      - name: Verify map navigation, survey and fleet route previews
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_navigation_test.gd
+      - name: Verify seeded galaxy starts and rival capital spacing
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_start_spacing_test.gd
+      - name: Verify interactive onboarding
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_tutorial_test.gd
+      - name: Verify package C2 reachable stars and fleet-gated colonies
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_package_c2_test.gd
+      - name: Verify seeded geography property matrix
+        run: timeout 120s godot --headless --path game --script res://tests/galaxy_geography_property_test.gd
+      - name: Verify quick-start help and navigation
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_help_navigation_test.gd
+      - name: Test new-game wizard navigation and seed persistence
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_wizard_test.gd
+      - name: Test strategic simulation systems
+        run: timeout 100s godot --headless --path game --script res://tests/galaxy_systems_test.gd
+      - name: Test empire strategy and shipbuilding
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_strategy_test.gd
+      - name: Test procedural star systems
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_celestials_test.gd
+      - name: Test planet economy
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_planet_economy_test.gd
+      - name: Test ancient history and branching events
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_lore_test.gd
+      - name: Verify fleet doctrines and combat experience
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_fleet_doctrine_test.gd
+      - name: Verify treaty trust and diplomatic decay
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_diplomacy_trust_test.gd
+      - name: Verify annual economy forecast against simulation
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_forecast_test.gd
+      - name: Test optional exploration automation
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_automation_test.gd
+      - name: Verify civilization civics, species traits and persistence
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_identity_test.gd
+      - name: Test non-linear galactic objectives and persistence
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_progress_test.gd
+      - name: Verify P5.2 maximum-scale campaigns, tick percentiles, memory and save-resume
+        run: timeout 240s godot --headless --path game --script res://tests/galaxy_max_scale_campaign_test.gd
+      - name: Measure 250-star 20-AI simulation baseline
+        run: timeout 100s godot --headless --path game --script res://tests/galaxy_performance_baseline_test.gd
+      - name: Verify save rotation, corruption fallback and interrupted recovery
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_save_recovery_test.gd
+      - name: Verify world contracts and deterministic twelve-tick replay
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_contracts_test.gd
+      - name: Test autonomous rival empires
+        run: timeout 60s godot --headless --path game --script res://tests/galaxy_ai_test.gd
       - name: Load main scene
         run: godot --headless --path game --quit-after 10
+
+
+  regression-matrix:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        script:
+          - galaxy_story_chains_test.gd
+          - galaxy_narrative_director_test.gd
+          - galaxy_ai_planner_test.gd
+          - galaxy_ai_scaling_test.gd
+          - galaxy_ai_soak_test.gd
+          - galaxy_visual_theme_test.gd
+          - galaxy_event_card_test.gd
+          - galaxy_ui_accessibility_test.gd
+          - galaxy_art_resources_test.gd
+          - galaxy_art_ui_smoke_test.gd
+          - galaxy_full_integration_test.gd
+          - galaxy_map_interaction_test.gd
+          - galaxy_ui_interaction_regression_test.gd
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot 4.3 stable
+        run: |
+          curl --fail --location --retry 3 --output /tmp/godot.zip "https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
+          unzip -q /tmp/godot.zip -d /tmp
+          sudo install -m 0755 /tmp/Godot_v4.3-stable_linux.x86_64 /usr/local/bin/godot
+      - name: Import project
+        run: godot --headless --path game --editor --quit
+      - name: Execute isolated regression
+        run: timeout 120s godot --headless --path game --script "res://tests/${{ matrix.script }}"
 
   render-check:
     runs-on: ubuntu-24.04
@@ -51,16 +269,19 @@ jobs:
       - name: Import project
         run: godot --headless --path game --editor --quit
       - name: Capture real engine render
-        run: xvfb-run -a -s "-screen 0 1280x720x24" godot --path game --rendering-method gl_compatibility --script res://tests/render_capture.gd
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" godot --path game --rendering-method gl_compatibility --script res://tests/render_capture.gd
+      - name: Measure P5.2 maximum-scale interactive map redraws at both resolutions
+        run: timeout 180s xvfb-run -a -s "-screen 0 1920x1080x24" godot --path game --rendering-method gl_compatibility --script res://tests/galaxy_max_scale_render_test.gd
       - name: Publish screenshot evidence
         uses: actions/upload-artifact@v4
         with:
           name: godot-render-evidence
-          path: ~/.local/share/godot/app_userdata/Land der Sonne/render-check.png
+          path: ~/.local/share/godot/app_userdata/Land der Sonne/render-*.png
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
 
   windows-export:
+    needs: [godot-smoke, regression-matrix, render-check]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -80,10 +301,79 @@ jobs:
           mkdir -p dist
           godot --headless --path game --export-release "Windows Desktop" ../dist/LandDerSonne.exe
           test -s dist/LandDerSonne.exe
+          test -s dist/LandDerSonne.pck
+          printf 'Land der Sonne - Windows x64 experimental build\n' > dist/BUILD_INFO.txt
+          printf 'Commit: %s\n' "$GITHUB_SHA" >> dist/BUILD_INFO.txt
+          printf 'Workflow: %s\n' "$GITHUB_RUN_ID" >> dist/BUILD_INFO.txt
+          printf 'Godot: 4.3 stable\n' >> dist/BUILD_INFO.txt
+          printf 'Validation: godot-smoke, regression-matrix, render-check required\n' >> dist/BUILD_INFO.txt
+          (cd dist && sha256sum LandDerSonne.exe LandDerSonne.pck > SHA256SUMS.txt)
+          (cd dist && zip -9 LandDerSonne-Windows-x64.zip LandDerSonne.exe LandDerSonne.pck BUILD_INFO.txt SHA256SUMS.txt)
+          test -s dist/LandDerSonne-Windows-x64.zip
+          unzip -t dist/LandDerSonne-Windows-x64.zip
+          (cd dist && sha256sum -c SHA256SUMS.txt)
       - name: Publish experimental Windows build
         uses: actions/upload-artifact@v4
         with:
           name: LandDerSonne-Windows-experimental
-          path: dist/*
+          path: dist/LandDerSonne-Windows-x64.zip
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
+
+  windows-runtime-smoke:
+    needs: [windows-export]
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download exported Windows package
+        uses: actions/download-artifact@v4
+        with:
+          name: LandDerSonne-Windows-experimental
+          path: windows-package
+      - name: Extract and verify Windows game files
+        shell: pwsh
+        run: |
+          Expand-Archive -Path "windows-package/LandDerSonne-Windows-x64.zip" -DestinationPath "windows-game" -Force
+          if (-not (Test-Path "windows-game/LandDerSonne.exe")) { throw "Missing Windows executable" }
+          if (-not (Test-Path "windows-game/LandDerSonne.pck")) { throw "Missing Windows PCK" }
+          $expected = Get-Content "windows-game/SHA256SUMS.txt"
+          foreach ($line in $expected) {
+            if ($line -notmatch '^([0-9a-fA-F]{64})\s+(.+)$') { throw "Invalid SHA256SUMS entry: $line" }
+            $hash = $Matches[1]
+            $file = $Matches[2].Trim()
+            $actual = (Get-FileHash "windows-game/$file" -Algorithm SHA256).Hash
+            if ($actual -ne $hash) { throw "Checksum mismatch: $file" }
+          }
+      - name: Run exported Windows executable and gameplay integration
+        shell: pwsh
+        run: |
+          $exe = (Resolve-Path "windows-game/LandDerSonne.exe").Path
+          $project = (Resolve-Path "game").Path
+          $checks = @(
+            @{ Name = "startup"; Args = @("--headless", "--quit-after", "30") },
+            @{ Name = "gameplay-integration"; Args = @("--headless", "--path", $project, "--script", "res://tests/galaxy_full_integration_test.gd") }
+          )
+          foreach ($check in $checks) {
+            $stdout = Join-Path $env:RUNNER_TEMP ($check.Name + ".stdout.log")
+            $stderr = Join-Path $env:RUNNER_TEMP ($check.Name + ".stderr.log")
+            $process = Start-Process -FilePath $exe -ArgumentList $check.Args -PassThru -Wait:$false -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+            if (-not $process.WaitForExit(120000)) {
+              $process.Kill()
+              throw "$($check.Name) timed out after 120 seconds"
+            }
+            Get-Content $stdout -ErrorAction SilentlyContinue
+            Get-Content $stderr -ErrorAction SilentlyContinue
+            if ($process.ExitCode -ne 0) { throw "$($check.Name) exited with $($process.ExitCode)" }
+            if ($check.Name -eq "gameplay-integration" -and -not (Select-String -Path $stdout -Pattern "GALAXY_INTEGRATION_PASS" -Quiet)) {
+              throw "Windows integration test did not emit its success marker"
+            }
+          }
+      - name: Upload Windows runtime logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-runtime-evidence
+          path: ${{ runner.temp }}/*.log
+          if-no-files-found: warn
+          retention-days: 14

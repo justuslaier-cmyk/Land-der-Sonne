@@ -1,22 +1,75 @@
-# Project status — 2026-11-08
+## Paket B / Durchlauf 2 — bestätigte technische Integration (2026-11-12)
 
-## Current phase
-Phase 0 — repository initialization and feasibility research.
+- Commit `9c99a63599205c99a936429933dbed577a16c431`: F1-Hilfe, Esc-Rückkehr und Leertaste-Pause mit Fokus-Schutz, zusammen mit dem zuvor integrierten achtteiligen Hilfebildschirm und dessen Regressionstest.
+- [GitHub Actions 43218500463](https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43218500463): **17/17 Jobs success**, darunter Godot-Smoke, 13 Regressionen, Render, Windows-Export und Windows-2022-Headless-Runtime.
+- Godot-Smoke bestätigt `GALAXY_HELP_PASS`, `GALAXY_SAVE_RECOVERY_PASS` und `GALAXY_PERFORMANCE_BASELINE` (250 Sterne, 20 KI, 30 Jahre; 35 ms Generierung, 63 ms Simulation im CI-Runner). Windows bestätigt `GALAXY_INTEGRATION_PASS`.
+- **Abgenommen:** B2-Tastaturkürzel und Hilfenavigation im automatisierten Test, vorhandene Integrations-/Exportpipeline.
+- **Nicht abgenommen:** vollständige P01–P10/P85–P86-Bedienungsanforderungen, interaktives Tutorial, echte Windows-10/11-GUI-Bedienung, P89-Schema-Migration, vollständiges Paket A und vollständiges Paket B. Keine Vollabnahme ohne Einzelbelege.
 
-## Verified
-- Repository justuslaier-cmyk/Land-der-Sonne was empty before initialization.
-- Top-down 2D perspective was selected by the user.
-- Repository is public.
+# Projektstatus — 2026-11-11 — Land der Sonne (galaktisches Strategiespiel)
 
-## Not yet verified or implemented
-No Godot project, gameplay, pixel-art assets, executable build, CI pipeline, automated gameplay test, rendering test, performance benchmark or completed engine comparison.
+## Arbeitsstand
+**Phase 16 / Durchlauf 03** im Entwicklungsbranch `design/galactic-grand-strategy-pivot`. Die **16 × 3 geplanten Durchläufe** wurden als Arbeitsrunden bearbeitet; dies ist **keine** technische Abnahme oder Veröffentlichung.
 
-## Immediate next actions
-1. Confirm repository bootstrap files are present.
-2. Research engine versions and CI/toolchain compatibility.
-3. Pin reproducible tooling and create a minimal Godot project on a feature branch.
-4. Implement a testable vertical slice with genuine rendered assets.
-5. Configure automated engine startup, tests, screenshot capture and Windows export.
+## Verbindliche Abnahme
+**0 / 98 Pflichtanforderungen vollständig abgenommen.** Maßgeblich ist `docs/vision/BINDING_GAME_REQUIREMENTS_CHECKLIST.md`; einzelne implementierte Teilfunktionen dürfen nicht als vollständig erfüllte Pflichten gezählt werden.
 
-## Guardrails
-Do not touch Grenzmark. Do not claim a playable game before build and runtime verification. Do not expand content volume before quality gates work.
+## Implementierte Teilfunktionen
+- Godot-4.3-Prototyp mit Galaxiekarte, Neues-Spiel-Assistent, Zeitsteuerung und versionierter JSON-Speicherung.
+- Prozedurale Galaxie und Himmelskörper, Gesellschaften, zivile Wirtschaft, Logistik, Diplomatie, Forschung, Flotten und KI als unterschiedliche Ausbaustufen.
+- Phase 13: Ereignis-/Story-Module und Narrative-Director **isoliert**, nicht als vollständiger Spiel-UI/Tick-Pfad integriert.
+- Phase 14: strategische KI-Bewertung, einmaliger Eigentumsindex pro Tick und begrenztes Entscheidungsjournal.
+- Phase 15: zentrale UI-Farbwerte, Ereigniskartenkopf, responsive Abstände, Textumbruch und Kontrastprüffunktionen.
+- Phase 16: CI-Testmatrix für acht Phase-13–15-Regressionstests mit `fail-fast: false`. Der 120-Jahre-KI-Replaytest prüft nun auch den jährlichen Fortschritt und JSON-Zwischenstände.
+
+## Nachweisbare Qualität
+- **Historischer, nicht aktueller Stand:** Workflow [43088734325](https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43088734325) war bei einem frühen Phase-01-Commit erfolgreich. Dieser Erfolg ist **kein** Nachweis für den aktuellen Branchstand.
+- Workflow [43099177950](https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43099177950) für Phase 16/1: Beim letzten Abruf standen `godot-smoke`, `render-check` und `windows-export` weiterhin auf **queued**. Keine Fehlerlogs oder Erfolgsergebnisse verfügbar.
+- Godot lokal nicht installiert; GitHub-Klon über das lokale Netzwerk wegen DNS-Fehler nicht möglich. Daher keine lokalen Godot-Test-, Render- oder Windows-Laufzeitnachweise.
+- Die neue Matrix und der überarbeitete Soak-Test sind **nicht** erfolgreich ausgeführt oder abgenommen.
+
+## Release-Blocker (priorisiert)
+1. GitHub-Actions-Jobs tatsächlich ausführen; CI-Logs und konkrete Fehlschläge analysieren, beheben und grün nachweisen.
+2. 120-Jahre-Simulation inklusive Save/Load real bestehen lassen; Langzeitinvarianten und Laufzeit messen.
+3. Narrative-Director in den tatsächlichen Tick-, Auswahl-, Speicher- und UI-Pfad integrieren.
+4. Grafik-/Audioressourcen, Lesbarkeit und Steuerung bei mehreren Auflösungen real prüfen.
+5. Windows-Export **nativ** starten und vollständige Spielpartien testen.
+6. Für jeden der 98 Pflichtpunkte getrennte Integration, Tests, Artefakte und Abnahmebelege führen.
+
+
+## Verifizierter CI-Stand und Gesamtaudit — 2026-11-12
+
+- Aktueller geprüfter Prototyp: CI-Lauf [43214501265](https://github.com/justuslaier-cmyk/Land-der-Sonne/actions/runs/43214501265), **17/17 Jobs erfolgreich**: Godot-Smoke, 13 Regressionen, Render-Check, Windows-Export, Windows-2022-Headless-Start und Integration mit Marker `GALAXY_INTEGRATION_PASS`.
+- Diese Evidenz ersetzt die oben genannten historischen CI-Blocker, **aber nicht** die unabhängigen 98 Vollabnahmen. Die 0/98 bleiben ohne individuelle Nachweise bestehen.
+- Verifiziert: automatisierte Integrationspfade und Windows-Headless-Lauf. Nicht verifiziert: sichtbare Windows-10/11-Bedienung, reale vollständige Spielpartien, Langzeitbalance, größere Galaxien unter Performancebudget, vollständige Anforderungserfüllung.
+- Korrigierte README im Audit-Commit: die ursprüngliche Fantasy-RPG-Beschreibung war überholt.
+
+### Priorisierte Restarbeit nach Pflichtkatalog
+
+1. **P87–P98 / Release und Stabilität:** individuelle Nachweise, Save-Slot/Backup/Migration, Performancebudgets, reproduzierbare lange Spielpartien, tatsächliche Benutzerabnahme. Headless-Start allein reicht nicht.
+2. **P01–P10, P80–P86 / Bedienung und Präsentation:** durchgängige Navigation, skalierbare Informationsdichte, Tooltips, Tutorials, konsistente Originalgrafik, Audio und reale Interaktionsprüfung.
+3. **P25–P50 / Gesellschaft, Wirtschaft, Politik:** kohärente Bilanzierung, autonome Reaktionen, Regierungssysteme, Markt- und Logistikketten, historische Auswirkungen. Existierende Teilmodule sind nicht mit vollständiger Integration gleichzusetzen.
+4. **P51–P64 / Forschung, Diplomatie, Militär:** echte Spezialisierungen, Technologieverbreitung, Spionage, Versorgung, Kriegsziele, Friedensfolgen und balancierte KI.
+5. **P11–P24, P65–P79 / Galaxis, Identität, Geschichte, KI:** systemische Tiefe, Erkundungsrisiken, Krisen, dynamische Geschichte, KI-Transparenz und großskalige Reproduzierbarkeit.
+
+### Durchlaufplanung und Zeitrisiko
+
+Ein einziger Entwicklungsdurchlauf ist für 98 voneinander abhängige Pflichtabnahmen nicht seriös als ausreichend belegbar. Die im Pflichtkatalog genannte Zahl **48** ist eine Organisationsannahme, keine verifizierte Fertigstellungsprognose. Die minimale Zahl hängt von messbaren Durchlaufzeiten, den noch fehlenden vertikalen Integrationen und der tatsächlichen Testabdeckung ab. Keine Zusage einer fixen Dauer oder vollständigen Erledigung ohne diese Messungen.
+
+### Vergleichsmaßstäbe (Recherche, 2026-11-12)
+
+- Godot Windows-Export und CI: https://docs.godotengine.org/en/latest/tutorials/export/exporting_for_windows.html ; https://github.com/abarichello/godot-ci/blob/master/.github/workflows/godot-ci.yml
+- Galactic Civilizations IV: Schiffsentwurf, mehrere Siegespfade, Kultur, KI, Diplomatie: https://archive.stardock.com/galciv4/press/gc4-documents/galciv4_reviewguide.pdf
+- Distant Worlds 2: Automatisierung, private Wirtschaft, Logistik, kontextuelle Hilfe, Galaxiegröße: https://store.steampowered.com/app/1531540/Distant_Worlds_2/
+- Vergleich ist eine Design-Gap-Analyse, **kein** Beleg, dass jedes Referenzspielsystem unverändert übernommen werden soll. Die verbindlichen P01–P98 entscheiden den Umfang.
+
+## Codeinventur und Anforderungsabdeckung (2026-11-12)
+
+Die [P01–P98-Codeinventur](../quality/P01_P98_CODE_COVERAGE_AUDIT.md) erfasst 127 Dateien im Branchvergleich gegenüber `main` (18 Implementierungsskripte, 59 Testskripte, 16 SVG-Grafiken, 30 Dokumentationsdateien) und ordnet allen 98 Pflichten konkrete zu prüfende Dateien oder ausdrücklich fehlende Nachweise zu. Dies ist keine Vollabnahme und kein vollständiger rekursiver Basisbranch-Scan. **P89:** Risiko bei der Backup-Rotation erkannt, noch nicht behoben; vor Änderung Fehlerfalltests erforderlich.
+
+## Optimierter künftiger Entwicklungsplan (2026-11-12)
+
+Der [komprimierte Plan mit acht priorisierten Paketen und 18 geplanten Durchläufen](OPTIMIZED_COMPLETION_PLAN_2026_11_12.md) bündelt bestehende Implementierungen, Grafik, KI, UI, CI und einzelne Abnahmen. **18 ist keine verifizierte Fertigstellungszahl**; P01–P98 bleiben verbindlich und werden nicht pauschal abgehakt. Der historische 48-Durchläufe-Plan bleibt unverändert als Arbeitsprotokoll erhalten. Start: Paket A, Durchlauf 1 (Save-Integrität und technische Verträge).
+
+## Prozess
+Keine ungeprüften Merges nach `main`; das andere Projekt `grenzmark` bleibt unangetastet. Die 48 Planungsdurchläufe sind **kein** Fertigstellungsversprechen.

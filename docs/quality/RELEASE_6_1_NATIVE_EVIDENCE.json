@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "requirements": {},
+  "gates": {
+    "windows_10_gui": {
+      "status": "open"
+    },
+    "windows_11_gui": {
+      "status": "open"
+    },
+    "human_playthroughs": {
+      "status": "open"
+    },
+    "target_hardware_performance": {
+      "status": "open"
+    },
+    "visual_review": {
+      "status": "open"
+    },
+    "licenses": {
+      "status": "open"
+    },
+    "reproducible_build": {
+      "status": "open"
+    },
+    "release_archive": {
+      "status": "open"
+    }
+  }
+}
